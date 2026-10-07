@@ -237,7 +237,7 @@ def test_interpolation_vector_output():
 
     ### InterpolatedModel only supports scalar outputs
     with pytest.raises(ValueError):
-        model = InterpolatedModel(
+        InterpolatedModel(
             x_data_coordinates={"x": x_data},
             y_data_structured=y_data,
         )
@@ -307,6 +307,27 @@ def test_interpolation_small_range():
     expected = 1.5
 
     assert np.abs(y_pred - expected) < 0.1
+
+
+def test_interpolation_x_data_y_data_pairing_2d():
+    """
+    Regression test: the flattened (unstructured) `x_data` and `y_data` attributes must be
+    point-paired, i.e., y_data[i] must be the value of the model at
+    {"x1": x_data["x1"][i], "x2": x_data["x2"][i]}. Previously, x_data was flattened in
+    C-order while y_data was flattened in F-order, scrambling the pairing for N>=2 dims.
+    """
+    x1 = np.array([0.0, 1.0, 2.0])
+    x2 = np.array([0.0, 10.0, 20.0, 30.0])  # Asymmetric grid, so scrambling would show
+    X1, X2 = np.meshgrid(x1, x2, indexing="ij")
+    Y = X1 * 100 + X2
+
+    model = InterpolatedModel(
+        x_data_coordinates={"x1": x1, "x2": x2},
+        y_data_structured=Y,
+    )
+
+    expected = 100 * model.x_data["x1"] + model.x_data["x2"]
+    assert np.allclose(model.y_data, expected)
 
 
 if __name__ == "__main__":

@@ -62,6 +62,9 @@ We also have a collections of aircraft analysis tools categorized by discipline:
 * `/propulsion/`: Contains analysis tools related to propulsion. Work in progress.
 * `/structures/`: Contains analysis tools related to structures, like beam models.
 * `/atmosphere/`: Contains a few models of standard atmospheres, so that you can get atmospheric properties at different altitudes.
+* `/performance/`: Contains the `OperatingPoint` class, which describes the flight condition (atmosphere, velocity, alpha, beta, rotation rates) that an airplane is analyzed at.
+* `/dynamics/`: Contains a flight dynamics engine, with point-mass and rigid-body models for simulating and optimizing vehicle trajectories.
+* `/weights/`: Contains the `MassProperties` class for representing mass, center of gravity, and inertia tensors, plus mass properties of simple shapes.
 * `/library/`: Contains tons of simple surrogate models for a wide variety of relevant phenomena. Some models are physics-based, others are empirical fits - all are documented in their docstring.
 
 ### Miscellaneous Tools
@@ -70,5 +73,3 @@ You can ignore all of these folders.
 
 * `/tools/`: Miscellaneous tools that do not interact with the rest of AeroSandbox - just along for the ride.
 * `/visualization/`: Tools for making prettier plots.
-
-* `in_progress`: Here be dragons, beware! But seriously, this is work in progress, ignore it.

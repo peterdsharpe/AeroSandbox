@@ -1,6 +1,7 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
 import pytest
+from numpy import pi
 
 """
 These tests all implement a simple wing aerostructural optimization problem.
@@ -13,7 +14,6 @@ GPKit implementation available at: https://gpkit.readthedocs.io/en/latest/exampl
 Each test solves the same problem in a slightly different way, verifying the correct solution is obtained for all flags.
 
 """
-from numpy import pi
 
 ### Constants
 k = 1.2  # form factor [-]

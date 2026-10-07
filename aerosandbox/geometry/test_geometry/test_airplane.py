@@ -1,13 +1,13 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools import units as u
-from typing import Union
+import pytest
 
 
 def a() -> asb.Airplane:
     fuselage_cabin_diameter = 20.4 * u.foot
     fuselage_cabin_radius = fuselage_cabin_diameter / 2
-    fuselage_cabin_xsec_area = np.pi * fuselage_cabin_radius**2
 
     fuselage_cabin_length = 123.2 * u.foot
     fwd_fuel_tank_length = 6
@@ -30,12 +30,12 @@ def a() -> asb.Airplane:
     r_fuse_sections = []
 
     def linear_map(
-        f_in: Union[float, np.ndarray],
-        min_in: Union[float, np.ndarray],
-        max_in: Union[float, np.ndarray],
-        min_out: Union[float, np.ndarray],
-        max_out: Union[float, np.ndarray],
-    ) -> Union[float, np.ndarray]:
+        f_in: Vectorizable,
+        min_in: Vectorizable,
+        max_in: Vectorizable,
+        min_out: Vectorizable,
+        max_out: Vectorizable,
+    ) -> Vectorizable:
         """
         Linearly maps an input `f_in` from range (`min_in`, `max_in`) to (`min_out`, `max_out`).
 
@@ -262,7 +262,9 @@ def a() -> asb.Airplane:
     )
 
     ### Wing
-    wing_airfoil = asb.Airfoil("b737c").repanel(100)
+    wing_airfoil = asb.Airfoil("b737b").repanel(
+        100
+    )  # "b737c" was removed from the airfoil database
 
     wing_span = 214 * u.foot
     wing_half_span = wing_span / 2
@@ -389,6 +391,37 @@ def a() -> asb.Airplane:
     )
 
     return airplane
+
+
+def test_airplane_construction():
+    airplane = a()
+
+    assert [wing.name for wing in airplane.wings] == [
+        "Main Wing",
+        "Horizontal Stabilizer",
+        "Vertical Stabilizer",
+    ]
+    assert [fuse.name for fuse in airplane.fuselages] == ["Fuselage"]
+
+    main_wing = airplane.wings[0]
+    assert main_wing.symmetric
+    assert main_wing.span() == pytest.approx(
+        214 * u.foot,
+        rel=0.01,  # Slightly longer than nominal, due to dihedral
+    )
+    assert main_wing.area() > 0
+
+    fuselage = airplane.fuselages[0]
+    expected_length = (  # nose + cabin + tail, plus two 6-meter fuel tanks
+        1.67 * 20.4 + 123.2 + 2.62 * 20.4
+    ) * u.foot + 12
+    assert fuselage.length() == pytest.approx(expected_length)
+    assert fuselage.volume() > 0
+
+    ### Auto-computed reference values should be inherited from the main wing:
+    assert airplane.s_ref == pytest.approx(main_wing.area())
+    assert airplane.b_ref == pytest.approx(main_wing.span())
+    assert airplane.c_ref == pytest.approx(main_wing.mean_aerodynamic_chord())
 
 
 if __name__ == "__main__":

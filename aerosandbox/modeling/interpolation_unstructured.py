@@ -6,23 +6,28 @@ from scipy import interpolate
 
 class UnstructuredInterpolatedModel(InterpolatedModel):
     """
-    A model that is interpolated to unstructured (i.e., point cloud) N-dimensional data. Maps from R^N -> R^1.
+    A model that is interpolated to unstructured (i.e., point cloud) N-dimensional data. Maps
+    from R^N -> R^1.
 
     You can evaluate this model at a given point by calling it just like a function, e.g.:
 
     >>> y = my_interpolated_model(x)
 
     The input to the model (`x` in the example above) is of the type:
-        * in the general N-dimensional case, a dictionary where: keys are variable names and values are float/array
-        * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a float/array.
+
+    * in the general N-dimensional case, a dictionary where keys are variable names and values
+      are float/array.
+    * in the case of a 1-dimensional input (R^1 -> R^1), it can optionally just be a
+      float/array.
+
     If you're not sure what the input type of `my_interpolated_model` should be, just do:
 
-    >>> print(my_interpolated_model) # Displays the valid input type to the model
+    >>> print(my_interpolated_model)  # Displays the valid input type to the model
 
     The output of the model (`y` in the example above) is always a float or array.
 
-    See the docstring __init__ method of InterpolatedModel for more details of how to instantiate and use UnstructuredInterpolatedModel.
-
+    See the docstring of the __init__ method of InterpolatedModel for more details on how to
+    instantiate and use UnstructuredInterpolatedModel.
     """
 
     def __init__(
@@ -36,64 +41,119 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         interpolated_model_kwargs: dict[str, Any] | None = None,
     ):
         """
-        Creates the interpolator. Note that data must be unstructured (i.e., point cloud) for general N-dimensional
+        Create the interpolator.
+
+        Note that data must be unstructured (i.e., point cloud) for general N-dimensional
         interpolation.
 
-        Note that if data is either 1D or structured,
+        Note that if the data is either 1D or structured, it is used directly (without
+        resampling) to construct the underlying InterpolatedModel.
 
-        Args:
+        Parameters
+        ----------
+        x_data : np.ndarray | dict[str, np.ndarray]
+            Values of the independent variable(s) in the dataset to be fitted. This is a
+            dictionary; syntax is {var_name:var_data}.
 
-            x_data: Values of the dependent variable(s) in the dataset to be fitted. This is a dictionary; syntax is {
-            var_name:var_data}.
+            * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can
+              instead supply x_data as a 1D ndarray. (If you do this, just treat `x` as an array
+              in your model, not a dict.)
+        y_data : np.ndarray
+            Values of the dependent variable in the dataset to be fitted. [1D ndarray of
+            length n]
+        x_data_resample : int | dict[str, int | np.ndarray], optional
+            A parameter that guides how the x_data should be resampled onto a structured grid.
 
-                * If the model is one-dimensional (e.g. f(x1) instead of f(x1, x2, x3...)), you can instead supply x_data
-                as a 1D ndarray. (If you do this, just treat `x` as an array in your model, not a dict.)
+            * If this is an int, we look at each axis of the `x_data` (here, we'll call this
+              `xi`), and we resample onto a linearly-spaced grid between `min(xi)` and `max(xi)`
+              with `x_data_resample` points.
 
-            y_data: Values of the independent variable in the dataset to be fitted. [1D ndarray of length n]
+            * If this is a dict, it must be a dict where the keys are strings matching the keys
+              of (the dictionary) `x_data`. The values can either be ints or 1D np.ndarrays.
 
-            x_data_resample: A parameter that guides how the x_data should be resampled onto a structured grid.
+              * If the values are ints, then that axis is linearly spaced between `min(xi)` and
+                `max(xi)` with `x_data_resample` points.
 
-                * If this is an int, we look at each axis of the `x_data` (here, we'll call this `xi`),
-                and we resample onto a linearly-spaced grid between `min(xi)` and `max(xi)` with `x_data_resample`
-                points.
+              * If the values are 1D np.ndarrays, then those 1D np.ndarrays are used as the
+                resampled spacing for the given axis.
+        resampling_interpolator : object, optional
+            Indicates the interpolator to use in order to resample the unstructured data onto a
+            structured grid. Should be analogous to scipy.interpolate.RBFInterpolator in
+            __init__ and __call__ syntax. See reference here:
 
-                * If this is a dict, it must be a dict where the keys are strings matching the keys of (the
-                dictionary) `x_data`. The values can either be ints or 1D np.ndarrays.
-
-                    * If the values are ints, then that axis is linearly spaced between `min(xi)` and `max(xi)` with
-                    `x_data_resample` points.
-
-                    * If the values are 1D np.ndarrays, then those 1D np.ndarrays are used as the resampled spacing
-                    for the given axis.
-
-            resampling_interpolator: Indicates the interpolator to use in order to resample the unstructured data
-            onto a structured grid. Should be analogous to scipy.interpolate.RBFInterpolator in __init__ and __call__
-            syntax. See reference here:
-
-                * https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RBFInterpolator.html
-
-            resampling_interpolator_kwargs: Indicates keyword arguments (keyword-value pairs, as a dictionary) to
-            pass into the resampling interpolator.
-
-            fill_value: Gives the value that the interpolator should return for points outside of the interpolation
-            domain. The interpolation domain is defined as the hypercube bounded by the coordinates specified in
-            `x_data_resample`. By default, these coordinates are the tightest axis-aligned hypercube that bounds the
-            point cloud data. If fill_value is None, then the interpolator will attempt to extrapolate if the interpolation method allows.
-
-            interpolated_model_kwargs: Indicates keyword arguments to pass into the (structured) InterpolatedModel.
-            Also a dictionary. See aerosandbox.InterpolatedModel for documentation on possible inputs here.
-
+            * https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.RBFInterpolator.html
+        resampling_interpolator_kwargs : dict[str, Any] | None, optional
+            Indicates keyword arguments (keyword-value pairs, as a dictionary) to pass into the
+            resampling interpolator.
+        fill_value : optional
+            Gives the value that the interpolator should return for points outside of the
+            interpolation domain. The interpolation domain is defined as the hypercube bounded
+            by the coordinates specified in `x_data_resample`. By default, these coordinates are
+            the tightest axis-aligned hypercube that bounds the point cloud data. If fill_value
+            is None, then the interpolator will attempt to extrapolate if the interpolation
+            method allows.
+        interpolated_model_kwargs : dict[str, Any] | None, optional
+            Indicates keyword arguments to pass into the (structured) InterpolatedModel. Also a
+            dictionary. See aerosandbox.InterpolatedModel for documentation on possible inputs
+            here.
         """
         if resampling_interpolator_kwargs is None:
             resampling_interpolator_kwargs = {}
         if interpolated_model_kwargs is None:
             interpolated_model_kwargs = {}
 
+        interpolated_model_kwargs = (
+            {  # Add in the fill_value, unless the user overrode it.
+                "fill_value": fill_value,
+                **interpolated_model_kwargs,
+            }
+        )
+
+        ### If `x_data` describes a 1D dataset (either as a 1D array, or as a dict with a
+        ### single 1D-array value), sort the data by x. (The underlying InterpolatedModel
+        ### requires strictly-increasing coordinates, and unstructured point-cloud data is
+        ### generally unsorted.)
+        def _sorted_by_x(x, y):
+            """
+            Sorts a point-paired 1D dataset (x, y) by x, if it is one.
+
+            Returns (x_sorted, y_sorted), or None if (x, y) is not a 1D point-paired dataset.
+            """
+            x = np.array(x)
+            y = np.array(y)
+            if not (
+                np.ndim(x) == 1 and np.ndim(y) == 1 and np.length(x) == np.length(y)
+            ):
+                return None
+            sort_order = np.argsort(x)
+            x = x[sort_order]
+            y = y[sort_order]
+            if np.any(np.diff(x) == 0):
+                raise ValueError(
+                    "Duplicate values were found in the 1D `x_data`; x-coordinates must be unique in order to interpolate."
+                )
+            return x, y
+
+        if isinstance(x_data, dict):
+            if len(x_data) == 1:
+                x_data_key = next(iter(x_data.keys()))
+                sorted_data = _sorted_by_x(x_data[x_data_key], y_data)
+                if sorted_data is not None:
+                    x_data = {x_data_key: sorted_data[0]}
+                    y_data = sorted_data[1]
+        else:
+            sorted_data = _sorted_by_x(x_data, y_data)
+            if sorted_data is not None:
+                x_data, y_data = sorted_data
+
         try:  # Try to use the InterpolatedModel initializer. If it doesn't work, then move on.
             super().__init__(
                 x_data_coordinates=x_data,
                 y_data_structured=y_data,
+                **interpolated_model_kwargs,
             )
+            self.x_data_raw_unstructured = x_data
+            self.y_data_raw = y_data
             return
         except ValueError:
             pass
@@ -133,21 +193,20 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
             raise TypeError("`x_data_resample` must be a dict-like object!")
 
         # Go through x_data_resample, and replace any values that are ints with linspaced arrays.
+        # (Copy the dict first, so that the caller's dict is not mutated in-place.)
+        x_data_resample = dict(x_data_resample)
         for k, v in x_data_resample.items():
             if isinstance(v, int):
                 x_data_resample[k] = np.linspace(
                     np.min(x_data[k]), np.max(x_data[k]), v
                 )
 
-        x_data_coordinates: Dict = x_data_resample
+        x_data_coordinates: dict = x_data_resample
 
         x_data_structured_values = [
             xi.flatten()
             for xi in np.meshgrid(*x_data_coordinates.values(), indexing="ij")
         ]
-        x_data_structured = {
-            k: xi for k, xi in zip(x_data.keys(), x_data_structured_values)
-        }
 
         y_data_structured = interpolator(
             np.stack(tuple(x_data_structured_values), axis=1)
@@ -155,11 +214,6 @@ class UnstructuredInterpolatedModel(InterpolatedModel):
         y_data_structured = y_data_structured.reshape(
             [np.length(xi) for xi in x_data_coordinates.values()]
         )
-
-        interpolated_model_kwargs = {
-            "fill_value": fill_value,
-            **interpolated_model_kwargs,
-        }
 
         super().__init__(
             x_data_coordinates=x_data_coordinates,

@@ -8,8 +8,8 @@ Created on Tue Apr 20 15:02:28 2021
 
 import aerosandbox as asb
 import aerosandbox.numpy as np
-from typing import Callable, List
-from functions import *
+from typing import Callable
+from functions import add, multiply, square, ln, sin
 
 """
 hello
@@ -54,7 +54,7 @@ my_node.evaluate() = 5
 
 
 class Node:
-    def __init__(self, oper: Callable, inputs: List):
+    def __init__(self, oper: Callable, inputs: list):
         """
         Takes in an operation and a list
         List contains Nodes, IndependentVariable, constants, and opti variables
@@ -126,7 +126,7 @@ class Node:
             sol = opti.solve(max_iter=500, verbose=False)
         except RuntimeError:
             sol = opti.debug
-        return sol.value(error), sol, L
+        return sol(error), sol, L
 
 
 class IndependentVariable:
@@ -141,7 +141,7 @@ class IndependentVariable:
 
 
 def generate_trees(
-    opers: List[Callable],
+    opers: list[Callable],
     size: int,
 ):
     if size <= 0:
@@ -155,8 +155,8 @@ def generate_trees(
         if input_size[i] == 2:
             for j in range(size):
                 for k in generate_trees(opers, j):
-                    for l in generate_trees(opers, (size - 1 - j)):
-                        yield Node(i, (k, l))
+                    for tree_node in generate_trees(opers, (size - 1 - j)):
+                        yield Node(i, (k, tree_node))
 
 
 def best_tree_of_size(x_data, y_data, loss, opers, size):
@@ -175,7 +175,7 @@ def best_tree_of_size(x_data, y_data, loss, opers, size):
 
     paramvalues = []
     for i in bestparams:
-        paramvalues.append(bestsol.value(i))
+        paramvalues.append(bestsol(i))
     return besttree, paramvalues, bestvalue
 
 
@@ -195,7 +195,7 @@ def best_tree_dynamic(x_data, y_data, loss, opers, size):
             bestparams = L
     paramvalues = []
     for i in bestparams:
-        paramvalues.append(bestsol.value(i))
+        paramvalues.append(bestsol(i))
     return besttree, paramvalues, bestvalue
 
 

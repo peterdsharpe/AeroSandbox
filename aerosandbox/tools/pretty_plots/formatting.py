@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 from matplotlib import ticker as mt
-from typing import Union, List
 from aerosandbox.tools.pretty_plots.labellines import labelLines
 import aerosandbox.numpy as np
 from aerosandbox.tools.pretty_plots.threedim import ax_is_3d
@@ -10,98 +9,142 @@ from aerosandbox.tools import string_formatting as sf
 
 
 def show_plot(
-    title: str = None,
-    xlabel: str = None,
-    ylabel: str = None,
-    zlabel: str = None,
-    dpi: float = None,
-    savefig: Union[str, List[str]] = None,
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    zlabel: str | None = None,
+    dpi: float | None = None,
+    savefig: str | Path | list[str | Path] | None = None,
     savefig_transparent: bool = False,
     tight_layout: bool = True,
     tight_layout_pad: float = 0.25,
-    legend: bool = None,
+    legend: bool | None = None,
     legend_inline: bool = False,
     legend_frame: bool = True,
     pretty_grids: bool = True,
     set_ticks: bool = True,
     rotate_axis_labels: bool = True,
-    rotate_axis_labels_linewidth: int = 14,
+    rotate_axis_labels_linewidth: int | None = 14,
+    label_current_axes_only: bool = False,
     show: bool = True,
 ):
     """
-    Makes a matplotlib Figure (and all its constituent Axes) look "nice", then displays it.
+    Make a matplotlib Figure (and all its constituent Axes) look "nice", then display it.
 
-    Arguments control whether various changes (from the default matplotlib settings) are made to the plot.
+    Arguments control whether various changes (from the default matplotlib settings) are made
+    to the plot.
 
     One argument in particular, `show` (a boolean), controls whether the plot is displayed.
 
-    Args:
+    Note on `None` vs `""` for string parameters (title, xlabel, ylabel, zlabel):
+        - `None` (default): The label is not touched; any existing label is preserved.
+        - `""` (empty string): The label is explicitly set to an empty string, clearing any
+          existing label.
 
-        title: If given, sets the title of the plot. If the Figure has multiple axes, this sets the Figure-level
-            suptitle instead of setting the individual Axis title.
+    Parameters
+    ----------
+    title : str | None
+        If given, sets the title of the plot. If the Figure has multiple axes, this sets the
+        Figure-level suptitle instead of setting the individual Axis title.
+    xlabel : str | None
+        If given, sets the xlabel of axes. By default, applies to all axes in the figure. Use
+        `label_current_axes_only=True` to apply only to the current axes (`plt.gca()`).
+    ylabel : str | None
+        If given, sets the ylabel of axes. By default, applies to all axes in the figure. Use
+        `label_current_axes_only=True` to apply only to the current axes (`plt.gca()`).
+    zlabel : str | None
+        If given, sets the zlabel of 3D axes. By default, applies to all 3D axes in the figure.
+        Use `label_current_axes_only=True` to apply only to the current axes (`plt.gca()`).
+    dpi : float | None
+        If given, sets the dpi (display resolution, in Dots Per Inch) of the Figure.
+    savefig : str | Path | list[str | Path] | None
+        If given, saves the figure to the given path(s).
 
-        xlabel: If given, sets the xlabel of all axes. (Equivalent to `ax.set_xlabel(my_label)`)
+        * If a string is given, saves the figure to that path.
+          (E.g., `savefig="my_plot.png"`)
 
-        ylabel: If given, sets the ylabel of all axes. (Equivalent to `ax.set_ylabel(my_label)`)
+        * If a list of strings is given, saves the figure to each of those paths.
+          (E.g., `savefig=["my_plot.png", "my_plot.pdf"]`)
+    savefig_transparent : bool
+        If True, saves the figure with a transparent background. If False, saves the figure
+        with a white background. Only has an effect if `savefig` is not None.
+    tight_layout : bool
+        If True, calls `plt.tight_layout()` to adjust the spacing of individual Axes. If False,
+        skips this step.
+    tight_layout_pad : float
+        If `tight_layout=True`, sets the padding width between the figure edge and the edges of
+        the subplots, as a fraction of the font size. The default here is 0.25, which is well
+        below the default of 1.08 in matplotlib. This causes Matplotlib to waste less
+        whitespace on padding.
+    legend : bool | None
+        This value can be True, False, or None.
 
-        zlabel: If given, sets the zlabel of all axes, if the axis is 3D. (Equivalent to `ax.set_zlabel(my_label)`)
+        * If True, displays a legend on the current Axis.
 
-        dpi: If given, sets the dpi (display resolution, in Dots Per Inch) of the Figure.
+        * If False, does not add a legend on the current Axis. (However, does not delete any
+          existing legends.)
 
-        savefig: If given, saves the figure to the given path(s).
+        * If None (default), goes through some logic to determine whether a legend should be
+          displayed. If there is only one line on the current Axis, no legend is displayed. If
+          there are multiple lines, a legend is (in general) displayed.
+    legend_inline : bool
+        Boolean that controls whether an "inline" legend is displayed.
 
-            * If a string is given, saves the figure to that path.
-                (E.g., `savefig="my_plot.png"`)
+        * If True, displays an "inline" legend, where the labels are next to the lines instead
+          of in a box.
 
-            * If a list of strings is given, saves the figure to each of those paths.
-                (E.g., `savefig=["my_plot.png", "my_plot.pdf"]`)
+        * If False (default), displays a traditional legend.
 
-        savefig_transparent: If True, saves the figure with a transparent background. If False, saves the figure with
-            a white background. Only has an effect if `savefig` is not None.
+        Only has an effect if `legend=True` (or `legend=None`, and logic determines that a
+        legend should be displayed).
+    legend_frame : bool
+        Boolean that controls whether a frame (rectangular background box) is displayed around
+        the legend. Default is True.
+    pretty_grids : bool
+        Boolean that controls whether the gridlines are formatted to have linewidths that are
+        (subjectively) more readable.
+    set_ticks : bool
+        Boolean that controls whether the tick and grid locations + labels are formatted to be
+        (subjectively) more readable. Works with both linear and log scales, and with both 2D
+        and 3D plots.
+    rotate_axis_labels : bool
+        Boolean that controls whether the y-axis labels are rotated to be horizontal and
+        wrapped to the specified line width. Default is True.
+    rotate_axis_labels_linewidth : int | None
+        The maximum line width (in characters) for wrapping y-axis labels when
+        `rotate_axis_labels=True`. Default is 14. Set to None to disable wrapping.
+    label_current_axes_only : bool
+        If True, xlabel/ylabel/zlabel are applied only to the current axes (`plt.gca()`) rather
+        than all axes in the figure. This is useful for multi-subplot figures where each
+        subplot needs different labels. Default is False for backwards compatibility.
+    show : bool
+        Boolean that controls whether the plot is displayed after all plot changes are applied.
+        Default is True. You may want to set this to False if you want to make additional
+        manual changes to the plot before displaying it.
 
-        tight_layout: If True, calls `plt.tight_layout()` to adjust the spacing of individual Axes. If False, skips
-            this step.
+    Returns
+    -------
+    None
+        Completely in-place function. If `show=True` (default), displays the plot after
+        applying changes.
 
-        tight_layout_pad: If `tight_layout=True`, sets the padding width between the figure edge and the edges of the
-        subplots, as a fraction of the font size. The default here is 0.25, which is well below the default of 1.08 in
-        matplotlib. This causes Matplotlib to waste less whitespace on padding.
+    Examples
+    --------
+    For multi-subplot figures with different labels per axes, set labels on each axes manually
+    and use `label_current_axes_only=True` or pass `xlabel=None, ylabel=None` to preserve
+    existing labels::
 
-        legend: This value can be True, False, or None.
+        fig, axes = plt.subplots(2, 1, sharex=True)
 
-            * If True, displays a legend on the current Axis.
+        axes[0].plot(x, y1)
+        axes[0].set_ylabel("Velocity [m/s]")
 
-            * If False, does not add a legend on the current Axis. (However, does not delete any existing legends.)
+        axes[1].plot(x, y2)
+        axes[1].set_xlabel("Time [s]")
+        axes[1].set_ylabel("Altitude [m]")
 
-            * If None (default), goes through some logic to determine whether a legend should be displayed. If there
-                is only one line on the current Axis, no legend is displayed. If there are multiple lines, a legend is (
-                in general) displayed.
-
-        legend_inline: Boolean that controls whether an "inline" legend is displayed.
-
-            * If True, displays an "inline" legend, where the labels are next to the lines instead of in a box.
-
-            * If False (default), displays a traditional legend.
-
-            Only has an effect if `legend=True` (or `legend=None`, and logic determines that a legend should be
-            displayed).
-
-        legend_frame: Boolean that controls whether a frame (rectangular background box) is displayed around the legend.
-            Default is True.
-
-        pretty_grids: Boolean that controls whether the gridlines are formatted have linewidths that are (subjectively)
-            more readable.
-
-        set_ticks: Boolean that controls whether the tick and grid locations + labels are formatted to be (
-            subjectively) more readable.
-
-            Works with both linear and log scales, and with both 2D and 3D plots.
-
-        show: Boolean that controls whether the plot is displayed after all plot changes are applied. Default is
-            True. You may want to set this to False if you want to make additional manual changes to the plot before
-            displaying it. Default is True.
-
-    Returns: None (completely in-place function). If `show=True` (default), displays the plot after applying changes.
-
+        # Preserve per-axes labels by passing None
+        show_plot(title="My Plot", xlabel=None, ylabel=None)
     """
     fig = plt.gcf()
     axes = fig.get_axes()
@@ -335,16 +378,23 @@ def show_plot(
                     break
 
     # Make axis labels if needed
+    if label_current_axes_only:
+        target_axes = [plt.gca()]
+        target_axes_3D = [ax for ax in target_axes if ax_is_3d(ax)]
+    else:
+        target_axes = axes
+        target_axes_3D = axes_with_3D
+
     if xlabel is not None:
-        for ax in axes:
-            if not ax.get_label() == "<colorbar>":
+        for ax in target_axes:
+            if ax.get_label() != "<colorbar>":
                 ax.set_xlabel(xlabel)
     if ylabel is not None:
-        for ax in axes:
-            if not ax.get_label() == "<colorbar>":
+        for ax in target_axes:
+            if ax.get_label() != "<colorbar>":
                 ax.set_ylabel(ylabel)
     if zlabel is not None:
-        if len(axes_with_3D) == 0:
+        if len(target_axes_3D) == 0:
             import warnings
 
             warnings.warn(
@@ -352,8 +402,8 @@ def show_plot(
                 stacklevel=2,
             )
 
-        for ax in axes_with_3D:
-            if not ax.get_label() == "<colorbar>":
+        for ax in target_axes_3D:
+            if ax.get_label() != "<colorbar>":
                 ax.set_zlabel(zlabel)
 
     # Rotate axis labels if needed
@@ -392,8 +442,11 @@ def show_plot(
     if legend:
         if legend_inline:  # Display an inline (matplotlib-label-lines) legend instead
             for ax in axes:
+                lines = ax.get_lines()
+                if len(lines) == 0:
+                    continue  # Skip axes with no lines (e.g., colorbar axes)
                 labelLines(
-                    lines=ax.get_lines(),
+                    lines=lines,
                 )
         else:  # Display a traditional legend on the last axis
             plt.legend(frameon=legend_frame)
@@ -401,7 +454,7 @@ def show_plot(
         fig.set_dpi(dpi)
     if savefig is not None:
         if not isinstance(savefig, (list, tuple, set)):
-            savefig: List[Union[str, Path]] = [savefig]
+            savefig: list[str | Path] = [savefig]
 
         for savefig_i in savefig:
             plt.savefig(savefig_i, dpi=dpi, transparent=savefig_transparent)
@@ -411,13 +464,33 @@ def show_plot(
 
 
 def set_ticks(
-    x_major: Union[float, int] = None,
-    x_minor: Union[float, int] = None,
-    y_major: Union[float, int] = None,
-    y_minor: Union[float, int] = None,
-    z_major: Union[float, int] = None,
-    z_minor: Union[float, int] = None,
+    x_major: float | int | None = None,
+    x_minor: float | int | None = None,
+    y_major: float | int | None = None,
+    y_minor: float | int | None = None,
+    z_major: float | int | None = None,
+    z_minor: float | int | None = None,
 ):
+    """
+    Set the major and minor tick spacings of the current axes.
+
+    Any argument left as None (the default) leaves the corresponding tick locator unchanged.
+
+    Parameters
+    ----------
+    x_major : float | int | None
+        The spacing between major ticks on the x-axis.
+    x_minor : float | int | None
+        The spacing between minor ticks on the x-axis.
+    y_major : float | int | None
+        The spacing between major ticks on the y-axis.
+    y_minor : float | int | None
+        The spacing between minor ticks on the y-axis.
+    z_major : float | int | None
+        The spacing between major ticks on the z-axis (for 3D plots).
+    z_minor : float | int | None
+        The spacing between minor ticks on the z-axis (for 3D plots).
+    """
     ax = plt.gca()
     if x_major is not None:
         ax.xaxis.set_major_locator(mt.MultipleLocator(base=x_major))
@@ -435,10 +508,11 @@ def set_ticks(
 
 def equal() -> None:
     """
-    Sets all axes to be equal. Works for both 2d plots and 3d plots.
+    Set all axes to be equal. Works for both 2D plots and 3D plots.
 
-    Returns: None
-
+    Returns
+    -------
+    None
     """
     ax = plt.gca()
 

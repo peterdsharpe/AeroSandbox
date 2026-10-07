@@ -1,4 +1,6 @@
+import matplotlib.figure
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.geometry.polygon import Polygon
 from aerosandbox.geometry.airfoil.airfoil_families import (
     get_NACA_coordinates,
@@ -6,11 +8,18 @@ from aerosandbox.geometry.airfoil.airfoil_families import (
     get_file_coordinates,
 )
 from aerosandbox.library.aerodynamics import transonic
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import plotly.graph_objects  # An optional dependency; import only for type-checking.
+
+    from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
+    from aerosandbox.geometry import ControlSurface
 from aerosandbox.modeling.splines.hermite import (
     cubic_hermite_patch,
 )
 from scipy import interpolate
-from typing import Union, Any, Dict, List
+from typing import Any
 import json
 from pathlib import Path
 import os
@@ -24,46 +33,49 @@ class Airfoil(Polygon):
     def __init__(
         self,
         name: str = "Untitled",
-        coordinates: Union[None, str, Path, np.ndarray] = None,
+        coordinates: None | str | Path | np.ndarray = None,
         **deprecated_keyword_arguments,
     ):
         """
-        Creates an Airfoil object.
+        Create an Airfoil object.
 
-        Args:
+        Parameters
+        ----------
+        name : str
+            Name of the airfoil. Can also be used to auto-generate coordinates; see the
+            description of `coordinates` below.
+        coordinates : None | str | Path | np.ndarray
+            A representation of the coordinates that define the airfoil. Can be one of several
+            types of input; the following sequence of operations is used to interpret the meaning
+            of the parameter:
 
-            name: Name of the airfoil [string]. Can also be used to auto-generate coordinates; see docstring for
-            `coordinates` below.
+            If `coordinates` is an Nx2 array of the [x, y] coordinates that define the airfoil,
+            these are used as-is. Points are expected to be provided in standard airfoil order:
 
-            coordinates: A representation of the coordinates that define the airfoil. Can be one of several types of
-            input; the following sequence of operations is used to interpret the meaning of the parameter:
+                * Points should start on the upper surface at the trailing edge, continue forward
+                  over the upper surface, wrap around the nose, continue aft over the lower
+                  surface, and then end at the trailing edge on the lower surface.
 
-                If `coordinates` is an Nx2 array of the [x, y] coordinates that define the airfoil, these are used
-                as-is. Points are expected to be provided in standard airfoil order:
+                * The trailing edge need not be closed, but many analyses implicitly assume that
+                  this gap is small.
 
-                    * Points should start on the upper surface at the trailing edge, continue forward over the upper
-                    surface, wrap around the nose, continue aft over the lower surface, and then end at the trailing
-                    edge on the lower surface.
+                * Take care to ensure that the point at the leading edge of the airfoil, usually
+                  (0, 0), is not duplicated.
 
-                    * The trailing edge need not be closed, but many analyses implicitly assume that this gap is small.
+            If `coordinates` is provided as a string, it is assumed to be the filepath to a *.dat
+            file containing the coordinates; we attempt to load coordinates from this.
 
-                    * Take care to ensure that the point at the leading edge of the airfoil, usually (0, 0),
-                    is not duplicated.
+            If the coordinates are not specified and instead left as None, the constructor will
+            attempt to auto-populate the coordinates based on the `name` parameter provided, in
+            the following order of priority:
 
-                If `coordinates` is provided as a string, it assumed to be the filepath to a *.dat file containing
-                the coordinates; we attempt to load coordinates from this.
+                * If `name` is a 4-digit NACA airfoil (e.g., "naca2412"), coordinates will be
+                  created based on the analytical equation.
 
-                If the coordinates are not specified and instead left as None, the constructor will attempt to
-                auto-populate the coordinates based on the `name` parameter provided, in the following order of
-                priority:
-
-                    * If `name` is a 4-digit NACA airfoil (e.g. "naca2412"), coordinates will be created based on the
-                    analytical equation.
-
-                    * If `name` is the name of an airfoil in the UIUC airfoil database (e.g. "s1223", "e216",
-                    "dae11"), coordinates will be loaded from that. Note that the string you provide must be exactly
-                    the name of the associated *.dat file in the UIUC database.
-
+                * If `name` is the name of an airfoil in the UIUC airfoil database (e.g., "s1223",
+                  "e216", "dae11"), coordinates will be loaded from that. Note that the string you
+                  provide must be exactly the name of the associated *.dat file in the UIUC
+                  database.
         """
         ### Handle the airfoil name
         self.name = name
@@ -90,16 +102,27 @@ class Airfoil(Polygon):
             try:  # If coordinates is a string, assume it's a filepath to a .dat file
                 self.coordinates = get_file_coordinates(filepath=coordinates)
             except (OSError, FileNotFoundError, TypeError, UnicodeDecodeError):
-                try:
-                    shape = coordinates.shape
-                    assert len(shape) == 2
-                    assert shape[0] == 2 or shape[1] == 2
-                    if not shape[1] == 2:
-                        coordinates = np.transpose(shape)
+                if hasattr(
+                    coordinates, "shape"
+                ):  # Handles NumPy arrays, CasADi types, etc.
+                    array = coordinates
+                else:  # Try to coerce other array-likes (e.g., a list of [x, y] pairs) to an array.
+                    try:
+                        array = np.asarray(coordinates, dtype=float)
+                    except (TypeError, ValueError):
+                        array = None  # Couldn't be interpreted as coordinates; warns below.
 
-                    self.coordinates = coordinates
-                except AttributeError:
-                    pass
+                if array is not None:
+                    shape = array.shape
+                    if not (len(shape) == 2 and (shape[0] == 2 or shape[1] == 2)):
+                        raise ValueError(
+                            "The `coordinates` input should be an Nx2 (or 2xN) array of [x, y] coordinates, "
+                            f"but instead it has shape {tuple(shape)}."
+                        )
+                    if not shape[1] == 2:
+                        array = np.transpose(array)
+
+                    self.coordinates = array
 
         if self.coordinates is None:
             import warnings
@@ -147,7 +170,7 @@ class Airfoil(Polygon):
 
                 def default_CL_function(alpha, Re, mach=0, deflection=0):
                     """
-                    Lift coefficient.
+                    Compute the lift coefficient.
                     """
                     print_default_warning()
                     Cl_inc = np.pi * np.sind(2 * alpha)
@@ -158,7 +181,7 @@ class Airfoil(Polygon):
 
                 def default_CD_function(alpha, Re, mach=0, deflection=0):
                     """
-                    Drag coefficient.
+                    Compute the drag coefficient.
                     """
                     print_default_warning()
                     Cf = Cf_flat_plate(Re_L=Re, method="hybrid-sharpe-convex")
@@ -175,7 +198,7 @@ class Airfoil(Polygon):
 
                 def default_CM_function(alpha, Re, mach=0, deflection=0):
                     """
-                    Pitching moment coefficient, as measured about quarter-chord.
+                    Compute the pitching moment coefficient, as measured about the quarter-chord.
                     """
                     print_default_warning()
                     return np.zeros_like(alpha)
@@ -205,6 +228,27 @@ class Airfoil(Polygon):
         normalize_coordinates: bool = True,
         use_leading_edge_modification: bool = True,
     ) -> "KulfanAirfoil":
+        """
+        Convert this Airfoil to a KulfanAirfoil by fitting Kulfan (CST) parameters to it.
+
+        Parameters
+        ----------
+        n_weights_per_side : int
+            The number of Kulfan weights to use per side of the airfoil.
+        N1 : float
+            The shape factor corresponding to the leading edge of the airfoil.
+        N2 : float
+            The shape factor corresponding to the trailing edge of the airfoil.
+        normalize_coordinates : bool
+            Whether to normalize the coordinates (via `Airfoil.normalize()`) before fitting.
+        use_leading_edge_modification : bool
+            Whether to include Kulfan's leading-edge modification (LEM) term in the fit.
+
+        Returns
+        -------
+        KulfanAirfoil
+            A KulfanAirfoil approximation of this airfoil.
+        """
         from aerosandbox.geometry.airfoil.kulfan_airfoil import KulfanAirfoil
         from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 
@@ -231,57 +275,69 @@ class Airfoil(Polygon):
         self,
         alphas=np.linspace(-13, 13, 27),
         Res=np.geomspace(1e3, 1e8, 12),
-        cache_filename: str = None,
-        xfoil_kwargs: Dict[str, Any] = None,
-        unstructured_interpolated_model_kwargs: Dict[str, Any] = None,
+        cache_filename: str | None = None,
+        xfoil_kwargs: dict[str, Any] | None = None,
+        unstructured_interpolated_model_kwargs: dict[str, Any] | None = None,
         include_compressibility_effects: bool = True,
         transonic_buffet_lift_knockdown: float = 0.3,
         make_symmetric_polars: bool = False,
     ) -> None:
         """
-        Generates airfoil polar surrogate models (CL, CD, CM functions) from XFoil data and assigns them in-place to
-        this Airfoil's polar functions.
+        Generate airfoil polar surrogate models (CL, CD, CM functions) from XFoil data.
 
-        In other words, when this function is run, the following functions will be added (or overwritten) to the instance:
+        The resulting polar surrogates are assigned in-place to this Airfoil's polar functions.
+        In other words, when this function is run, the following functions will be added (or
+        overwritten) on the instance:
+
             * Airfoil.CL_function(alpha, Re, mach)
             * Airfoil.CD_function(alpha, Re, mach)
             * Airfoil.CM_function(alpha, Re, mach)
 
         Where alpha is in degrees.
 
-        Warning: In-place operation! Modifies this Airfoil object by setting Airfoil.CL_function, etc. to the new
-        polars.
+        Warning: In-place operation! Modifies this Airfoil object by setting
+        Airfoil.CL_function, etc. to the new polars.
 
-        Args:
+        Parameters
+        ----------
+        alphas
+            The range of alphas to sample from XFoil at [degrees].
+        Res
+            The range of Reynolds numbers to sample from XFoil at [dimensionless].
+        cache_filename : str | None
+            A path-like filename (ideally a "*.json" file) that can be used to cache the XFoil
+            results, making it much faster to regenerate the results.
 
-            alphas: The range of alphas to sample from XFoil at. Given in degrees.
+            * If the file does not exist, XFoil will be run, and a cache file will be created.
 
-            Res: The range of Reynolds numbers to sample from XFoil at. Dimensionless.
+            * If the file does exist, XFoil will not be run, and the cache file will be read
+              instead.
+        xfoil_kwargs : dict[str, Any] | None
+            Keyword arguments to pass into the AeroSandbox XFoil module. See the
+            aerosandbox.XFoil constructor for options.
+        unstructured_interpolated_model_kwargs : dict[str, Any] | None
+            Keyword arguments to pass into the UnstructuredInterpolatedModels that contain the
+            polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
+            options.
+        include_compressibility_effects : bool
+            Includes compressibility effects in the polars, such as wave drag, mach tuck, and CL
+            effects across normal shocks. Note that accuracy here is dubious in the transonic
+            regime and above - you should really specify your own CL/CD/CM models.
+        transonic_buffet_lift_knockdown : float
+            The factor by which lift is knocked down (multiplied) in the transonic buffet regime,
+            if compressibility effects are included.
+        make_symmetric_polars : bool
+            If the airfoil is known to be symmetric, setting this to True will mirror the XFoil
+            data across alpha = 0 when constructing the polars.
 
-            cache_filename: A path-like filename (ideally a "*.json" file) that can be used to cache the XFoil
-                results, making it much faster to regenerate the results.
-
-                * If the file does not exist, XFoil will be run, and a cache file will be created.
-
-                * If the file does exist, XFoil will not be run, and the cache file will be read instead.
-
-            xfoil_kwargs: Keyword arguments to pass into the AeroSandbox XFoil module. See the aerosandbox.XFoil
-                constructor for options.
-
-            unstructured_interpolated_model_kwargs: Keyword arguments to pass into the UnstructuredInterpolatedModels
-                that contain the polars themselves. See the aerosandbox.UnstructuredInterpolatedModel constructor for
-                options.
-
-            include_compressibility_effects: Includes compressibility effects in the polars, such as wave drag,
-                mach tuck, CL effects across normal shocks. Note that accuracy here is dubious in the transonic regime
-                and above - you should really specify your own CL/CD/CM models
-
-        Returns: None (in-place), adds the following functions to the instance:
+        Returns
+        -------
+        None
+            (In-place operation.) Adds the following functions to the instance:
 
             * Airfoil.CL_function(alpha, Re, mach)
             * Airfoil.CD_function(alpha, Re, mach)
             * Airfoil.CM_function(alpha, Re, mach)
-
         """
         if self.coordinates is None:
             raise ValueError(
@@ -326,7 +382,9 @@ class Airfoil(Polygon):
         if data is None:
             ### If a cache filename is given, ensure that the directory exists.
             if cache_filename is not None:
-                os.makedirs(os.path.dirname(cache_filename), exist_ok=True)
+                cache_directory = os.path.dirname(cache_filename)
+                if cache_directory:  # Empty for a bare filename (current directory).
+                    os.makedirs(cache_directory, exist_ok=True)
 
             from aerosandbox.aerodynamics.aero_2D import XFoil
 
@@ -356,14 +414,25 @@ class Airfoil(Polygon):
                     "CD",
                     "CDp",
                     "Re",
-                ]  # Assumes the rest are antisymmetric
-
-                data = {
-                    k: np.concatenate(
-                        [v, v if k in keys_symmetric_across_alpha else -v]
-                    )
-                    for k, v in data.items()
+                    "Cpmin",
+                    "Xcpmin",
+                ]
+                # Top-/bottom-surface quantities swap with each other when mirrored across alpha;
+                # all remaining keys (e.g., alpha, CL, CM, Chinge) are antisymmetric.
+                keys_swapped_across_alpha = {
+                    "Top_Xtr": "Bot_Xtr",
+                    "Bot_Xtr": "Top_Xtr",
                 }
+
+                def mirrored(k):
+                    if k in keys_symmetric_across_alpha:
+                        return data[k]
+                    elif k in keys_swapped_across_alpha:
+                        return data[keys_swapped_across_alpha[k]]
+                    else:
+                        return -data[k]
+
+                data = {k: np.concatenate([v, mirrored(k)]) for k, v in data.items()}
 
             if (
                 cache_filename is not None
@@ -645,16 +714,49 @@ class Airfoil(Polygon):
 
     def get_aero_from_neuralfoil(
         self,
-        alpha: Union[float, np.ndarray],
-        Re: Union[float, np.ndarray],
-        mach: Union[float, np.ndarray] = 0.0,
-        n_crit: Union[float, np.ndarray] = 9.0,
-        xtr_upper: Union[float, np.ndarray] = 1.0,
-        xtr_lower: Union[float, np.ndarray] = 1.0,
+        alpha: Vectorizable,
+        Re: Vectorizable,
+        mach: Vectorizable = 0.0,
+        n_crit: Vectorizable = 9.0,
+        xtr_upper: Vectorizable = 1.0,
+        xtr_lower: Vectorizable = 1.0,
         model_size: str = "large",
-        control_surfaces: List["ControlSurface"] = None,
+        control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
-    ) -> Dict[str, Union[float, np.ndarray]]:
+    ) -> dict[str, Vectorizable]:
+        """
+        Compute this airfoil's aerodynamics at given operating conditions using NeuralFoil.
+
+        The airfoil is normalized and converted to a KulfanAirfoil before analysis; the moment
+        coefficient is then corrected back to this airfoil's original (unnormalized) geometry.
+
+        Parameters
+        ----------
+        alpha : Vectorizable
+            Angle of attack [degrees].
+        Re : Vectorizable
+            Reynolds number [dimensionless].
+        mach : Vectorizable
+            Mach number [dimensionless].
+        n_crit : Vectorizable
+            Critical amplification factor for boundary-layer transition (e^N method).
+        xtr_upper : Vectorizable
+            Forced transition location on the upper surface, as a fraction of chord (x/c).
+        xtr_lower : Vectorizable
+            Forced transition location on the lower surface, as a fraction of chord (x/c).
+        model_size : str
+            The size of the NeuralFoil model to use (e.g., "xxsmall", "small", "large",
+            "xxxlarge").
+        control_surfaces : list["ControlSurface"] | None
+            Control surfaces to apply to the airfoil before analysis.
+        include_360_deg_effects : bool
+            Whether to blend in post-stall (360-degree) aerodynamic effects.
+
+        Returns
+        -------
+        dict[str, Vectorizable]
+            A dictionary of aerodynamic outputs (e.g., "CL", "CD", "CM", "Cpmin", ...).
+        """
         ### Normalize the inputs and evaluate
         normalization_outputs = self.normalize(return_dict=True)
         normalized_airfoil = normalization_outputs["airfoil"].to_kulfan_airfoil(
@@ -695,12 +797,31 @@ class Airfoil(Polygon):
 
     def plot_polars(
         self,
-        alphas: Union[np.ndarray, List[float]] = np.linspace(-20, 20, 500),
-        Res: Union[np.ndarray, List[float]] = 10 ** np.arange(3, 9),
+        alphas: np.ndarray | list[float] = np.linspace(-20, 20, 500),
+        Res: np.ndarray | list[float] = 10 ** np.arange(3, 9),
         mach: float = 0.0,
         show: bool = True,
         Re_colors=None,
     ) -> None:
+        """
+        Plot the polar functions (CL, CD, CM, and L/D) of this airfoil.
+
+        Requires that the polar functions (Airfoil.CL_function, etc.) exist on this instance;
+        see `Airfoil.generate_polars()`.
+
+        Parameters
+        ----------
+        alphas : np.ndarray | list[float]
+            The angles of attack to plot at [degrees].
+        Res : np.ndarray | list[float]
+            The Reynolds numbers to plot at [dimensionless].
+        mach : float
+            The Mach number to plot at [dimensionless].
+        show : bool
+            Whether to show the plot.
+        Re_colors
+            Colors to use for each Reynolds number series. If None, a default colormap is used.
+        """
         import matplotlib.pyplot as plt
         import aerosandbox.tools.pretty_plots as p
 
@@ -771,15 +892,20 @@ class Airfoil(Polygon):
             )
 
     def local_camber(
-        self, x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
-    ) -> Union[float, np.ndarray]:
+        self, x_over_c: Vectorizable = np.linspace(0, 1, 101)
+    ) -> Vectorizable:
         """
-        Returns the local camber of the airfoil at a given point or points.
+        Return the local camber of the airfoil at a given point or points.
 
-        Args:
-            x_over_c: The x/c locations to calculate the camber at [1D array, more generally, an iterable of floats]
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations to calculate the camber at [1D array, more generally, an iterable
+            of floats].
 
-        Returns:
+        Returns
+        -------
+        Vectorizable
             Local camber of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
@@ -799,15 +925,20 @@ class Airfoil(Polygon):
         return (upper_interpolated + lower_interpolated) / 2
 
     def local_thickness(
-        self, x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101)
-    ) -> Union[float, np.ndarray]:
+        self, x_over_c: Vectorizable = np.linspace(0, 1, 101)
+    ) -> Vectorizable:
         """
-        Returns the local thickness of the airfoil at a given point or points.
+        Return the local thickness of the airfoil at a given point or points.
 
-        Args:
-            x_over_c: The x/c locations to calculate the thickness at [1D array, more generally, an iterable of floats]
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations to calculate the thickness at [1D array, more generally, an
+            iterable of floats].
 
-        Returns:
+        Returns
+        -------
+        Vectorizable
             Local thickness of the airfoil (y/c) [1D array].
         """
         upper = self.upper_coordinates()[::-1]
@@ -828,13 +959,17 @@ class Airfoil(Polygon):
 
     def max_camber(self, x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)) -> float:
         """
-        Returns the maximum camber of the airfoil.
+        Return the maximum camber of the airfoil.
 
-        Args:
-            x_over_c_sample: Where should the airfoil be sampled to determine the max camber?
+        Parameters
+        ----------
+        x_over_c_sample : np.ndarray
+            Where should the airfoil be sampled to determine the max camber?
 
-        Returns: The maximum thickness, as a fraction of chord.
-
+        Returns
+        -------
+        float
+            The maximum camber, as a fraction of chord.
         """
         return np.max(self.local_camber(x_over_c=x_over_c_sample))
 
@@ -842,30 +977,42 @@ class Airfoil(Polygon):
         self, x_over_c_sample: np.ndarray = np.linspace(0, 1, 101)
     ) -> float:
         """
-        Returns the maximum thickness of the airfoil.
+        Return the maximum thickness of the airfoil.
 
-        Args:
-            x_over_c_sample: Where should the airfoil be sampled to determine the max thickness?
+        Parameters
+        ----------
+        x_over_c_sample : np.ndarray
+            Where should the airfoil be sampled to determine the max thickness?
 
-        Returns: The maximum thickness, as a fraction of chord.
-
+        Returns
+        -------
+        float
+            The maximum thickness, as a fraction of chord.
         """
         return np.max(self.local_thickness(x_over_c=x_over_c_sample))
 
     def draw(
         self, draw_mcl=False, draw_markers=True, backend="matplotlib", show=True
-    ) -> None:
+    ) -> "matplotlib.figure.Figure | plotly.graph_objects.Figure | None":
         """
         Draw the airfoil object.
 
-        Args:
-            draw_mcl: Should we draw the mean camber line (MCL)? [boolean]
+        Parameters
+        ----------
+        draw_mcl : bool
+            Should we draw the mean camber line (MCL)?
+        draw_markers : bool
+            Should we draw a marker at each vertex?
+        backend : str
+            Which backend should we use? "plotly" or "matplotlib".
+        show : bool
+            Should we show the plot?
 
-            backend: Which backend should we use? "plotly" or "matplotlib"
-
-            show: Should we show the plot? [boolean]
-
-        Returns: None
+        Returns
+        -------
+        matplotlib.figure.Figure | plotly.graph_objects.Figure | None
+            With the "plotly" backend and show=False, returns the plotly Figure; otherwise
+            returns None.
         """
         x = np.reshape(np.array(self.x()), -1)
         y = np.reshape(np.array(self.y()), -1)
@@ -927,29 +1074,29 @@ class Airfoil(Polygon):
 
     def LE_index(self) -> int:
         """
-        Returns the index of the leading edge point in the airfoil coordinates.
+        Return the index of the leading edge point in the airfoil coordinates.
         """
         return int(np.argmin(self.x()))
 
     def lower_coordinates(self) -> np.ndarray:
         """
-        Returns an Nx2 ndarray of [x, y] coordinates that describe the lower surface of the airfoil.
+        Return an Nx2 ndarray of [x, y] coordinates describing the lower surface of the airfoil.
 
         Order is from the leading edge to the trailing edge.
 
-        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
-        Airfoil.upper_coordinates().
+        Includes the leading edge point; be careful about duplicates if using this method in
+        conjunction with Airfoil.upper_coordinates().
         """
         return self.coordinates[self.LE_index() :, :]
 
     def upper_coordinates(self) -> np.ndarray:
         """
-        Returns an Nx2 ndarray of [x, y] coordinates that describe the upper surface of the airfoil.
+        Return an Nx2 ndarray of [x, y] coordinates describing the upper surface of the airfoil.
 
         Order is from the trailing edge to the leading edge.
 
-        Includes the leading edge point; be careful about duplicates if using this method in conjunction with
-        Airfoil.lower_coordinates().
+        Includes the leading edge point; be careful about duplicates if using this method in
+        conjunction with Airfoil.lower_coordinates().
         """
         return self.coordinates[: self.LE_index() + 1, :]
 
@@ -976,7 +1123,7 @@ class Airfoil(Polygon):
 
     def TE_thickness(self) -> float:
         """
-        Returns the thickness of the trailing edge of the airfoil.
+        Return the thickness of the trailing edge of the airfoil.
         """
         x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
         y_gap = self.coordinates[0, 1] - self.coordinates[-1, 1]
@@ -985,14 +1132,14 @@ class Airfoil(Polygon):
 
     def TE_angle(self) -> float:
         """
-        Returns the trailing edge angle of the airfoil, in degrees.
+        Return the trailing edge angle of the airfoil, in degrees.
         """
         upper_TE_vec = self.coordinates[0, :] - self.coordinates[1, :]
         lower_TE_vec = self.coordinates[-1, :] - self.coordinates[-2, :]
 
         return np.arctan2d(
             upper_TE_vec[0] * lower_TE_vec[1] - upper_TE_vec[1] * lower_TE_vec[0],
-            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * upper_TE_vec[1],
+            upper_TE_vec[0] * lower_TE_vec[0] + upper_TE_vec[1] * lower_TE_vec[1],
         )
 
     # def LE_radius(self) -> float:
@@ -1006,20 +1153,25 @@ class Airfoil(Polygon):
         spacing_function_per_side=np.cosspace,
     ) -> "Airfoil":
         """
-        Returns a repaneled copy of the airfoil with cosine-spaced coordinates on the upper and lower surfaces.
+        Return a repaneled copy of the airfoil with cosine-spaced coordinates on each surface.
 
-        Args:
+        Parameters
+        ----------
+        n_points_per_side : int
+            Number of points per side (upper and lower) of the airfoil.
 
-            n_points_per_side: Number of points per side (upper and lower) of the airfoil [int]
+            Note: The number of points defining the final airfoil will be
+            `n_points_per_side * 2 - 1`, since one point (the leading edge point) is shared by
+            both the upper and lower surfaces.
+        spacing_function_per_side
+            Determines how to space the points on each side of the airfoil. Can be `np.linspace`
+            or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that
+            returns a spaced array of `n` points between `a` and `b`.
 
-                Notes: The number of points defining the final airfoil will be `n_points_per_side * 2 - 1`,
-                since one point (the leading edge point) is shared by both the upper and lower surfaces.
-
-            spacing_function_per_side: Determines how to space the points on each side of the airfoil. Can be
-                `np.linspace` or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that returns
-                a spaced array of `n` points between `a` and `b`. [function]
-
-        Returns: A copy of the airfoil with the new coordinates.
+        Returns
+        -------
+        Airfoil
+            A copy of the airfoil with the new coordinates.
         """
 
         old_upper_coordinates = (
@@ -1074,8 +1226,8 @@ class Airfoil(Polygon):
 
         except ValueError as e:
             if not (
-                (np.all(np.diff(upper_distances_from_TE)) > 0)
-                and (np.all(np.diff(lower_distances_from_LE)) > 0)
+                np.all(np.diff(upper_distances_from_TE) > 0)
+                and np.all(np.diff(lower_distances_from_LE) > 0)
             ):
                 raise ValueError(
                     "It looks like your Airfoil has a duplicate point. Try removing the duplicate point and "
@@ -1094,52 +1246,73 @@ class Airfoil(Polygon):
     def normalize(
         self,
         return_dict: bool = False,
-    ) -> Union["Airfoil", Dict[str, Union["Airfoil", float]]]:
+    ) -> "Airfoil | dict[str, Airfoil | float]":
         """
-        Returns a copy of the Airfoil with a new set of `coordinates`, such that:
+        Return a copy of the Airfoil with a normalized set of `coordinates`.
+
+        The new coordinates are such that:
+
             - The leading edge (LE) is at (0, 0)
             - The trailing edge (TE) is at (1, 0)
             - The chord length is equal to 1
 
-        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting the first and last coordinate points (upper and lower surface TE points, respectively). The TE point is not necessarily one of the original points in the airfoil coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the TE thickness is nonzero.
+        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting
+        the first and last coordinate points (the upper- and lower-surface TE points,
+        respectively). The TE point is not necessarily one of the original points in the airfoil
+        coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the
+        TE thickness is nonzero.
 
-        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidian distance from the trailing edge. (In other words, if you were to center a circle on the trailing edge and progressively grow it, what's the last coordinate point that it would intersect?) The LE point is always one of the original points in the airfoil coordinates.
+        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidean
+        distance from the trailing edge. (In other words, if you were to center a circle on the
+        trailing edge and progressively grow it, what's the last coordinate point that it would
+        intersect?) The LE point is always one of the original points in the airfoil coordinates.
 
-        The chord is defined as the Euclidian distance between the LE and TE points.
+        The chord is defined as the Euclidean distance between the LE and TE points.
 
-        Coordinate modifications to achieve the constraints described above (LE @ origin, TE at (1, 0), and chord of 1) are done by means of a translation and rotation.
+        Coordinate modifications to achieve the constraints described above (LE at origin, TE at
+        (1, 0), and chord of 1) are done by means of a translation and rotation.
 
-        Args:
+        Parameters
+        ----------
+        return_dict : bool
+            Determines the output type of the function.
 
-            return_dict: Determines the output type of the function.
-                - If `False` (default), returns a copy of the Airfoil with the new coordinates.
-                - If `True`, returns a dictionary with keys:
+            - If `False` (default), returns a copy of the Airfoil with the new coordinates.
+            - If `True`, returns a dictionary with keys:
 
-                        - "airfoil": a copy of the Airfoil with the new coordinates
+                - "airfoil": a copy of the Airfoil with the new coordinates
 
-                        - "x_translation": the amount by which the airfoil's LE was translated in the x-direction
+                - "x_translation": the amount by which the airfoil's LE was translated in the
+                  x-direction
 
-                        - "y_translation": the amount by which the airfoil's LE was translated in the y-direction
+                - "y_translation": the amount by which the airfoil's LE was translated in the
+                  y-direction
 
-                        - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil had to get
-                            bigger)
+                - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil
+                  had to get bigger)
 
-                        - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about the LE.
-                            Sign convention is that positive angles rotate the airfoil counter-clockwise.
+                - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about
+                  the LE. Sign convention is that positive angles rotate the airfoil
+                  counter-clockwise.
 
-                    All of thes values represent the "required change", e.g.:
+              All of these values represent the "required change", e.g.:
 
-                        - "x_translation" is the amount by which the airfoil's LE had to be translated in the
-                            x-direction to get it to the origin.
+                - "x_translation" is the amount by which the airfoil's LE had to be translated
+                  in the x-direction to get it to the origin.
 
-                        - "rotation_angle" is the angle (in degrees) by which the airfoil had to be rotated (CCW).
+                - "rotation_angle" is the angle (in degrees) by which the airfoil had to be
+                  rotated (CCW).
 
-        Returns: Depending on the value of `return_dict`, either:
+        Returns
+        -------
+        Airfoil | dict[str, Airfoil | float]
+            Depending on the value of `return_dict`, either:
 
             - A copy of the airfoil with the new coordinates (default), or
 
-            - A dictionary with keys "airfoil", "x_translation", "y_translation", "scale_factor", and "rotation_angle".
-                documentation for `return_tuple` for more information.
+            - A dictionary with keys "airfoil", "x_translation", "y_translation",
+              "scale_factor", and "rotation_angle". See the documentation for the `return_dict`
+              parameter for more information.
         """
 
         ### Step 1: Translate so that the LE point is at (0, 0).
@@ -1196,15 +1369,27 @@ class Airfoil(Polygon):
         modify_polars: bool = True,
     ) -> "Airfoil":
         """
-        Returns a version of the airfoil with a trailing-edge control surface added at a given point. Implicitly
-        repanels the airfoil as part of this operation.
+        Return a version of the airfoil with a trailing-edge control surface added.
 
-        Args:
-            deflection: Deflection angle [degrees]. Downwards-positive.
-            hinge_point_x: Chordwise location of the hinge, as a fraction of chord (x/c) [float]
+        The control surface is added at a given hinge point. Implicitly repanels the airfoil as
+        part of this operation.
 
-        Returns: an Airfoil object with the new control deflection.
+        Parameters
+        ----------
+        deflection : float
+            Deflection angle [degrees]. Downwards-positive.
+        hinge_point_x : float
+            Chordwise location of the hinge, as a fraction of chord (x/c).
+        modify_coordinates : bool
+            Whether to modify the airfoil coordinates to reflect the control surface deflection.
+        modify_polars : bool
+            Whether to modify the airfoil's polar functions (if they exist) to reflect the
+            control surface deflection.
 
+        Returns
+        -------
+        Airfoil
+            An Airfoil object with the new control deflection.
         """
         if modify_coordinates:
             # Find the hinge point
@@ -1257,60 +1442,77 @@ class Airfoil(Polygon):
         else:
             coordinates = self.coordinates
 
-        if modify_polars:
-            effectiveness = (
-                1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
-            )
-            dalpha = deflection * effectiveness
-
-            def CL_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CL_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CD_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CD_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-            def CM_function(alpha: float, Re: float, mach: float) -> float:
-                return self.CM_function(
-                    alpha=alpha + dalpha,
-                    Re=Re,
-                    mach=mach,
-                )
-
-        else:
-            CL_function = self.CL_function
-            CD_function = self.CD_function
-            CM_function = self.CM_function
-
-        return Airfoil(
+        new_airfoil = Airfoil(
             name=self.name,
             coordinates=coordinates,
-            CL_function=CL_function,
-            CD_function=CD_function,
-            CM_function=CM_function,
         )
+
+        ### Polar functions only exist on Airfoils created via the deprecated constructor keyword arguments (or via
+        ### Airfoil.generate_polars()); carry them over only if they exist.
+        has_polar_functions = all(
+            hasattr(self, f"{coefficient}_function")
+            for coefficient in ["CL", "CD", "CM"]
+        )
+
+        if has_polar_functions:
+            if modify_polars:
+                effectiveness = (
+                    1 - np.maximum(0, hinge_point_x + 1e-16) ** 2.751428551177291
+                )
+                dalpha = deflection * effectiveness
+
+                def CL_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CL_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CD_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CD_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+                def CM_function(alpha: float, Re: float, mach: float) -> float:
+                    return self.CM_function(
+                        alpha=alpha + dalpha,
+                        Re=Re,
+                        mach=mach,
+                    )
+
+            else:
+                CL_function = self.CL_function
+                CD_function = self.CD_function
+                CM_function = self.CM_function
+
+            new_airfoil.CL_function = CL_function
+            new_airfoil.CD_function = CD_function
+            new_airfoil.CM_function = CM_function
+
+        return new_airfoil
 
     def set_TE_thickness(
         self,
         thickness: float = 0.0,
     ) -> "Airfoil":
         """
-        Creates a modified copy of the Airfoil that has a specified trailing-edge thickness.
+        Create a modified copy of the Airfoil that has a specified trailing-edge thickness.
 
-        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of chord).
+        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of
+        chord).
 
-        Args:
-            thickness: The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of chord).
+        Parameters
+        ----------
+        thickness : float
+            The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of
+            chord).
 
-        Returns: The modified airfoil.
-
+        Returns
+        -------
+        Airfoil
+            The modified airfoil.
         """
         ### Compute existing trailing-edge properties
         x_gap = self.coordinates[0, 0] - self.coordinates[-1, 0]
@@ -1329,40 +1531,40 @@ class Airfoil(Polygon):
             y_adjustment = s_adjustment
 
         ### Decompose the existing airfoil coordinates to upper and lower sides, and x and y.
-        u = self.upper_coordinates()
-        ux = u[:, 0]
-        uy = u[:, 1]
+        upper = self.upper_coordinates()
+        upper_x = upper[:, 0]
+        upper_y = upper[:, 1]
 
-        le_x = ux[-1]
+        le_x = upper_x[-1]
 
-        l = self.lower_coordinates()[1:]
-        lx = l[:, 0]
-        ly = l[:, 1]
+        lower = self.lower_coordinates()[1:]
+        lower_x = lower[:, 0]
+        lower_y = lower[:, 1]
 
-        te_x = (ux[0] + lx[-1]) / 2
+        te_x = (upper_x[0] + lower_x[-1]) / 2
 
         ### Create modified versions of the upper and lower coordinates
-        new_u = np.stack(
+        new_upper = np.stack(
             arrays=[
-                ux + x_adjustment * (ux - le_x) / (te_x - le_x),
-                uy + y_adjustment * (ux - le_x) / (te_x - le_x),
+                upper_x + x_adjustment * (upper_x - le_x) / (te_x - le_x),
+                upper_y + y_adjustment * (upper_x - le_x) / (te_x - le_x),
             ],
             axis=1,
         )
-        new_l = np.stack(
+        new_lower = np.stack(
             arrays=[
-                lx - x_adjustment * (lx - le_x) / (te_x - le_x),
-                ly - y_adjustment * (lx - le_x) / (te_x - le_x),
+                lower_x - x_adjustment * (lower_x - le_x) / (te_x - le_x),
+                lower_y - y_adjustment * (lower_x - le_x) / (te_x - le_x),
             ],
             axis=1,
         )
 
         ### If the desired thickness is zero, ensure that is precisely reached.
         if thickness == 0:
-            new_l[-1] = new_u[0]
+            new_lower[-1] = new_upper[0]
 
         ### Combine the upper and lower surface coordinates into a single array.
-        new_coordinates = np.concatenate([new_u, new_l], axis=0)
+        new_coordinates = np.concatenate([new_upper, new_lower], axis=0)
 
         ### Return a new Airfoil with the desired coordinates.
         return Airfoil(name=self.name, coordinates=new_coordinates)
@@ -1373,18 +1575,22 @@ class Airfoil(Polygon):
         scale_y: float = 1.0,
     ) -> "Airfoil":
         """
-        Scales an Airfoil about the origin.
+        Scale an Airfoil about the origin.
 
-        Args:
+        Parameters
+        ----------
+        scale_x : float
+            Amount to scale in the x-direction.
+        scale_y : float
+            Amount to scale in the y-direction. Scaling by a negative y-value will result in
+            coordinates being re-ordered such that the order of the coordinates is still correct
+            (i.e., starts from the upper-surface trailing edge, continues along the upper surface
+            to the nose, then continues along the lower surface to the trailing edge).
 
-            scale_x: Amount to scale in the x-direction.
-
-            scale_y: Amount to scale in the y-direction. Scaling by a negative y-value will result in coordinates
-                being re-ordered such that the order of the coordinates is still correct (i.e., starts from the
-                upper-surface trailing edge, continues along the upper surface to the nose, then continues along the
-                lower surface to the trailing edge).
-
-        Returns: A copy of the Airfoil with appropriate scaling applied.
+        Returns
+        -------
+        Airfoil
+            A copy of the Airfoil with appropriate scaling applied.
         """
         x = self.x() * scale_x
         y = self.y() * scale_y
@@ -1411,13 +1617,19 @@ class Airfoil(Polygon):
         translate_y: float = 0.0,
     ) -> "Airfoil":
         """
-        Translates an Airfoil by a given amount.
-        Args:
-            translate_x: Amount to translate in the x-direction
-            translate_y: Amount to translate in the y-direction
+        Translate an Airfoil by a given amount.
 
-        Returns: The translated Airfoil.
+        Parameters
+        ----------
+        translate_x : float
+            Amount to translate in the x-direction.
+        translate_y : float
+            Amount to translate in the y-direction.
 
+        Returns
+        -------
+        Airfoil
+            The translated Airfoil.
         """
         x = self.x() + translate_x
         y = self.y() + translate_y
@@ -1428,19 +1640,23 @@ class Airfoil(Polygon):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Airfoil":
         """
-        Rotates the airfoil clockwise by the specified amount, in radians.
+        Rotate the airfoil counterclockwise by the specified angle, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 
-        Args:
-            angle: Angle to rotate, counterclockwise, in radians.
+        Parameters
+        ----------
+        angle : float
+            Angle to rotate, counterclockwise, in radians.
+        x_center : float
+            The x-coordinate of the center of rotation.
+        y_center : float
+            The y-coordinate of the center of rotation.
 
-            x_center: The x-coordinate of the center of rotation.
-
-            y_center: The y-coordinate of the center of rotation.
-
-        Returns: The rotated Airfoil.
-
+        Returns
+        -------
+        Airfoil
+            The rotated Airfoil.
         """
 
         coordinates = np.copy(self.coordinates)
@@ -1467,22 +1683,29 @@ class Airfoil(Polygon):
         n_points_per_side: int = 100,
     ) -> "Airfoil":
         """
-        Blends this airfoil with another airfoil. Merges both the coordinates and the aerodynamic functions.
+        Blend this airfoil with another airfoil.
 
-        Args:
+        Merges both the coordinates and the aerodynamic functions.
 
-            airfoil: The other airfoil to blend with.
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The other airfoil to blend with.
+        blend_fraction : float
+            The fraction of the other airfoil to use when blending. Defaults to 0.5 (50%).
 
-            blend_fraction: The fraction of the other airfoil to use when blending. Defaults to 0.5 (50%).
+            * A blend fraction of 0 will return an identical airfoil to this one (self).
 
-                * A blend fraction of 0 will return an identical airfoil to this one (self).
+            * A blend fraction of 1 will return an identical airfoil to the other one (`airfoil`
+              parameter).
+        n_points_per_side : int
+            The number of points per side to use when blending the coordinates of the two
+            airfoils.
 
-                * A blend fraction of 1 will return an identical airfoil to the other one (`airfoil` parameter).
-
-            n_points_per_side: The number of points per side to use when blending the coordinates of the two airfoils.
-
-        Returns: A new airfoil that is a blend of this airfoil and another one.
-
+        Returns
+        -------
+        Airfoil
+            A new airfoil that is a blend of this airfoil and another one.
         """
         foil_a = self.repanel(n_points_per_side=n_points_per_side)
         foil_b = airfoil.repanel(n_points_per_side=n_points_per_side)
@@ -1503,20 +1726,26 @@ class Airfoil(Polygon):
 
     def write_dat(
         self,
-        filepath: Union[str, Path] = None,
+        filepath: Path | str | None = None,
         include_name: bool = True,
     ) -> str:
         """
-        Writes a .dat file corresponding to this airfoil to a filepath.
+        Write a .dat file corresponding to this airfoil to a filepath.
 
-        Args:
-            filepath: filepath (including the filename and .dat extension) [string]
-                If None, this function returns the .dat file as a string.
+        Parameters
+        ----------
+        filepath : Path | str | None
+            Filepath (including the filename and .dat extension). If None, this function returns
+            the .dat file as a string.
+        include_name : bool
+            Should the name be included in the .dat file? (In a standard *.dat file, it usually
+            is.)
 
-            include_name: Should the name be included in the .dat file? (In a standard *.dat file, it usually is.)
-
-        Returns: None
-
+        Returns
+        -------
+        str
+            The .dat file contents, as a string. (If `filepath` is given, the contents are also
+            written to disk.)
         """
         contents = []
 
@@ -1534,18 +1763,18 @@ class Airfoil(Polygon):
         return string
 
     # def get_xfoil_data(self,
-    #                    a_start=-6,  # type: float
-    #                    a_end=12,  # type: float
-    #                    a_step=0.5,  # type: float
-    #                    a_init=0,  # type: float
-    #                    Re_start=1e4,  # type: float
-    #                    Re_end=1e7,  # type: float
-    #                    n_Res=30,  # type: int
-    #                    mach=0,  # type: float
-    #                    max_iter=20,  # type: int
-    #                    repanel=False,  # type: bool
-    #                    parallel=True,  # type: bool
-    #                    verbose=True,  # type: bool
+    #                    a_start: float = -6,
+    #                    a_end: float = 12,
+    #                    a_step: float = 0.5,
+    #                    a_init: float = 0,
+    #                    Re_start: float = 1e4,
+    #                    Re_end: float = 1e7,
+    #                    n_Res: int = 30,
+    #                    mach: float = 0,
+    #                    max_iter: int = 20,
+    #                    repanel: bool = False,
+    #                    parallel: bool = True,
+    #                    verbose: bool = True,
     #                    ):
     #     """ # TODO finish docstring
     #     Calculates aerodynamic performance data for a particular airfoil with XFoil.
@@ -1816,7 +2045,7 @@ class Airfoil(Polygon):
     #     return self
     #
     # def plot_xfoil_data_polar(self,
-    #                           Res,  # type: list
+    #                           Res: list,
     #                           Cd_plot_max=0.04,
     #                           repanel=False,
     #                           parallel=True,

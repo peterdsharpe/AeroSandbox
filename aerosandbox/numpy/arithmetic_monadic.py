@@ -1,14 +1,42 @@
+"""Monadic (single-operand) arithmetic functions for AeroSandbox.
+
+This module provides reduction and aggregation functions that work with both
+NumPy arrays and CasADi symbolic arrays.
+"""
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.array import asarray
+from aerosandbox.numpy.typing import Array, ArrayLike, Scalar
 
 
-def sum(x, axis: int = None):
+def sum(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the sum of array elements over a given axis.
+
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to sum. By default (None), sum over all elements.
+        For CasADi arrays, only None, 0, or 1 are valid.
+
+    Returns
+    -------
+    Scalar | Array
+        Sum of the elements. If ``axis`` is None, a scalar is returned.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.sum : https://numpy.org/doc/stable/reference/generated/numpy.sum.html
     """
-    Sum of array elements over a given axis.
-
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.sum.html
-    """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.sum(x, axis=axis)
 
@@ -26,12 +54,32 @@ def sum(x, axis: int = None):
             )
 
 
-def mean(x, axis: int = None):
-    """
-    Compute the arithmetic mean along the specified axis.
+def mean(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the arithmetic mean along the specified axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.mean.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to compute the mean. By default (None), compute over
+        all elements. For CasADi arrays, only None, 0, or 1 are valid.
+
+    Returns
+    -------
+    Scalar | Array
+        Mean of the elements. If ``axis`` is None, a scalar is returned.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.mean : https://numpy.org/doc/stable/reference/generated/numpy.mean.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.mean(x, axis=axis)
 
@@ -41,19 +89,78 @@ def mean(x, axis: int = None):
         elif axis == 1:
             return sum(x, axis=1) / x.shape[1]
         elif axis is None:
-            return mean(mean(x, axis=0), axis=1)
+            return sum(x, axis=None) / (x.shape[0] * x.shape[1])
         else:
             raise ValueError(
                 "CasADi types can only be up to 2D, so `axis` must be None, 0, or 1."
             )
 
 
-def abs(x):
+def abs(x: ArrayLike) -> Array:
+    """Compute the absolute value element-wise.
+
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+
+    Returns
+    -------
+    Array
+        An array containing the absolute value of each element in ``x``.
+
+    See Also
+    --------
+    numpy.abs : https://numpy.org/doc/stable/reference/generated/numpy.absolute.html
+    """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.abs(x)
 
     else:
         return _cas.fabs(x)
+
+
+def round(a: ArrayLike, decimals: int = 0, out: _onp.ndarray | None = None) -> Array:
+    """Evenly round to the given number of decimals.
+
+    Parameters
+    ----------
+    a : ArrayLike
+        Input array.
+    decimals : int, optional
+        Number of decimal places to round to. Default is 0.
+    out : ndarray, optional
+        Alternative output array (NumPy backend only).
+
+    Returns
+    -------
+    Array
+        An array of the same type as ``a``, containing the rounded values.
+
+    See Also
+    --------
+    numpy.round : https://numpy.org/doc/stable/reference/generated/numpy.round.html
+
+    Notes
+    -----
+    For CasADi types, halfway values are rounded towards positive infinity
+    (CasADi has no round-half-to-even primitive), whereas NumPy rounds
+    halfway values to the nearest even integer.
+    """
+    if not is_casadi_type(a):
+        return _onp.round(a, decimals=decimals, out=out)
+
+    else:
+        if out is not None:
+            raise NotImplementedError(
+                "`out` is not supported for CasADi types; use the return value instead."
+            )
+        if decimals != 0:
+            factor = 10.0**decimals
+            return _cas.floor(a * factor + 0.5) / factor
+        else:
+            return _cas.floor(a + 0.5)
 
 
 # TODO trace()
@@ -74,14 +181,59 @@ def abs(x):
 #             return _cas.cumsum(_onp.flatten(x))
 
 
-def prod(x, axis: int = None):
-    """
-    Return the product of array elements over a given axis.
+def prod(x: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Compute the product of array elements over a given axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.prod.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to compute the product. By default (None), compute
+        over all elements. For CasADi arrays, only None, 0, or 1 are valid.
+
+    Returns
+    -------
+    Scalar | Array
+        Product of the elements. If ``axis`` is None, a scalar is returned.
+
+    See Also
+    --------
+    numpy.prod : https://numpy.org/doc/stable/reference/generated/numpy.prod.html
+
+    Notes
+    -----
+    For CasADi types, this uses a sign-magnitude decomposition to handle
+    negative numbers correctly while maintaining O(1) graph complexity::
+
+        prod(x) = exp(sum(log(|x|))) * cos(π * num_negatives)
+
+    where ``num_negatives`` counts elements with negative sign. This correctly
+    handles:
+
+    - Positive numbers: standard exp-log identity
+    - Negative numbers: sign tracked via cosine of count
+    - Zeros: exp(log(0)) = exp(-inf) = 0
+
+    Gradients at x=0 are not well-defined (discontinuous), which is
+    mathematically inherent to the product function.
     """
+    x = asarray(x)
     if not is_casadi_type(x):
         return _onp.prod(x, axis=axis)
 
     else:
-        return _cas.exp(sum(_cas.log(x), axis=axis))
+        ### Compute magnitude: exp(sum(log(|x|)))
+        # If any element is 0, log(0) = -inf, sum = -inf, exp(-inf) = 0 (correct)
+        abs_x = _cas.fabs(x)
+        log_abs_x = _cas.log(abs_x)
+        magnitude = _cas.exp(sum(log_abs_x, axis=axis))
+
+        ### Compute sign of product: cos(π * num_negatives)
+        # For each element: (1 - sign(x)) / 2 gives 1 if x<0, 0 if x>0, 0.5 if x=0
+        # Sum gives count of negatives (plus 0.5 for each zero, but those make magnitude=0)
+        # cos(π * n) = 1 if n even, -1 if n odd
+        num_negatives = sum((1 - _cas.sign(x)) / 2, axis=axis)
+        sign_of_product = _cas.cos(_onp.pi * num_negatives)
+
+        return magnitude * sign_of_product

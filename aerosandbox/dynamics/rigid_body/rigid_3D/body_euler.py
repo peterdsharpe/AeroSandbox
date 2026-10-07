@@ -3,12 +3,53 @@ from aerosandbox.dynamics.rigid_body.common_rigid_body import (
 )
 import aerosandbox.numpy as np
 from aerosandbox.weights.mass_properties import MassProperties
-from typing import Union
+from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
+
+
+def _sincos(x):
+    """
+    Compute the sine and cosine of `x` [radians], snapping to exact values at cardinal angles.
+
+    Snaps to exact values (0, ±1) when `x` is numerically at a cardinal angle. Falls back to
+    `np.sin(x)` / `np.cos(x)` otherwise (e.g., for symbolic or non-cardinal inputs).
+
+    Returns
+    -------
+    tuple
+        A tuple of (sin(x), cos(x)).
+    """
+    try:
+        x = np.mod(x, 2 * np.pi)
+        one = np.ones_like(x)
+        zero = np.zeros_like(x)
+
+        if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
+            sin = zero
+            cos = one
+        elif np.allclose(x, np.pi / 2):
+            sin = one
+            cos = zero
+        elif np.allclose(x, np.pi):
+            sin = zero
+            cos = -one
+        elif np.allclose(x, 3 * np.pi / 2):
+            sin = -one
+            cos = zero
+        else:
+            raise ValueError()
+    except Exception:
+        sin = np.sin(x)
+        cos = np.cos(x)
+    return sin, cos
 
 
 class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
     """
+    Simulate rigid-body dynamics in 3D, with velocity in body axes and angles as Euler angles.
+
     Dynamics instance:
+
     * simulating a rigid body
     * in 3D
     * with velocity parameterized in body axes
@@ -38,24 +79,23 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         hx_b: Angular momentum (e.g., propellers) about the body-x axis. [kg*m^2/sec]
         hy_b: Angular momentum (e.g., propellers) about the body-y axis. [kg*m^2/sec]
         hz_b: Angular momentum (e.g., propellers) about the body-z axis. [kg*m^2/sec]
-
     """
 
     def __init__(
         self,
-        mass_props: MassProperties = None,
-        x_e: Union[float, np.ndarray] = 0,
-        y_e: Union[float, np.ndarray] = 0,
-        z_e: Union[float, np.ndarray] = 0,
-        u_b: Union[float, np.ndarray] = 0,
-        v_b: Union[float, np.ndarray] = 0,
-        w_b: Union[float, np.ndarray] = 0,
-        phi: Union[float, np.ndarray] = 0,
-        theta: Union[float, np.ndarray] = 0,
-        psi: Union[float, np.ndarray] = 0,
-        p: Union[float, np.ndarray] = 0,
-        q: Union[float, np.ndarray] = 0,
-        r: Union[float, np.ndarray] = 0,
+        mass_props: MassProperties | None = None,
+        x_e: Vectorizable = 0,
+        y_e: Vectorizable = 0,
+        z_e: Vectorizable = 0,
+        u_b: Vectorizable = 0,
+        v_b: Vectorizable = 0,
+        w_b: Vectorizable = 0,
+        phi: Vectorizable = 0,
+        theta: Vectorizable = 0,
+        psi: Vectorizable = 0,
+        p: Vectorizable = 0,
+        q: Vectorizable = 0,
+        r: Vectorizable = 0,
     ):
         # Initialize state variables
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -116,12 +156,15 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def state_derivatives(self):
         """
-        Computes the state derivatives (i.e. equations of motion) for a body in 3D space.
+        Compute the state derivatives (i.e., equations of motion) for a body in 3D space.
 
         Based on Section 9.8.2 of Flight Vehicle Aerodynamics by Mark Drela.
 
-        Returns:
+        Returns
+        -------
+        dict
             Time derivatives of each of the 12 state variables, given in a dictionary:
+
                 {
                     "xe"   : d_xe,
                     "ye"   : d_ye,
@@ -164,36 +207,10 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
         hy = self.hy_b
         hz = self.hz_b
 
-        ### Trig Shorthands
-        def sincos(x):
-            try:
-                x = np.mod(x, 2 * np.pi)
-                one = np.ones_like(x)
-                zero = np.zeros_like(x)
-
-                if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
-                    sin = zero
-                    cos = one
-                elif np.allclose(x, np.pi / 2):
-                    sin = one
-                    cos = zero
-                elif np.allclose(x, np.pi):
-                    sin = zero
-                    cos = -one
-                elif np.allclose(x, 3 * np.pi / 2):
-                    sin = -one
-                    cos = zero
-                else:
-                    raise ValueError()
-            except Exception:
-                sin = np.sin(x)
-                cos = np.cos(x)
-            return sin, cos
-
         # Do the trig
-        sphi, cphi = sincos(phi)
-        sthe, cthe = sincos(theta)
-        spsi, cpsi = sincos(psi)
+        sphi, cphi = _sincos(phi)
+        sthe, cthe = _sincos(theta)
+        spsi, cpsi = _sincos(psi)
 
         ##### Equations of Motion
 
@@ -279,71 +296,55 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def convert_axes(
         self,
-        x_from,
-        y_from,
-        z_from,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ):
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
-        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
-        y_to, z_to], as given in the `to_axes` frame.
+        Convert a vector from one axis frame to another.
 
-        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For more documentation,
-        see the docstring of OperatingPoint.convert_axes().
+        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an
+        equivalent vector [x_to, y_to, z_to], as given in the `to_axes` frame.
+
+        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For
+        more documentation, see the docstring of OperatingPoint.convert_axes().
 
         Both `from_axes` and `to_axes` should be a string, one of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
 
-        Args:
-                x_from: x-component of the vector, in `from_axes` frame.
-                y_from: y-component of the vector, in `from_axes` frame.
-                z_from: z-component of the vector, in `from_axes` frame.
-                from_axes: The axes to convert from.
-                to_axes: The axes to convert to.
+        * "geometry"
+        * "body"
+        * "wind"
+        * "stability"
+        * "earth"
 
-        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
+        Parameters
+        ----------
+        x_from : Vectorizable
+            x-component of the vector, in `from_axes` frame.
+        y_from : Vectorizable
+            y-component of the vector, in `from_axes` frame.
+        z_from : Vectorizable
+            z-component of the vector, in `from_axes` frame.
+        from_axes : str
+            The axes to convert from.
+        to_axes : str
+            The axes to convert to.
 
+        Returns
+        -------
+        tuple[Vectorizable, Vectorizable, Vectorizable]
+            The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
         """
         if from_axes == to_axes:
             return x_from, y_from, z_from
 
         if from_axes == "earth" or to_axes == "earth":
-            ### Trig Shorthands
-            def sincos(x):
-                try:
-                    x = np.mod(x, 2 * np.pi)
-                    one = np.ones_like(x)
-                    zero = np.zeros_like(x)
-
-                    if np.allclose(x, 0) or np.allclose(x, 2 * np.pi):
-                        sin = zero
-                        cos = one
-                    elif np.allclose(x, np.pi / 2):
-                        sin = one
-                        cos = zero
-                    elif np.allclose(x, np.pi):
-                        sin = zero
-                        cos = -one
-                    elif np.allclose(x, 3 * np.pi / 2):
-                        sin = -one
-                        cos = zero
-                    else:
-                        raise ValueError()
-                except Exception:
-                    sin = np.sin(x)
-                    cos = np.cos(x)
-                return sin, cos
-
-                # Do the trig
-
-            sphi, cphi = sincos(self.phi)
-            sthe, cthe = sincos(self.theta)
-            spsi, cpsi = sincos(self.psi)
+            # Do the trig
+            sphi, cphi = _sincos(self.phi)
+            sthe, cthe = _sincos(self.theta)
+            spsi, cpsi = _sincos(self.psi)
 
         if from_axes == "earth":
             x_b = (cthe * cpsi) * x_from + (cthe * spsi) * y_from + (-sthe) * z_from
@@ -383,11 +384,18 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def add_force(
         self,
-        Fx: Union[float, np.ndarray] = 0,
-        Fy: Union[float, np.ndarray] = 0,
-        Fz: Union[float, np.ndarray] = 0,
-        axes="body",
+        Fx: Vectorizable = 0,
+        Fy: Vectorizable = 0,
+        Fz: Vectorizable = 0,
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ):
+        """
+        Add a force (in whichever axis system you choose) to this Dynamics instance.
+
+        Note that, for this class, the default axis system is `axes="body"` (this class's native
+        axis system), which differs from other Dynamics classes. See
+        `_DynamicsPointMassBaseClass.add_force()` for full documentation.
+        """
         Fx_b, Fy_b, Fz_b = self.convert_axes(
             x_from=Fx, y_from=Fy, z_from=Fz, from_axes=axes, to_axes="body"
         )
@@ -397,10 +405,10 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     def add_moment(
         self,
-        Mx: Union[float, np.ndarray] = 0,
-        My: Union[float, np.ndarray] = 0,
-        Mz: Union[float, np.ndarray] = 0,
-        axes="body",
+        Mx: Vectorizable = 0,
+        My: Vectorizable = 0,
+        Mz: Vectorizable = 0,
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ):
         Mx_b, My_b, Mz_b = self.convert_axes(
             x_from=Mx, y_from=My, z_from=Mz, from_axes=axes, to_axes="body"
@@ -411,18 +419,10 @@ class DynamicsRigidBody3DBodyEuler(_DynamicsRigidBodyBaseClass):
 
     @property
     def speed(self):
-        """The speed of the object, expressed as a scalar."""
+        """Return the speed of the object, expressed as a scalar."""
         return (self.u_b**2 + self.v_b**2 + self.w_b**2) ** 0.5
 
-    @property
-    def alpha(self):
-        """The angle of attack, in degrees."""
-        return np.arctan2d(self.w_b, self.u_b)
-
-    @property
-    def beta(self):
-        """The sideslip angle, in degrees."""
-        return np.arctan2d(self.v_b, (self.u_b**2 + self.w_b**2) ** 0.5)
+    # `alpha` and `beta` are inherited from _DynamicsRigidBodyBaseClass.
 
 
 if __name__ == "__main__":

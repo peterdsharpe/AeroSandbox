@@ -1,28 +1,39 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from typing import Literal
+import warnings
 
 
 def Cd_cylinder(
-    Re_D: float | np.ndarray,
-    mach: float | np.ndarray = 0.0,
+    Re_D: Vectorizable,
+    mach: Vectorizable = 0.0,
     include_mach_effects: bool = True,
     subcritical_only: bool = False,
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
-    Returns the drag coefficient of a cylinder in crossflow as a function of its Reynolds number and Mach.
+    Compute the drag coefficient of a cylinder in crossflow.
 
-    Args:
-        Re_D: Reynolds number, referenced to diameter
-        mach: Mach number
-        include_mach_effects: If this is set False, it assumes Mach = 0, which simplifies the computation.
-        subcritical_only: Determines whether the model models purely subcritical (Re < 300k) cylinder flows. Useful, since
-    this model is now convex and can be more well-behaved.
+    The drag coefficient is a function of the cylinder's Reynolds number and Mach.
 
-    Returns:
+    Parameters
+    ----------
+    Re_D : Vectorizable
+        Reynolds number, referenced to diameter
+    mach : Vectorizable
+        Mach number
+    include_mach_effects : bool
+        If this is set False, it assumes Mach = 0, which simplifies the computation.
+    subcritical_only : bool
+        Determines whether the model models purely subcritical (Re < 300k) cylinder flows.
+        Useful, since this model is then convex and can be more well-behaved.
 
+    Returns
+    -------
+    Vectorizable
+        The drag coefficient of the cylinder, referenced to the cylinder diameter and unit
+        length.
+    """
     # TODO rework this function to use tanh blending, which will mitigate overflows
-
-    """
 
     ##### Do the viscous part of the computation
     csigc = 5.5766722118597247
@@ -80,7 +91,7 @@ def Cd_cylinder(
 
 
 def Cf_flat_plate(
-    Re_L: float | np.ndarray,
+    Re_L: Vectorizable,
     method: Literal[
         "blasius",
         "turbulent",
@@ -89,50 +100,53 @@ def Cf_flat_plate(
         "hybrid-sharpe-convex",
         "hybrid-sharpe-nonconvex",
     ] = "hybrid-sharpe-convex",
-) -> float | np.ndarray:
+) -> Vectorizable:
     """
-    Returns the mean skin friction coefficient over a flat plate.
+    Compute the mean skin friction coefficient over a flat plate.
 
     Don't forget to double it (two sides) if you want a drag coefficient.
-
-    Args:
-
-        Re_L: Reynolds number, normalized to the length of the flat plate.
-
-        method: The method of computing the skin friction coefficient. One of:
-
-            * "blasius": Uses the Blasius solution. Citing Cengel and Cimbala, "Fluid Mechanics: Fundamentals and
-            Applications", Table 10-4.
-
-                Valid approximately for Re_L <= 5e5.
-
-            * "turbulent": Uses turbulent correlations for smooth plates. Citing Cengel and Cimbala,
-            "Fluid Mechanics: Fundamentals and Applications", Table 10-4.
-
-                Valid approximately for 5e5 <= Re_L <= 1e7.
-
-            * "hybrid-cengel": Uses turbulent correlations for smooth plates, but accounts for a
-            non-negligible laminar run at the beginning of the plate. Citing Cengel and Cimbala, "Fluid Mechanics:
-            Fundamentals and Applications", Table 10-4. Returns: Mean skin friction coefficient over a flat plate.
-
-                Valid approximately for 5e5 <= Re_L <= 1e7.
-
-            * "hybrid-schlichting": Schlichting's model, that roughly accounts for a non-negligtible laminar run.
-            Citing "Boundary Layer Theory" 7th Ed., pg. 644
-
-            * "hybrid-sharpe-convex": A hybrid model that blends the Blasius and Schlichting models. Convex in
-            log-log space; however, it may overlook some truly nonconvex behavior near transitional Reynolds numbers.
-
-            * "hybrid-sharpe-nonconvex": A hybrid model that blends the Blasius and Cengel models. Nonconvex in
-            log-log-space; however, it may capture some truly nonconvex behavior near transitional Reynolds numbers.
-
-    Returns:
-
-        C_f: The skin friction coefficient, normalized to the length of the plate.
 
     You can view all of these functions graphically using
     `aerosandbox.library.aerodynamics.test_aerodynamics.test_Cf_flat_plate.py`
 
+    Parameters
+    ----------
+    Re_L : Vectorizable
+        Reynolds number, normalized to the length of the flat plate.
+    method : str
+        The method of computing the skin friction coefficient. One of:
+
+        * "blasius": Uses the Blasius solution. Citing Cengel and Cimbala, "Fluid Mechanics:
+          Fundamentals and Applications", Table 10-4.
+
+          Valid approximately for Re_L <= 5e5.
+
+        * "turbulent": Uses turbulent correlations for smooth plates. Citing Cengel and
+          Cimbala, "Fluid Mechanics: Fundamentals and Applications", Table 10-4.
+
+          Valid approximately for 5e5 <= Re_L <= 1e7.
+
+        * "hybrid-cengel": Uses turbulent correlations for smooth plates, but accounts for a
+          non-negligible laminar run at the beginning of the plate. Citing Cengel and Cimbala,
+          "Fluid Mechanics: Fundamentals and Applications", Table 10-4.
+
+          Valid approximately for 5e5 <= Re_L <= 1e7.
+
+        * "hybrid-schlichting": Schlichting's model, that roughly accounts for a
+          non-negligible laminar run. Citing "Boundary Layer Theory" 7th Ed., pg. 644.
+
+        * "hybrid-sharpe-convex": A hybrid model that blends the Blasius and Schlichting
+          models. Convex in log-log space; however, it may overlook some truly nonconvex
+          behavior near transitional Reynolds numbers.
+
+        * "hybrid-sharpe-nonconvex": A hybrid model that blends the Blasius and Cengel
+          models. Nonconvex in log-log-space; however, it may capture some truly nonconvex
+          behavior near transitional Reynolds numbers.
+
+    Returns
+    -------
+    Vectorizable
+        C_f: The mean skin friction coefficient, normalized to the length of the plate.
     """
     Re_L = np.abs(Re_L)
 
@@ -166,15 +180,25 @@ def Cf_flat_plate(
 
 def Cl_flat_plate(alpha, Re_c=None):
     """
-    Returns the approximate lift coefficient of a flat plate, following thin airfoil theory.
-    :param alpha: Angle of attack [deg]
-    :param Re_c: Reynolds number, normalized to the length of the flat plate.
-    :return: Approximate lift coefficient.
+    Compute the approximate lift coefficient of a flat plate, following thin airfoil theory.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, normalized to the length of the flat plate.
+
+    Returns
+    -------
+    Approximate lift coefficient.
     """
     if Re_c is not None:
-        from warnings import warn
-
-        warn("`Re_c` input will be deprecated in a future version.")
+        warnings.warn(
+            "`Re_c` input will be deprecated in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     alpha_rad = alpha * np.pi / 180
     return 2 * np.pi * alpha_rad
@@ -182,41 +206,68 @@ def Cl_flat_plate(alpha, Re_c=None):
 
 def Cd_flat_plate_normal():
     """
-    Returns the drag coefficient of a flat plat oriented normal to the flow (i.e., alpha = 90 deg).
-
-    Uses results from Tian, Xinliang, Muk Chen Ong, Jianmin Yang, and Dag Myrhaug. “Large-Eddy Simulation of the Flow
-    Normal to a Flat Plate Including Corner Effects at a High Reynolds Number.” Journal of Fluids and Structures 49 (
-    August 2014): 149–69. https://doi.org/10.1016/j.jfluidstructs.2014.04.008.
+    Compute the drag coefficient of a flat plate oriented normal to the flow (alpha = 90 deg).
 
     Note: Cd for this case is effectively invariant of Re.
 
-    Returns: Drag coefficient
+    Returns
+    -------
+    Drag coefficient
 
+    References
+    ----------
+    Uses results from Tian, Xinliang, Muk Chen Ong, Jianmin Yang, and Dag Myrhaug. “Large-Eddy
+    Simulation of the Flow Normal to a Flat Plate Including Corner Effects at a High Reynolds
+    Number.” Journal of Fluids and Structures 49 (August 2014): 149–69.
+    https://doi.org/10.1016/j.jfluidstructs.2014.04.008.
     """
     return 2.202
 
 
-import warnings
-
-
 def Cl_2412(alpha, Re_c):
+    """
+    Compute the lift coefficient of a NACA 2412 airfoil, using a curve fit to 2D XFoil data.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a NACA 2412 airfoil, 2D XFoil data
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9892
 
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     return 0.2568 + 0.1206 * alpha - 0.002018 * alpha**2
 
 
 def Cd_profile_2412(alpha, Re_c):
+    """
+    Compute the profile drag coefficient of a NACA 2412 airfoil, using a curve fit.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a NACA 2412 airfoil in incompressible flow.
     # Within -2 < alpha < 12 and 10^5 < Re_c < 10^7, has R^2 = 0.9713
 
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.maximum(Re_c, 1)
     log_Re = np.log(Re_c)
@@ -242,6 +293,18 @@ def Cd_profile_2412(alpha, Re_c):
 
 
 def Cl_e216(alpha, Re_c):
+    """
+    Compute the lift coefficient of an Eppler 216 airfoil, using a curve fit to 2D XFoil data.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a Eppler 216 (e216) airfoil, 2D XFoil data. Incompressible flow.
     # Within -2 < alpha < 12 and 10^4 < Re_c < 10^6, has R^2 = 0.9994
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
@@ -250,6 +313,7 @@ def Cl_e216(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -281,6 +345,18 @@ def Cl_e216(alpha, Re_c):
 
 
 def Cd_profile_e216(alpha, Re_c):
+    """
+    Compute the profile drag coefficient of an Eppler 216 airfoil, using a curve fit.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a Eppler 216 (e216) airfoil, 2D XFoil data. Incompressible flow.
     # Within -2 < alpha < 12 and 10^4 < Re_c < 10^6, has R^2 = 0.9995
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
@@ -289,6 +365,7 @@ def Cd_profile_e216(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -321,43 +398,65 @@ def Cd_profile_e216(alpha, Re_c):
 
 def Cd_wave_e216(Cl, mach, sweep=0.0):
     r"""
+    Compute the wave drag coefficient of an Eppler 216 airfoil, using a curve fit.
+
     A curve fit I did to Eppler 216 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\e216
-    :param Cl: Lift coefficient
-    :param mach: Mach number
-    :param sweep: Sweep angle, in deg
-    :return: Wave drag coefficient.
+
+    Parameters
+    ----------
+    Cl
+        Lift coefficient
+    mach
+        Mach number
+    sweep
+        Sweep angle, in deg
+
+    Returns
+    -------
+    Wave drag coefficient.
     """
 
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
-
-    # Coeffs
-    c0 = 7.2685945744797997e-01
-    c1 = -1.5483144040727698e-01
-    c3 = 2.1305118052118968e-01
-    c4 = 7.8812272501525316e-01
-    c5 = 3.3888938102072169e-03
-    l0 = 1.5298928303149546e00
-    l1 = 5.2389999717540392e-01
-
-    m = mach_perpendicular
-    l = Cl_perpendicular
-
-    Cd_wave = (
-        np.fmax(m - (c0 + c1 * np.sqrt(c3 + (l - c4) ** 2) + c5 * l), 0) * (l0 + l1 * l)
+    return (
+        np.fmax(
+            mach_perpendicular
+            - (
+                7.2685945744797997e-01
+                + -1.5483144040727698e-01
+                * np.sqrt(
+                    2.1305118052118968e-01
+                    + (Cl_perpendicular - 7.8812272501525316e-01) ** 2
+                )
+                + 3.3888938102072169e-03 * Cl_perpendicular
+            ),
+            0,
+        )
+        * (1.5298928303149546e00 + 5.2389999717540392e-01 * Cl_perpendicular)
     ) ** 2
-
-    return Cd_wave
 
 
 def Cl_rae2822(alpha, Re_c):
+    """
+    Compute the lift coefficient of a RAE2822 airfoil, using a curve fit to 2D XFoil data.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a RAE2822 airfoil, 2D XFoil data. Incompressible flow.
     # Within -2 < alpha < 12 and 10^4 < Re_c < 10^6, has R^2 = 0.9857
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < 10^6.
@@ -366,6 +465,7 @@ def Cl_rae2822(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -395,6 +495,18 @@ def Cl_rae2822(alpha, Re_c):
 
 
 def Cd_profile_rae2822(alpha, Re_c):
+    """
+    Compute the profile drag coefficient of a RAE2822 airfoil, using a curve fit.
+
+    Deprecated; use `asb.Airfoil.get_aero_from_neuralfoil()` instead.
+
+    Parameters
+    ----------
+    alpha
+        Angle of attack [deg]
+    Re_c
+        Reynolds number, referenced to chord.
+    """
     # A curve fit I did to a RAE2822 airfoil, 2D XFoil data. Incompressible flow.
     # Within -2 < alpha < 12 and 10^4 < Re_c < 10^6, has R^2 = 0.9995
     # Likely valid from -6 < alpha < 12 and 10^4 < Re_c < Inf.
@@ -403,6 +515,7 @@ def Cd_profile_rae2822(alpha, Re_c):
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     Re_c = np.fmax(Re_c, 1)
     log10_Re = np.log10(Re_c)
@@ -435,36 +548,50 @@ def Cd_profile_rae2822(alpha, Re_c):
 
 def Cd_wave_rae2822(Cl, mach, sweep=0.0):
     r"""
+    Compute the wave drag coefficient of a RAE2822 airfoil, using a curve fit.
+
     A curve fit I did to RAE2822 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\rae2822
-    :param Cl: Lift coefficient
-    :param mach: Mach number
-    :param sweep: Sweep angle, in deg
-    :return: Wave drag coefficient.
+
+    Parameters
+    ----------
+    Cl
+        Lift coefficient
+    mach
+        Mach number
+    sweep
+        Sweep angle, in deg
+
+    Returns
+    -------
+    Wave drag coefficient.
     """
 
     warnings.warn(
         "This function is deprecated. Use `asb.Airfoil.get_aero_from_neuralfoil()` instead.",
         DeprecationWarning,
+        stacklevel=2,
     )
     mach = np.fmax(mach, 0)
     mach_perpendicular = mach * np.cosd(sweep)  # Relation from FVA Eq. 8.176
     Cl_perpendicular = Cl / np.cosd(sweep) ** 2  # Relation from FVA Eq. 8.177
-
-    # Coeffs
-    c2 = 4.5776476424519119e00
-    mc0 = 9.5623337929607111e-01
-    mc1 = 2.0552787101770234e-01
-    mc2 = 1.1259268018737063e00
-    mc3 = 1.9538856688443659e-01
-
-    m = mach_perpendicular
-    l = Cl_perpendicular
-
-    Cd_wave = np.fmax(m - (mc0 - mc1 * np.sqrt(mc2 + (l - mc3) ** 2)), 0) ** 2 * c2
-
-    return Cd_wave
+    return (
+        np.fmax(
+            mach_perpendicular
+            - (
+                9.5623337929607111e-01
+                - 2.0552787101770234e-01
+                * np.sqrt(
+                    1.1259268018737063e00
+                    + (Cl_perpendicular - 1.9538856688443659e-01) ** 2
+                )
+            ),
+            0,
+        )
+        ** 2
+        * 4.5776476424519119e00
+    )
 
 
 def fuselage_upsweep_drag_area(
@@ -472,22 +599,28 @@ def fuselage_upsweep_drag_area(
     fuselage_xsec_area_max: float,
 ) -> float:
     """
-    Calculates the drag area (in m^2) of the aft end of a fuselage with a given upsweep angle.
+    Calculate the drag area (in m^2) of the aft end of a fuselage with a given upsweep angle.
 
-    Upsweep is the characteristic shape seen on the aft end of many fuselages in transport aircraft, where the
-    centerline of the fuselage is angled upwards near the aft end. This is done to reduce the required landing gear
-    height for adequate takeoff rotation, which in turn reduces mass. This nonzero centerline angle can cause some
-    separation drag, which is predicted here.
+    Upsweep is the characteristic shape seen on the aft end of many fuselages in transport
+    aircraft, where the centerline of the fuselage is angled upwards near the aft end. This is
+    done to reduce the required landing gear height for adequate takeoff rotation, which in
+    turn reduces mass. This nonzero centerline angle can cause some separation drag, which is
+    predicted here.
 
     Equation is from Raymer, Aircraft Design: A Conceptual Approach, 5th Ed., Eq. 12.36, pg. 440.
 
-    Args:
-        upsweep_angle_rad: The upsweep angle of the aft end of the fuselage relative to the centerline, in radians.
+    Parameters
+    ----------
+    upsweep_angle_rad : float
+        The upsweep angle of the aft end of the fuselage relative to the centerline. [radians]
+    fuselage_xsec_area_max : float
+        The maximum cross-sectional area of the fuselage. [m^2]
 
-        fuselage_xsec_area_max: The maximum cross-sectional area of the fuselage, in m^2.
-
-    Returns: The drag area of the aft end of the fuselage [m^2]. This is equivalent to D/q, where D is the drag force
-    and q is the dynamic pressure.
+    Returns
+    -------
+    float
+        The drag area of the aft end of the fuselage [m^2]. This is equivalent to D/q, where D
+        is the drag force and q is the dynamic pressure.
     """
     return 3.83 * np.abs(upsweep_angle_rad) ** 2.5 * fuselage_xsec_area_max
 

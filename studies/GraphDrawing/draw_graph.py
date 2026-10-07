@@ -1,6 +1,5 @@
 import aerosandbox as asb
 import aerosandbox.numpy as np
-import casadi as cas
 
 CL_multipoint_targets = np.array([0.8, 1.0, 1.2, 1.4, 1.5, 1.6])
 CL_multipoint_weights = np.array([5, 6, 7, 8, 9, 10])
@@ -10,6 +9,11 @@ mach = 0.03
 
 initial_guess_airfoil = asb.KulfanAirfoil("naca0012")
 initial_guess_airfoil.name = "Initial Guess (NACA0012)"
+
+### Create CasADi symbolic variables for graph visualization
+# This study specifically uses CasADi's low-level symbolic framework
+# to visualize computational graphs - inherently backend-specific.
+import casadi as cas
 
 optimized_airfoil = asb.KulfanAirfoil(
     name="Optimized",

@@ -2,7 +2,6 @@ import subprocess
 import tempfile
 import warnings
 from pathlib import Path
-from typing import Dict, List, Union
 
 import aerosandbox.numpy as np
 from aerosandbox.common import ExplicitAnalysis
@@ -12,30 +11,29 @@ from aerosandbox.performance import OperatingPoint
 
 class AVL(ExplicitAnalysis):
     """
-
     An interface to AVL, a 3D vortex lattice aerodynamics code developed by Mark Drela at MIT.
 
-    Requires AVL to be on your computer; AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+    Requires AVL to be on your computer; AVL is available here:
+    https://web.mit.edu/drela/Public/web/avl/
 
-    It is recommended (but not required) that you add AVL to your system PATH environment variable such that it can
-    be called with the command `avl`. If this is not the case, you need to specify the path to your AVL
-    executable using the `avl_command` argument of the constructor.
+    It is recommended (but not required) that you add AVL to your system PATH environment variable
+    such that it can be called with the command `avl`. If this is not the case, you need to
+    specify the path to your AVL executable using the `avl_command` argument of the constructor.
 
-    Usage example:
-
-        >>> avl = asb.AVL(
-        >>>     airplane=my_airplane,
-        >>>     op_point=asb.OperatingPoint(
-        >>>         velocity=100, # m/s
-        >>>         alpha=5, # deg
-        >>>         beta=4, # deg
-        >>>         p=0.01, # rad/sec
-        >>>         q=0.02, # rad/sec
-        >>>         r=0.03, # rad/sec
-        >>>     )
-        >>> )
-        >>> outputs = avl.run()
-
+    Examples
+    --------
+    >>> avl = asb.AVL(
+    >>>     airplane=my_airplane,
+    >>>     op_point=asb.OperatingPoint(
+    >>>         velocity=100, # m/s
+    >>>         alpha=5, # deg
+    >>>         beta=4, # deg
+    >>>         p=0.01, # rad/sec
+    >>>         q=0.02, # rad/sec
+    >>>         r=0.03, # rad/sec
+    >>>     )
+    >>> )
+    >>> outputs = avl.run()
     """
 
     default_analysis_specific_options = {
@@ -87,48 +85,61 @@ class AVL(ExplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         avl_command: str = "avl",
         verbose: bool = False,
-        timeout: Union[float, int, None] = 5,
-        working_directory: str = None,
+        timeout: float | int | None = 5,
+        working_directory: Path | str | None = None,
         ground_effect: bool = False,
         ground_effect_height: float = 0,
     ):
         """
-        Interface to AVL.
+        Initialize an interface to AVL.
 
-        Args:
+        Parameters
+        ----------
+        airplane : Airplane
+            The airplane object you wish to analyze.
+        op_point : OperatingPoint
+            The operating point you wish to analyze at.
+        xyz_ref : list[float] | None
+            The moment reference point, given as a [x, y, z] location in geometry axes. If left
+            as None (default), this will default to the `xyz_ref` of the airplane object.
+        avl_command : str
+            The command-line argument to call AVL.
 
-            airplane: The airplane object you wish to analyze.
+            * If AVL is on your system PATH, then you can just leave this as "avl".
 
-            op_point: The operating point you wish to analyze at.
+            * If AVL is not on your system PATH, then you should provide a filepath to the AVL
+              executable.
 
-            avl_command: The command-line argument to call AVL.
+            Note that AVL is not on your PATH by default. To tell if AVL is on your system PATH,
+            open up a terminal and type "avl".
 
-                * If AVL is on your system PATH, then you can just leave this as "avl".
+                * If the AVL menu appears, it's on your PATH.
 
-                * If AVL is not on your system PATH, then you should provide a filepath to the AVL executable.
+                * If you get something like "'avl' is not recognized as an internal or external
+                  command..." or "Command 'avl' not found, did you mean...", then it is not on
+                  your PATH and you'll need to specify the location of your AVL executable as a
+                  string.
 
-                Note that AVL is not on your PATH by default. To tell if AVL is on your system PATH, open up a
-                terminal and type "avl".
-
-                    * If the AVL menu appears, it's on your PATH.
-
-                    * If you get something like "'avl' is not recognized as an internal or external command..." or
-                    "Command 'avl' not found, did you mean...", then it is not on your PATH and you'll need to
-                    specify the location of your AVL executable as a string.
-
-                To add AVL to your path, modify your system's environment variables. (Google how to do this for your OS.)
-
-            verbose: Controls whether or not AVL output is printed to command line.
-
-            timeout: Controls how long any individual AVL run is allowed to run before the
-            process is killed. Given in units of seconds. To disable timeout, set this to None.
-
-            working_directory: Controls which working directory is used for the AVL input and output files. By
-            default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
-            somewhere local for debugging purposes.
+            To add AVL to your path, modify your system's environment variables. (Google how to
+            do this for your OS.)
+        verbose : bool
+            Controls whether or not AVL output is printed to command line.
+        timeout : float | int | None
+            Controls how long any individual AVL run is allowed to run before the process is
+            killed. Given in units of seconds. To disable timeout, set this to None.
+        working_directory : Path | str | None
+            Controls which working directory is used for the AVL input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run. However,
+            you can set it to somewhere local for debugging purposes.
+        ground_effect : bool
+            If True, models ground effect by mirroring the airplane about a ground plane (using
+            AVL's Z-symmetry), located at a z-location given by `ground_effect_height`.
+        ground_effect_height : float
+            The z-location of the ground plane, in geometry axes. Only used if `ground_effect`
+            is True.
         """
         super().__init__()
 
@@ -163,9 +174,13 @@ class AVL(ExplicitAnalysis):
 
     def open_interactive(self) -> None:
         """
-        Opens a new terminal window and runs AVL interactively. This is useful for detailed analysis or debugging.
+        Open a new terminal window and run AVL interactively.
 
-        Returns: None
+        This is useful for detailed analysis or debugging.
+
+        Returns
+        -------
+        None
         """
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -203,17 +218,22 @@ class AVL(ExplicitAnalysis):
 
     def run(
         self,
-        run_command: str = None,
-    ) -> Dict[str, float]:
+        run_command: str | None = None,
+    ) -> dict[str, float]:
         """
-        Private function to run AVL.
+        Run AVL on the airplane and operating point that this analysis was constructed with.
 
-        Args: run_command: A string with any AVL keystroke inputs that you'd like. By default, you start off within the OPER
-        menu. All of the inputs indicated in the constructor have been set already, but you can override them here (
-        for this run only) if you want.
+        Parameters
+        ----------
+        run_command : str | None
+            A string with any AVL keystroke inputs that you'd like. By default, you start off
+            within the OPER menu. All of the inputs indicated in the constructor have been set
+            already, but you can override them here (for this run only) if you want.
 
-        Returns: A dictionary containing all of your results.
-
+        Returns
+        -------
+        dict[str, float]
+            A dictionary containing all of your results.
         """
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
@@ -261,7 +281,7 @@ class AVL(ExplicitAnalysis):
                     # check=True
                 )
                 outs, errs = proc.communicate(input=keystrokes, timeout=self.timeout)
-                return_code = proc.poll()
+                proc.poll()
 
             except subprocess.TimeoutExpired:
                 proc.kill()
@@ -326,22 +346,38 @@ class AVL(ExplicitAnalysis):
 
             res["F_w"] = [-res["D"], res["Y"], -res["L"]]
             res["F_b"] = self.op_point.convert_axes(
-                *res["F_w"], from_axes="wind", to_axes="body"
+                res["F_w"][0],
+                res["F_w"][1],
+                res["F_w"][2],
+                from_axes="wind",
+                to_axes="body",
             )
             res["F_g"] = self.op_point.convert_axes(
-                *res["F_b"], from_axes="body", to_axes="geometry"
+                res["F_b"][0],
+                res["F_b"][1],
+                res["F_b"][2],
+                from_axes="body",
+                to_axes="geometry",
             )
             res["M_b"] = [res["l_b"], res["m_b"], res["n_b"]]
             res["M_g"] = self.op_point.convert_axes(
-                *res["M_b"], from_axes="body", to_axes="geometry"
+                res["M_b"][0],
+                res["M_b"][1],
+                res["M_b"][2],
+                from_axes="body",
+                to_axes="geometry",
             )
             res["M_w"] = self.op_point.convert_axes(
-                *res["M_b"], from_axes="body", to_axes="wind"
+                res["M_b"][0],
+                res["M_b"][1],
+                res["M_b"][2],
+                from_axes="body",
+                to_axes="wind",
             )
 
             return res
 
-    def _default_keystroke_file_contents(self) -> List[str]:
+    def _default_keystroke_file_contents(self) -> list[str]:
         run_file_contents = []
 
         # Disable graphics
@@ -386,32 +422,45 @@ class AVL(ExplicitAnalysis):
             f"y y {float(r_bar)}",
         ]
 
-        # Set control surface deflections
+        # Set control surface deflections.
+        # All control surfaces are lumped into the single AVL control variable d1
+        # ("all_deflections"), with each surface's own deflection encoded as its
+        # CONTROL-card gain in the .avl file (see write_avl()); setting d1 = 1 here
+        # hence deflects every surface by its user-specified amount.
         run_file_contents += ["d1 d1 1"]
 
         return run_file_contents
 
     def write_avl(
         self,
-        filepath: Union[Path, str] = None,
-    ) -> None:
+        filepath: Path | str | None = None,
+    ) -> str:
         """
-        Writes a .avl file corresponding to this airplane to a filepath.
+        Write a .avl file corresponding to this airplane to a filepath.
 
-        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
-        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at
+        MIT. AVL is available here: https://web.mit.edu/drela/Public/web/avl/
 
-        Args:
-            filepath: filepath (including the filename and .avl extension) [string]
-                If None, this function returns the .avl file as a string.
+        Parameters
+        ----------
+        filepath : Path | str | None
+            filepath (including the filename and .avl extension) [string]
 
-        Returns: None
+            If None, no files are written to disk (including the sidecar airfoil and fuselage
+            files that would normally accompany the .avl file), and the would-be contents of the
+            .avl file are only returned as a string.
 
+        Returns
+        -------
+        str
+            The would-be contents of the .avl file as a string.
         """
+        if filepath is not None:
+            filepath = Path(filepath)
 
         def clean(s):
             """
-            Removes leading and trailing whitespace from each line of a multi-line string.
+            Remove leading and trailing whitespace from each line of a multi-line string.
             """
             return "\n".join([line.strip() for line in s.split("\n")])
 
@@ -437,7 +486,6 @@ class AVL(ExplicitAnalysis):
         """
         )
 
-        control_surface_counter = 0
         airfoil_counter = 0
 
         for wing in airplane.wings:
@@ -511,7 +559,7 @@ class AVL(ExplicitAnalysis):
             )
 
             ### Build up a buffer of the control surface strings to write to each section
-            control_surface_commands: List[List[str]] = [[] for _ in wing.xsecs]
+            control_surface_commands: list[list[str]] = [[] for _ in wing.xsecs]
             for i, xsec in enumerate(wing.xsecs[:-1]):
                 for surf in xsec.control_surfaces:
                     xhinge = (
@@ -519,11 +567,16 @@ class AVL(ExplicitAnalysis):
                     )
                     sign_dup = 1 if surf.symmetric else -1
 
+                    # All control surfaces are attached to a single AVL control variable
+                    # ("all_deflections"), with each surface's deflection encoded as its
+                    # gain [deg deflection / unit control variable]. The run keystrokes
+                    # then set this control variable to 1, so that each surface deflects
+                    # by its own user-specified `deflection`.
                     command = clean(
                         f"""\
                         CONTROL
                         #name, gain, Xhinge, XYZhvec, SgnDup
-                        {surf.name} 1 {xhinge:.8g} 0 0 0 {sign_dup}
+                        all_deflections {surf.deflection:.8g} {xhinge:.8g} 0 0 0 {sign_dup}
                         """
                     )
 
@@ -545,9 +598,10 @@ class AVL(ExplicitAnalysis):
 
                 af_filepath = Path(str(filepath) + f".af{airfoil_counter}")
                 airfoil_counter += 1
-                xsec.airfoil.repanel(50).write_dat(
-                    filepath=af_filepath, include_name=True
-                )
+                if filepath is not None:
+                    xsec.airfoil.repanel(50).write_dat(
+                        filepath=af_filepath, include_name=True
+                    )
 
                 avl_file += clean(
                     f"""\
@@ -578,10 +632,10 @@ class AVL(ExplicitAnalysis):
                 for control_surface_command in control_surface_commands[i]:
                     avl_file += control_surface_command
 
-        filepath = Path(filepath)
         for i, fuse in enumerate(airplane.fuselages):
             fuse_filepath = Path(str(filepath) + f".fuse{i}")
-            self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
+            if filepath is not None:
+                self.write_avl_bfile(fuselage=fuse, filepath=fuse_filepath)
             fuse_options = self.get_options(fuse)
 
             avl_file += clean(
@@ -604,28 +658,39 @@ class AVL(ExplicitAnalysis):
             with open(filepath, "w+") as f:
                 f.write(avl_file)
 
+        return avl_file
+
     @staticmethod
     def write_avl_bfile(
         fuselage,
-        filepath: Union[Path, str] = None,
+        filepath: Path | str | None = None,
         include_name: bool = True,
     ) -> str:
         """
-        Writes an AVL-compatible BFILE corresponding to this fuselage to a filepath.
+        Write an AVL-compatible BFILE corresponding to this fuselage to a filepath.
 
-        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at MIT.
-        AVL is available here: https://web.mit.edu/drela/Public/web/avl/
+        For use with the AVL vortex-lattice-method aerodynamics analysis tool by Mark Drela at
+        MIT. AVL is available here: https://web.mit.edu/drela/Public/web/avl/
 
-        Args:
-            filepath: filepath (including the filename and .avl extension) [string]
-                If None, this function returns the would-be file contents as a string.
+        Parameters
+        ----------
+        fuselage
+            The Fuselage object to write the BFILE for.
+        filepath : Path | str | None
+            filepath (including the filename and .avl extension) [string]
 
-            include_name: Should the name of the fuselage be included in the .dat file? (This should be True for use with AVL.)
+            If None, this function returns the would-be file contents as a string.
+        include_name : bool
+            Should the name of the fuselage be included in the .dat file? (This should be True
+            for use with AVL.)
 
-        Returns:
-
+        Returns
+        -------
+        str
+            The would-be contents of the BFILE as a string.
         """
-        filepath = Path(filepath)
+        if filepath is not None:
+            filepath = Path(filepath)
 
         contents = []
 
@@ -663,13 +728,13 @@ class AVL(ExplicitAnalysis):
         s: str,
         data_identifier: str = " = ",
         cast_outputs_to_float: bool = True,
-        overwrite: bool = None,
-    ) -> Dict[str, float]:
+        overwrite: bool | None = None,
+    ) -> dict[str, float]:
         """
-        Parses a (multiline) string of unformatted data into a nice and tidy dictionary.
+        Parse a (multiline) string of unformatted data into a nice and tidy dictionary.
 
-        The expected input string looks like what you might get as an output from AVL (or many other Drela codes),
-        which may list data in ragged order.
+        The expected input string looks like what you might get as an output from AVL (or many
+        other Drela codes), which may list data in ragged order.
 
         An example input `s` that you might want to parse could look like the following:
 
@@ -693,10 +758,10 @@ class AVL(ExplicitAnalysis):
           CYff  =   0.00000         e =    0.9649    | Plane
         ```
 
-        Here, this function will go through this string and extract each key-value pair, as denoted by the data
-        identifier (by default, " = "). It will pull the next whole word without spaces to the left as the key,
-        and it will pull the next whole word without spaces to the right as the value. Together, these will be
-        returned as a Dict.
+        Here, this function will go through this string and extract each key-value pair, as
+        denoted by the data identifier (by default, " = "). It will pull the next whole word
+        without spaces to the left as the key, and it will pull the next whole word without
+        spaces to the right as the value. Together, these will be returned as a Dict.
 
         So, the output for the input above would be:
         {
@@ -707,33 +772,39 @@ class AVL(ExplicitAnalysis):
             # and so on...
         }
 
-        Args:
+        Parameters
+        ----------
+        s : str
+            The input string to identify. Can be multiline.
+        data_identifier : str
+            The triggering substring for a new key-value pair. By default, it's " = ", which is
+            convention in many output files from Mark Drela's codes. Be careful if you decide to
+            change this to "=", as you could pick up on heading separators ('=======') in
+            Markdown-like files.
+        cast_outputs_to_float : bool
+            If this boolean flag is set true, the values of the key-value pairs are cast to
+            floating-point numbers before returning (as opposed to the default type, string). If
+            a value can't be cast, a NaN is returned (guaranteeing that you can do
+            floating-point math with the outputs in downstream applications.)
+        overwrite : bool | None
+            Determines the behavior if you find a key that's already in the dictionary.
 
-            s: The input string to identify. Can be multiline.
+            * By default, value is None. In this case, an error is raised.
 
-            data_identifier: The triggering substring for a new key-value pair. By default, it's " = ",
-            which is convention in many output files from Mark Drela's codes. Be careful if you decide to change this
-            to "=", as you could pick up on heading separators ('=======') in Markdown-like files.
+            * If you set it to True, the new value will overwrite the old one. Thus, your
+              dictionary will have the last matching value from the string.
 
-            cast_outputs_to_float: If this boolean flag is set true, the values of the key-value pairs are cast to
-            floating-point numbers before returning (as opposed to the default type, string). If a value can't be
-            cast, a NaN is returned (guaranteeing that you can do floating-point math with the outputs in downstream
-            applications.)
+            * If you set it to False, the new value will be discarded. Thus, your dictionary
+              will have the first matching value from the string.
 
-            overwrite: Determines the behavior if you find a key that's already in the dictionary.
+        Returns
+        -------
+        dict[str, float]
+            A dictionary of key-value pairs, corresponding to the unformatted data in the input
+            string.
 
-                * By default, value is None. In this case, an error is raised.
-
-                * If you set it to True, the new value will overwrite the old one. Thus, your dictionary will have
-                the last matching value from the string.
-
-                * If you set it to False, the new value will be discarded. Thus, your dictionary will have the first
-                matching value from the string.
-
-        Returns: A dictionary of key-value pairs, corresponding to the unformatted data in the input string.
-
-            Keys are strings, values are floats if `cast_outputs_to_float` is True, otherwise also strings.
-
+            Keys are strings, values are floats if `cast_outputs_to_float` is True, otherwise
+            also strings.
         """
 
         items = {}
@@ -744,10 +815,10 @@ class AVL(ExplicitAnalysis):
             key = ""  # start with a blank key, which we will build up as we read
 
             i = index - 1  # Starting from the left of the identifier
-            while s[i] == " " and i >= 0:
+            while i >= 0 and s[i] == " ":
                 # First, skip any blanks
                 i -= 1
-            while s[i] != " " and s[i] != "\n" and i >= 0:
+            while i >= 0 and s[i] != " " and s[i] != "\n":
                 # Then, read the key in backwards order until you get to a blank or newline
                 key = s[i] + key
                 i -= 1
@@ -757,10 +828,10 @@ class AVL(ExplicitAnalysis):
             i = index + len(
                 data_identifier
             )  # Starting from the right of the identifier
-            while s[i] == " " and i <= len(s):
+            while i < len(s) and s[i] == " ":
                 # First, skip any blanks
                 i += 1
-            while s[i] != " " and s[i] != "\n" and i <= len(s):
+            while i < len(s) and s[i] != " " and s[i] != "\n":
                 # Then, read the key in forward order until you get to a blank or newline
                 value += s[i]
                 i += 1

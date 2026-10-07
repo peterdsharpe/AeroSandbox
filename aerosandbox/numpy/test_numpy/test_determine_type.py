@@ -1,4 +1,4 @@
-from aerosandbox.numpy.determine_type import *
+from aerosandbox.numpy.determine_type import is_casadi_type
 import pytest
 import numpy as np
 import casadi as cas

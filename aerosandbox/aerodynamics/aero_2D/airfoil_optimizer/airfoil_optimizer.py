@@ -3,6 +3,7 @@ from aerosandbox.geometry import Airfoil
 from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_coordinates
 from scipy import optimize
 import matplotlib.pyplot as plt
+from dataclasses import dataclass, field
 
 if __name__ == "__main__":
     ### Design Conditions
@@ -37,14 +38,26 @@ if __name__ == "__main__":
     ### Packing/Unpacking functions
     n_lower = len(lower_guess)
     n_upper = len(upper_guess)
-    pack = lambda lower, upper: np.concatenate((lower, upper))
-    unpack = lambda pack: (pack[:n_lower], pack[n_lower:])
+
+    def pack(lower, upper):
+        return np.concatenate((lower, upper))
+
+    def unpack(pack):
+        return (pack[:n_lower], pack[n_lower:])
 
     def make_airfoil(x):
         """
-        A function that constructs an airfoil from a packed design vector.
-        :param x:
-        :return:
+        Construct an airfoil from a packed design vector.
+
+        Parameters
+        ----------
+        x
+            The packed design vector.
+
+        Returns
+        -------
+        Airfoil
+            The constructed airfoil.
         """
         lower, upper = unpack(x)
         return Airfoil(
@@ -84,12 +97,15 @@ if __name__ == "__main__":
     plt.legend()
 
     def draw(
-        airfoil,  # type: Airfoil
+        airfoil: Airfoil,
     ):
         """
-        Updates the "current airfoil" line on the plot with the given airfoil.
-        :param airfoil:
-        :return:
+        Update the "current airfoil" line on the plot with the given airfoil.
+
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The airfoil to draw.
         """
         trace_current.set_xdata(airfoil.coordinates[:, 0])
         trace_current.set_ydata(airfoil.coordinates[:, 1])
@@ -97,15 +113,29 @@ if __name__ == "__main__":
         plt.pause(0.001)
 
     ### Utilities for tracking the design vector and objective throughout the optimization run
-    iteration = 0
-    xs = []
-    fs = []
+    @dataclass
+    class OptimizationState:
+        """Holds state for the optimization to avoid globals."""
+
+        iteration: int = 0
+        xs: list = field(default_factory=list)
+        fs: list = field(default_factory=list)
+
+    state = OptimizationState()
 
     def augmented_objective(x):
         """
-        Objective function with constraints added via a multiplicative external penalty method
-        :param x: Packed design vector
-        :return: Value of the augmented objective
+        Compute the objective with constraints added via a multiplicative external penalty method.
+
+        Parameters
+        ----------
+        x
+            Packed design vector.
+
+        Returns
+        -------
+        float
+            Value of the augmented objective.
         """
         airfoil = make_airfoil(x)
         xfoil = airfoil.xfoil_cseq(
@@ -136,19 +166,18 @@ if __name__ == "__main__":
             np.minimum(0, (airfoil.local_thickness(0.30) - 0.12) / 0.005) ** 2
         )  # Spar thickness constraint
 
-        xs.append(x)
-        fs.append(objective)
+        state.xs.append(x)
+        state.fs.append(objective)
 
         return objective * (1 + penalty)
 
     def callback(x):
-        global iteration
-        iteration += 1
-        print(f"Iteration {iteration}: Cd = {fs[-1]:.6f}")
-        if iteration % 1 == 0:
+        state.iteration += 1
+        print(f"Iteration {state.iteration}: Cd = {state.fs[-1]:.6f}")
+        if state.iteration % 1 == 0:
             airfoil = make_airfoil(x)
             draw(airfoil)
-            ax.set_title(f"Airfoil Optimization: Iteration {iteration}")
+            ax.set_title(f"Airfoil Optimization: Iteration {state.iteration}")
             airfoil.write_dat("optimized_airfoil.dat")
 
     draw(initial_airfoil)

@@ -9,6 +9,28 @@ def mass_flow_rate(
     molecular_mass=28.9644e-3,
     gamma=1.4,
 ):
+    """
+    Compute the mass flow rate of a compressible flow through a given cross-sectional area.
+
+    Parameters
+    ----------
+    mach
+        Mach number [-]
+    area
+        Cross-sectional flow area [m^2]
+    total_pressure
+        Total (stagnation) pressure of the flow [Pa]
+    total_temperature
+        Total (stagnation) temperature of the flow [K]
+    molecular_mass : float
+        Molecular mass of the gas [kg/mol]. The default value is that of air.
+    gamma : float
+        The ratio of specific heats. 1.4 for air.
+
+    Returns
+    -------
+    Mass flow rate [kg/s].
+    """
     specific_gas_constant = universal_gas_constant / molecular_mass
     return (
         (area * total_pressure)

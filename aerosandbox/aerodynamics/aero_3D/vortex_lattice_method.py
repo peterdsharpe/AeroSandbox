@@ -1,21 +1,28 @@
 import aerosandbox.numpy as np
 from aerosandbox import ExplicitAnalysis
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
 )
-from typing import Dict, Any, List, Callable
+from typing import Any, Callable
 import copy
+import aerosandbox.geometry.mesh_utilities as mesh_utils
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
+    """
+    Reshape an array into a tall (Nx1) column vector.
+    """
     return np.reshape(array, (-1, 1))
 
 
 def wide(array):
+    """
+    Reshape an array into a wide (1xN) row vector.
+    """
     return np.reshape(array, (1, -1))
 
 
@@ -23,40 +30,74 @@ class VortexLatticeMethod(ExplicitAnalysis):
     """
     An explicit (linear) vortex-lattice-method aerodynamics analysis.
 
-    Usage example:
-        >>> analysis = asb.VortexLatticeMethod(
-        >>>     airplane=my_airplane,
-        >>>     op_point=asb.OperatingPoint(
-        >>>         velocity=100, # m/s
-        >>>         alpha=5, # deg
-        >>>         beta=4, # deg
-        >>>         p=0.01, # rad/sec
-        >>>         q=0.02, # rad/sec
-        >>>         r=0.03, # rad/sec
-        >>>     )
-        >>> )
-        >>> aero_data = analysis.run()
-        >>> analysis.draw()
+    Examples
+    --------
+    >>> analysis = asb.VortexLatticeMethod(
+    >>>     airplane=my_airplane,
+    >>>     op_point=asb.OperatingPoint(
+    >>>         velocity=100, # m/s
+    >>>         alpha=5, # deg
+    >>>         beta=4, # deg
+    >>>         p=0.01, # rad/sec
+    >>>         q=0.02, # rad/sec
+    >>>         r=0.03, # rad/sec
+    >>>     )
+    >>> )
+    >>> aero_data = analysis.run()
+    >>> analysis.draw()
     """
 
     def __init__(
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
         spanwise_resolution: int = 10,
         spanwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
+            [float, float, int], np.ndarray
         ] = np.cosspace,
         chordwise_resolution: int = 10,
         chordwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
+            [float, float, int], np.ndarray
         ] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
+        """
+        Initialize a VortexLatticeMethod analysis.
+
+        Parameters
+        ----------
+        airplane : Airplane
+            An Airplane object that you want to analyze.
+        op_point : OperatingPoint
+            The OperatingPoint that you want to analyze the Airplane at.
+        xyz_ref : list[float] | None
+            The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
+        run_symmetric_if_possible : bool
+            If this flag is True and the problem formulation is XZ-symmetric, the solver will
+            attempt to exploit the symmetry. This results in roughly half the number of governing
+            equations.
+        verbose : bool
+            If True, prints progress messages during the analysis.
+        spanwise_resolution : int
+            The number of spanwise panels that each wing section is subdivided into.
+        spanwise_spacing_function : Callable[[float, float, int], np.ndarray]
+            A function (e.g., `np.linspace` or `np.cosspace`) that determines how the spanwise
+            panels are spaced within each wing section.
+        chordwise_resolution : int
+            The number of chordwise panels that each wing is subdivided into.
+        chordwise_spacing_function : Callable[[float, float, int], np.ndarray]
+            A function (e.g., `np.linspace` or `np.cosspace`) that determines how the chordwise
+            panels are spaced.
+        vortex_core_radius : float
+            The regularization radius of each vortex core [m].
+        align_trailing_vortices_with_wind : bool
+            If True, trailing vortex legs are aligned with the freestream direction; if False,
+            they extend in the +x (geometry axes) direction.
+        """
         super().__init__()
 
         ### Set defaults
@@ -105,11 +146,14 @@ class VortexLatticeMethod(ExplicitAnalysis):
             + "\n)"
         )
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
-        Computes the aerodynamic forces.
+        Compute the aerodynamic forces.
 
-        Returns a dictionary with keys:
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -130,7 +174,8 @@ class VortexLatticeMethod(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            VortexLatticeMethod.airplane object.
         """
 
         if self.verbose:
@@ -383,20 +428,32 @@ class VortexLatticeMethod(ExplicitAnalysis):
         r=True,
     ):
         """
-        Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
+        Compute the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
-        Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
-        needed, leaving it False will speed up the computation.
+        Arguments essentially determine which stability derivatives are computed. If a stability
+        derivative is not needed, leaving it False will speed up the computation.
 
-        Args:
+        Parameters
+        ----------
+        alpha : bool
+            If True, compute the stability derivatives with respect to the angle of attack
+            (alpha).
+        beta : bool
+            If True, compute the stability derivatives with respect to the sideslip angle (beta).
+        p : bool
+            If True, compute the stability derivatives with respect to the body-axis roll rate
+            (p).
+        q : bool
+            If True, compute the stability derivatives with respect to the body-axis pitch rate
+            (q).
+        r : bool
+            If True, compute the stability derivatives with respect to the body-axis yaw rate
+            (r).
 
-            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
-            - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
-            - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
-            - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
-            - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
-
-        Returns: a dictionary with keys:
+        Returns
+        -------
+        dict
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -417,8 +474,9 @@ class VortexLatticeMethod(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
-            example, if `alpha=True`, then the following additional keys will be present:
+            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`,
+            and `r` arguments. For example, if `alpha=True`, then the following additional keys
+            will be present:
 
                 - 'CLa', the lift coefficient derivative with respect to alpha [1/rad]
                 - 'CDa', the drag coefficient derivative with respect to alpha [1/rad]
@@ -432,18 +490,28 @@ class VortexLatticeMethod(ExplicitAnalysis):
             VortexLatticeMethod.airplane object.
 
             Data types:
-                - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
 
-                    - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                    are floats, not arrays).
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn"
+              keys are:
 
-                    - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                    array).
+                - floats if the OperatingPoint object is not vectorized (i.e., if all
+                  attributes of OperatingPoint are floats, not arrays).
 
-                - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-                floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute
+                  of OperatingPoint is an array).
 
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which
+              will contain either floats or arrays, again depending on whether the
+              OperatingPoint object is vectorized or not.
         """
+        do_analysis: dict[str, bool] = {
+            "alpha": alpha,
+            "beta": beta,
+            "p": p,
+            "q": q,
+            "r": r,
+        }
+
         abbreviations = {
             "alpha": "a",
             "beta": "b",
@@ -479,7 +547,7 @@ class VortexLatticeMethod(ExplicitAnalysis):
         # of integration".)
 
         for derivative_denominator in abbreviations.keys():
-            if not locals()[
+            if not do_analysis[
                 derivative_denominator
             ]:  # Basically, if the parameter from the function input is not True,
                 continue  # Skip this run.
@@ -521,12 +589,22 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
             ### Try to compute and append neutral point, if possible
             if derivative_denominator == "alpha":
+                CLa = np.where(  # Guard against divide-by-zero for degenerate configurations
+                    run_base["CLa"] == 0,
+                    np.nan,
+                    run_base["CLa"],
+                )
                 run_base["x_np"] = self.xyz_ref[0] - (
-                    run_base["Cma"] * (self.airplane.c_ref / run_base["CLa"])
+                    run_base["Cma"] * (self.airplane.c_ref / CLa)
                 )
             if derivative_denominator == "beta":
+                CYb = np.where(  # Guard against divide-by-zero for degenerate configurations
+                    run_base["CYb"] == 0,
+                    np.nan,
+                    run_base["CYb"],
+                )
                 run_base["x_np_lateral"] = self.xyz_ref[0] - (
-                    run_base["Cnb"] * (self.airplane.b_ref / run_base["CYb"])
+                    run_base["Cnb"] * (self.airplane.b_ref / CYb)
                 )
 
         return run_base
@@ -536,13 +614,18 @@ class VortexLatticeMethod(ExplicitAnalysis):
         points: np.ndarray,
     ) -> np.ndarray:
         """
-        Computes the induced velocity at a set of points in the flowfield.
+        Compute the induced velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the induced velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the induced velocities at. Given in
+            geometry axes.
 
-        Returns: A Nx3 of the induced velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the induced velocity at those points. Given in geometry axes.
         """
         u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
             x_field=tall(points[:, 0]),
@@ -572,13 +655,18 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def get_velocity_at_points(self, points: np.ndarray) -> np.ndarray:
         """
-        Computes the velocity at a set of points in the flowfield.
+        Compute the velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the velocities at. Given in
+            geometry axes.
 
-        Returns: A Nx3 of the velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the velocity at those points. Given in geometry axes.
         """
         V_induced = self.get_induced_velocity_at_points(points)
 
@@ -595,35 +683,39 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def calculate_streamlines(
         self,
-        seed_points: np.ndarray = None,
+        seed_points: np.ndarray | None = None,
         n_steps: int = 300,
-        length: float = None,
+        length: float | None = None,
     ) -> np.ndarray:
         """
-        Computes streamlines, starting at specific seed points.
+        Compute streamlines, starting at specific seed points.
 
-        After running this function, a new instance variable `VortexLatticeFilaments.streamlines` is computed
+        After running this function, a new instance variable `VortexLatticeFilaments.streamlines`
+        is computed.
 
-        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
-        before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
-        schemes, RK substepping, etc.), due to the near-singular conditions near vortex filaments.
+        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity
+        vectors are normalized before ODE integration). After investigation, it's not worth doing
+        fancier ODE integration methods (adaptive schemes, RK substepping, etc.), due to the
+        near-singular conditions near vortex filaments.
 
-        Args:
-
-            seed_points: A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+        Parameters
+        ----------
+        seed_points : np.ndarray | None
+            A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+            auto-calculated if not specified.
+        n_steps : int
+            The number of individual streamline steps to trace. Minimum of 2.
+        length : float | None
+            The approximate total length of the streamlines desired, in meters. Will be
             auto-calculated if not specified.
 
-            n_steps: The number of individual streamline steps to trace. Minimum of 2.
-
-            length: The approximate total length of the streamlines desired, in meters. Will be auto-calculated if
-            not specified.
-
-        Returns:
-            streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
-            Consists of streamlines data.
+        Returns
+        -------
+        streamlines : np.ndarray
+            A 3D array with dimensions: (n_seed_points) x (3) x (n_steps). Consists of
+            streamlines data.
 
             Result is also saved as an instance variable, VortexLatticeMethod.streamlines.
-
         """
         if self.verbose:
             print("Calculating streamlines...")
@@ -670,19 +762,20 @@ class VortexLatticeMethod(ExplicitAnalysis):
 
     def draw(
         self,
-        c: np.ndarray = None,
-        cmap: str = None,
-        colorbar_label: str = None,
+        c: np.ndarray | None = None,
+        cmap: str | None = None,
+        colorbar_label: str | None = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
         draw_streamlines=True,
         recalculate_streamlines=False,
         backend: str = "pyvista",
     ):
         """
-        Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
-        :return:
+        Draw the solution.
+
+        Note: Must be called on a SOLVED AeroProblem object. To solve an AeroProblem, use
+        opti.solve(). To substitute a solved solution, use ap = sol(ap).
         """
         if show_kwargs is None:
             show_kwargs = {}

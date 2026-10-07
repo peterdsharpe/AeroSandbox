@@ -1,13 +1,35 @@
+"""Top-level linear algebra functions for the AeroSandbox NumPy-like interface.
+
+This module provides linear algebra functions that live in the top-level
+namespace (rather than under ``linalg``), working with both NumPy arrays and
+CasADi symbolic arrays.
+"""
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 
 
 def dot(a, b, manual=False):
-    """
-    Dot product of two arrays.
+    """Compute the dot product of two arrays.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.dot.html
+    Parameters
+    ----------
+    a
+        First input array.
+    b
+        Second input array.
+    manual : bool, optional
+        If True, use a manual loop implementation. Default is False.
+
+    Returns
+    -------
+    Scalar | Array
+        The dot product of ``a`` and ``b``.
+
+    See Also
+    --------
+    numpy.dot : https://numpy.org/doc/stable/reference/generated/numpy.dot.html
     """
     if manual:
         return sum([ai * bi for ai, bi in zip(a, b)])
@@ -20,10 +42,41 @@ def dot(a, b, manual=False):
 
 
 def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None, manual=False):
-    """
-    Return the cross product of two (arrays of) vectors.
+    """Return the cross product of two (arrays of) vectors.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.cross.html
+    Parameters
+    ----------
+    a
+        Components of the first vector(s).
+    b
+        Components of the second vector(s).
+    axisa : int, optional
+        Axis of ``a`` that defines the vector(s). Default is -1 (the last axis).
+        For CasADi arrays, must be -1, 0, or 1.
+    axisb : int, optional
+        Axis of ``b`` that defines the vector(s). Default is -1 (the last axis).
+        For CasADi arrays, must be -1, 0, or 1.
+    axisc : int, optional
+        Axis of the result containing the cross product vector(s). Default is -1
+        (the last axis). For CasADi arrays, must be -1, 0, or 1.
+    axis : int, optional
+        If given, the axis of ``a``, ``b``, and the result that defines the
+        vector(s) and cross product(s). Overrides ``axisa``, ``axisb``, and
+        ``axisc``.
+    manual : bool, optional
+        If True, use a manual implementation that treats ``a`` and ``b`` as
+        3-element sequences and returns a tuple of the three cross-product
+        components. Default is False.
+
+    Returns
+    -------
+    Array
+        Vector cross product(s). If ``manual`` is True, a tuple of the three
+        components is returned instead.
+
+    See Also
+    --------
+    numpy.cross : https://numpy.org/doc/stable/reference/generated/numpy.cross.html
     """
     if manual:
         cross_x = a[1] * b[2] - a[2] * b[1]
@@ -74,12 +127,26 @@ def cross(a, b, axisa=-1, axisb=-1, axisc=-1, axis=None, manual=False):
 
 
 def transpose(a, axes=None):
-    """
-    Reverse or permute the axes of an array; returns the modified array.
+    """Reverse or permute the axes of an array; return the modified array.
 
-    For an array a with two axes, transpose(a) gives the matrix transpose.
+    For an array ``a`` with two axes, ``transpose(a)`` gives the matrix transpose.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.transpose.html
+    Parameters
+    ----------
+    a
+        Input array.
+    axes : tuple or list of ints, optional
+        Permutation of the axes (NumPy backend only). If None (default), the
+        order of the axes is reversed.
+
+    Returns
+    -------
+    Array
+        The input array with its axes permuted.
+
+    See Also
+    --------
+    numpy.transpose : https://numpy.org/doc/stable/reference/generated/numpy.transpose.html
     """
     if not is_casadi_type(a, recursive=False):
         return _onp.transpose(a, axes=axes)

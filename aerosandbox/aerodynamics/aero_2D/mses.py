@@ -1,38 +1,42 @@
 from aerosandbox.common import ExplicitAnalysis
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import ConcreteVectorizable
+from typing import Literal
 import subprocess
 from pathlib import Path
 from aerosandbox.geometry import Airfoil
 from aerosandbox.aerodynamics.aero_3D.avl import AVL
-from typing import Union, List
 import tempfile
 from textwrap import dedent
 
 
 class MSES(ExplicitAnalysis):
     """
+    An interface to MSES, MSET, and MPLOT, a 2D airfoil analysis system.
 
-    An interface to MSES, MSET, and MPLOT, a 2D airfoil analysis system developed by Mark Drela at MIT.
+    MSES, MSET, and MPLOT were developed by Mark Drela at MIT. Requires compiled binaries for
+    all the programs to be on your computer; MSES is available here:
+    https://web.mit.edu/drela/Public/web/mses/
+    Academics can get a copy by emailing the MIT Tech. Licensing Office; MIT affiliates can
+    find a copy on Athena.
 
-    Requires compiled binaries for all the programs to be on your computer;
-    MSES is available here: https://web.mit.edu/drela/Public/web/mses/
-    Academics can get a copy by emailing the MIT Tech. Licensing Office;
-    MIT affiliates can find a copy on Athena.
+    It is recommended (but not required) that you add MSES, MSET, and MPLOT to your system
+    PATH environment variable such that they can be called with the commands `mses`, `mset`,
+    and `mplot`. If this is not the case, you need to specify the path to these executables
+    using the command arguments of the constructor.
 
-    It is recommended (but not required) that you add MSES, MSET, and MPLOT to your system PATH environment variable
-    such that they can be called with the commands `mses`, `mset`, and `mplot`. If this is not the case, you need to
-    specify the path to these executables using the command arguments of the constructor.
-
+    Notes
     -----
     X11 Notes:
 
-    Note that MSES, MSET, and MPLOT by default open up X11 windows on your computer. If you prefer that this doesn't
-    happen (for extra speed), or if you cannot have this happen (e.g., you are computing in an environment without
-    proper X11 support, like Windows Subsystem for Linux), you should use XVFB. https://en.wikipedia.org/wiki/Xvfb
+    Note that MSES, MSET, and MPLOT by default open up X11 windows on your computer. If you
+    prefer that this doesn't happen (for extra speed), or if you cannot have this happen
+    (e.g., you are computing in an environment without proper X11 support, like Windows
+    Subsystem for Linux), you should use XVFB. https://en.wikipedia.org/wiki/Xvfb
 
-    XVFB is a virtual "display" server that can receive X11 output and safely dump it. (If you don't use XVFB and you
-    don't have proper X11 support on your computer, this AeroSandbox MSES module will simply error out during the
-    MSET call - probably not what you want.)
+    XVFB is a virtual "display" server that can receive X11 output and safely dump it. (If you
+    don't use XVFB and you don't have proper X11 support on your computer, this AeroSandbox
+    MSES module will simply error out during the MSET call - probably not what you want.)
 
     To install XVFB on a Linux machine, use:
 
@@ -40,24 +44,22 @@ class MSES(ExplicitAnalysis):
     sudo apt-get install xvfb
     ```
 
-    Then, when instantiating this MSES instance in AeroSandbox, pass the `use_xvfb` flag to be True. Default behavior
-    here is that this class will look for the XVFB executable, `xvfb-run`, on your machine. If it finds it,
-    it will run with XVFB enabled. If it does not, it will run without XVFB.
+    Then, when instantiating this MSES instance in AeroSandbox, pass the `use_xvfb` flag to be
+    True. Default behavior here is that this class will look for the XVFB executable,
+    `xvfb-run`, on your machine. If it finds it, it will run with XVFB enabled. If it does
+    not, it will run without XVFB.
 
-    -----
-
-    Usage example:
-
+    Examples
+    --------
     >>> ms = MSES(
     >>>     airfoil=Airfoil("naca2412").repanel(n_points_per_side=100),
-    >>>     Re=1e6,
-    >>>     mach=0.2,
     >>> )
     >>>
-    >>> result_at_single_alpha = ms.alpha(5)
-    >>> #result_at_several_CLs = ms.cl([0.5, 0.7, 0.8, 0.9])
-    >>> result_at_multiple_alphas = ms.alpha([3, 5, 60]) # Note: if a result does not converge (such as the 60 degree case here), it will not be included in the results.
+    >>> result_at_single_operating_point = ms.run(alpha=5, Re=1e6, mach=0.2)
+    >>> result_at_multiple_alphas = ms.run(alpha=[3, 5, 60], Re=1e6, mach=0.2)
 
+    Note: if a run does not converge (such as the 60 degree case in the example above), it
+    will not be included in the results.
     """
 
     def __init__(
@@ -70,14 +72,16 @@ class MSES(ExplicitAnalysis):
         mset_command: str = "mset",
         mses_command: str = "mses",
         mplot_command: str = "mplot",
-        use_xvfb: bool = None,
+        use_xvfb: bool | None = None,
         xvfb_command: str = "xvfb-run -a",
         verbosity: int = 1,
-        timeout_mset: Union[float, int, None] = 10,
-        timeout_mses: Union[float, int, None] = 60,
-        timeout_mplot: Union[float, int, None] = 10,
-        working_directory: str = None,
-        behavior_after_unconverged_run: str = "reinitialize",
+        timeout_mset: float | int | None = 10,
+        timeout_mses: float | int | None = 60,
+        timeout_mplot: float | int | None = 10,
+        working_directory: str | None = None,
+        behavior_after_unconverged_run: Literal[
+            "reinitialize", "terminate"
+        ] = "reinitialize",
         mset_alpha: float = 0,
         mset_n: int = 141,
         mset_e: float = 0.4,
@@ -87,61 +91,93 @@ class MSES(ExplicitAnalysis):
         mses_mucon: float = -1.0,
     ):
         """
-        Interface to XFoil. Compatible with both XFoil v6.xx (public) and XFoil v7.xx (private, contact Mark Drela at
-        MIT for a copy.)
+        Initialize an interface to MSES, MSET, and MPLOT.
 
-        Args:
-            # TODO docs
-            airfoil: The angle of attack [degrees]
+        MSES, MSET, and MPLOT are a 2D airfoil analysis system developed by Mark Drela at MIT.
 
-            Re: The chord-referenced Reynolds number
+        Parameters
+        ----------
+        airfoil : Airfoil
+            The airfoil to analyze. Should be an AeroSandbox Airfoil object.
+        n_crit : float
+            The critical Tollmein-Schlichting wave amplification factor, as part of the "e^n"
+            transition criterion. This is a measure of freestream turbulence and surface
+            roughness.
+        xtr_upper : float
+            The upper-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default).
+        xtr_lower : float
+            The lower-surface forced transition location [x/c], where the boundary layer will
+            be automatically tripped to turbulent. Set to 1 to disable forced transition
+            (default).
+        max_iter : int
+            How many iterations should we let MSES do?
+        mset_command : str
+            The command-line argument to call MSET.
 
-            mach: The freestream Mach number
+            * If MSET is on your system PATH, then you can just leave this as "mset".
 
-            n_crit: The critical Tollmein-Schlichting wave amplification factor
+            * If MSET is not on your system PATH, then you should provide a filepath to the
+              MSET executable.
+        mses_command : str
+            The command-line argument to call MSES. (Same rules as `mset_command`.)
+        mplot_command : str
+            The command-line argument to call MPLOT. (Same rules as `mset_command`.)
+        use_xvfb : bool | None
+            Controls whether Xvfb is used to soak up the X11 windows opened by MSET, MSES, and
+            MPLOT. (See the "X11 Notes" in the class docstring above.) If this is None
+            (default), Xvfb is used if and only if the `xvfb_command` executable appears to be
+            available on this machine.
+        xvfb_command : str
+            The command-line argument to call Xvfb, if it is used.
+        verbosity : int
+            Controls the amount of printout. Set to 0 for silent operation; 1 (default)
+            prints high-level progress; 2 also prints the raw MSET / MSES / MPLOT outputs.
+        timeout_mset : float | int | None
+            Controls how long any individual MSET run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        timeout_mses : float | int | None
+            Controls how long any individual MSES run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        timeout_mplot : float | int | None
+            Controls how long any individual MPLOT run is allowed to take before the process
+            is killed. Given in units of seconds [s]. To disable the timeout, set this to
+            None.
+        working_directory : str | None
+            Controls which working directory is used for the input and output files. By
+            default, this is set to a TemporaryDirectory that is deleted after the run.
+            However, you can set it to somewhere local for debugging purposes.
+        behavior_after_unconverged_run : Literal["reinitialize", "terminate"]
+            Controls what happens when a run in a (multipoint) sweep does not converge.
+            Options are:
 
-            xtr_upper: The upper-surface trip location [x/c]
+            * "reinitialize" (default): Reinitializes the mesh at the next operating point
+              and continues the sweep.
 
-            xtr_lower: The lower-surface trip location [x/c]
-
-            full_potential: If this is set True, it will turn full-potential mode on. Note that full-potential mode
-            is only available in XFoil v7.xx or higher. (Unless you have specifically gone through the trouble of
-            acquiring a copy of XFoil v7.xx you likely have v6.xx. Version 7.xx is not publicly distributed as of
-            2022; contact Mark Drela at MIT for a copy.) Note that if you enable this flag with XFoil v6.xx,
-            you'll likely get an error (no output file generated).
-
-            max_iter: How many iterations should we let XFoil do?
-
-            xfoil_command: The command-line argument to call XFoil.
-
-                * If XFoil is on your system PATH, then you can just leave this as "xfoil".
-
-                * If XFoil is not on your system PATH, then you should provide a filepath to the XFoil executable.
-
-                Note that XFoil is not on your PATH by default. To tell if XFoil is not on your system PATH,
-                open up a terminal and type "xfoil".
-
-                    * If the XFoil menu appears, it's on your PATH.
-
-                    * If you get something like "'xfoil' is not recognized as an internal or external command..." or
-                    "Command 'xfoil' not found, did you mean...", then it is not on your PATH and you'll need to
-                    specify the location of your XFoil executable as a string.
-
-                To add XFoil to your path, modify your system's environment variables. (Google how to do this for
-                your OS.)
-
-            xfoil_repanel: Controls whether to allow XFoil to repanel your airfoil using its internal methods (PANE
-            -> PPAR, both with default settings, 160 nodes)
-
-            verbose: Controls whether or not XFoil output is printed to command line.
-
-            timeout: Controls how long any individual XFoil run (i.e. alpha sweep) is allowed to run before the
-            process is killed. Given in units of seconds. To disable timeout, set this to None.
-
-            working_directory: Controls which working directory is used for the XFoil input and output files. By
-            default, this is set to a TemporaryDirectory that is deleted after the run. However, you can set it to
-            somewhere local for debugging purposes.
-
+            * "terminate": Skips all subsequent runs; any already-converged results are still
+              returned.
+        mset_alpha : float
+            The angle of attack [degrees] used when generating the initial mesh with MSET.
+            (Currently unused; the mesh is instead initialized at the first angle of attack
+            in the run sweep.)
+        mset_n : int
+            The number of airfoil-surface gridpoints; the value passed to option "n" of
+            MSET's grid-parameter menu.
+        mset_e : float
+            The value passed to option "e" (grid exponent) of MSET's grid-parameter menu.
+        mset_io : int
+            The value passed to options "i" and "o" (inlet/outlet streamwise gridpoints) of
+            MSET's grid-parameter menu.
+        mset_x : float
+            The value passed to option "x" of MSET's grid-parameter menu.
+        mses_mcrit : float
+            The critical Mach number ("MCRIT") written to the MSES case file. Governs where
+            MSES begins to add artificial dissipation.
+        mses_mucon : float
+            The artificial dissipation constant ("MUCON") written to the MSES case file.
         """
         if use_xvfb is None:
             trial_run = subprocess.run(
@@ -185,10 +221,36 @@ class MSES(ExplicitAnalysis):
 
     def run(
         self,
-        alpha: Union[float, np.ndarray, List] = 0.0,
-        Re: Union[float, np.ndarray, List] = 0.0,
-        mach: Union[float, np.ndarray, List] = 0.01,
+        alpha: ConcreteVectorizable = 0.0,
+        Re: ConcreteVectorizable = 0.0,
+        mach: ConcreteVectorizable = 0.01,
     ):
+        """
+        Run MSES at one or more operating points and return the results.
+
+        The `alpha`, `Re`, and `mach` inputs are broadcast against each other (in the NumPy
+        sense) to form the sequence of operating points, which are then run in order.
+
+        Parameters
+        ----------
+        alpha : ConcreteVectorizable
+            The angle of attack [degrees]. Can be either a float or an iterable of floats,
+            such as an array.
+        Re : ConcreteVectorizable
+            The chord-referenced Reynolds number. Can be either a float or an iterable of
+            floats, such as an array.
+        mach : ConcreteVectorizable
+            The freestream Mach number. Can be either a float or an iterable of floats, such
+            as an array.
+
+        Returns
+        -------
+        dict
+            A dictionary with the MSES results, where each value is a numpy array with one
+            entry per converged run. Keys are parsed from the MPLOT output and include "mach",
+            "alpha", "CL", "CD", etc. Runs that do not converge are not included. If no runs
+            converge, an empty dictionary is returned.
+        """
         ### Make all inputs iterables:
         alphas, Res, machs = np.broadcast_arrays(
             np.ravel(alpha),
@@ -245,16 +307,18 @@ class MSES(ExplicitAnalysis):
                 )
 
             try:
-                mset_run = mset(mset_alpha=alphas[0])
+                mset(mset_alpha=alphas[0])
             except subprocess.CalledProcessError as e:
                 print(e.stdout)
                 print(e.stderr)
                 if "BadName (named color or font does not exist)" in e.stderr:
                     raise RuntimeError(
-                        "MSET via AeroSandbox errored becausee it couldn't launch an X11 window.\n"
+                        "MSET via AeroSandbox errored because it couldn't launch an X11 window.\n"
                         "Try either installing a typical X11 client, or install Xvfb, which is\n"
                         "a virtual X11 server. More details in the AeroSandbox MSES docstring."
                     )
+                else:
+                    raise
 
             runs_output = {}
 
@@ -314,13 +378,13 @@ class MSES(ExplicitAnalysis):
                             next_alpha = alphas[i + 1]
                         except IndexError:
                             break
-                        mset_run = mset(mset_alpha=next_alpha)
+                        mset(mset_alpha=next_alpha)
                     elif self.behavior_after_unconverged_run == "terminate":
                         if self.verbosity >= 1:
                             print(
                                 "Run did not converge. Skipping all subsequent runs..."
                             )
-                            break
+                        break
 
                     continue
 
@@ -364,6 +428,10 @@ class MSES(ExplicitAnalysis):
 
             # Clean up the dictionary
             runs_output = {k: np.array(v) for k, v in runs_output.items()}
+
+            if len(runs_output) == 0:  # No runs converged
+                return runs_output
+
             # runs_output["mach"] = runs_output.pop("Ma")
             runs_output = {"mach": runs_output.pop("Ma"), **runs_output}
 

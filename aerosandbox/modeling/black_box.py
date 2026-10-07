@@ -1,36 +1,53 @@
 import inspect
-from typing import Callable, Any, Literal
+from typing import Callable, Literal
 
 
 def black_box(
-    function: Callable[[Any], float],
+    function: Callable[..., float],
     n_in: int | None = None,
     n_out: int = 1,
     fd_method: Literal["forward", "backward", "central", "smoothed"] = "central",
     fd_step: float | None = None,
     fd_step_iter: bool | None = None,
-) -> Callable[[Any], float]:
+) -> Callable[..., float]:
     """
-    Wraps a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization problems.
+    Wrap a function as a black box, allowing it to be used in AeroSandbox / CasADi optimization
+    problems.
 
-    Obtains gradients via finite differences. Assumes that the function's Jacobian is fully dense, always.
+    Obtains gradients via finite differences. Assumes that the function's Jacobian is fully dense,
+    always.
 
-    Args:
+    Parameters
+    ----------
+    function : Callable[..., float]
+        The function to wrap as a black box. Should accept scalar inputs (one scalar per argument,
+        positional or keyword) and return a single scalar output.
+    n_in : int | None, optional
+        The number of (scalar) inputs that the function takes. If not specified, this is inferred
+        from the function's signature (i.e., its number of parameters).
+    n_out : int, optional
+        The number of (scalar) outputs that the function returns. Currently, only single-output
+        functions (`n_out=1`) are supported.
+    fd_method : Literal["forward", "backward", "central", "smoothed"], optional
+        The finite-differencing method used to compute gradients. One of:
 
-        function:
+        - "forward"
+        - "backward"
+        - "central"
+        - "smoothed"
+    fd_step : float | None, optional
+        The step size used for finite-differencing. Maps to the CasADi `fd_options["h"]` option;
+        if not specified, CasADi's default is used.
+    fd_step_iter : bool | None, optional
+        Whether the finite-differencing step size should be iteratively refined. Maps to the
+        CasADi `fd_options["h_iter"]` option; if not specified, CasADi's default is used.
 
-        n_in:
-
-        n_out:
-
-        fd_method: One of:
-            - 'forward'
-            - 'backward'
-            - 'central'
-            - 'smoothed'
-
-    Returns:
-
+    Returns
+    -------
+    Callable[..., float]
+        A wrapped version of the function with the same call signature (both positional and
+        keyword arguments are supported), which can be used inside AeroSandbox / CasADi
+        optimization problems.
     """
     ### Grab the signature of the function to be wrapped - we'll need it.
     signature = inspect.signature(function)
@@ -57,6 +74,10 @@ def black_box(
     if fd_step_iter is not None:
         fd_options["h_iter"] = fd_step_iter
 
+    # NOTE: This is the ONLY place outside of aerosandbox.numpy where CasADi is directly
+    # imported. This exception is necessary because cas.Callback is a CasADi-specific
+    # feature for creating custom callback functions with finite-difference gradients.
+    # There is no backend-agnostic abstraction for this functionality.
     import casadi as cas
 
     class BlackBox(cas.Callback):
@@ -108,13 +129,18 @@ def black_box(
         inputs = []
 
         # Check number of positional arguments in the signature
-        n_positional_args = len(signature.parameters) - len(
-            signature.parameters.values()
+        n_required_args = sum(
+            1
+            for parameter in signature.parameters.values()
+            if parameter.default is parameter.empty
         )
         n_args = len(signature.parameters)
-        if len(args) < n_positional_args or len(args) > n_args:
+        if len(args) > n_args:
+            # Note: required arguments may legally be passed as keyword arguments, so only
+            # an upper-bound check applies here. (Missing required arguments are caught,
+            # per-argument, in the loop below.)
             raise TypeError(
-                f"Takes from {n_positional_args} to {n_args} positional arguments but {len(args)} were given"
+                f"Takes from {n_required_args} to {n_args} positional arguments but {len(args)} were given"
             )
 
         for i, (name, parameter) in enumerate(signature.parameters.items()):

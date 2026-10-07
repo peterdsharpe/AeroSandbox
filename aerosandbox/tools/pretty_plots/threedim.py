@@ -2,7 +2,7 @@ import matplotlib
 import mpl_toolkits
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from typing import Dict, Tuple
+from typing import Literal
 
 preset_view_angles = {
     # Given in the form:
@@ -26,17 +26,38 @@ def figure3d(
     nrows: int = 1,
     ncols: int = 1,
     orthographic: bool = True,
-    box_aspect: Tuple[float] = None,
+    box_aspect: tuple[float] | None = None,
     adjust_colors: bool = True,
     computed_zorder: bool = True,
-    ax_kwargs: Dict = None,
+    ax_kwargs: dict | None = None,
     **fig_kwargs,
-) -> Tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
+) -> tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]:
     """
-    Creates a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
+    Create a new 3D figure. Args and kwargs are passed into matplotlib.pyplot.figure().
 
-    Returns: (fig, ax)
+    Parameters
+    ----------
+    nrows : int
+        The number of rows of subplots.
+    ncols : int
+        The number of columns of subplots.
+    orthographic : bool
+        Whether to use an orthographic (rather than perspective) projection.
+    box_aspect : tuple[float] | None
+        If given, the aspect ratio of the axes' bounding box.
+    adjust_colors : bool
+        Whether to adjust the axes' background colors (moving them onto the panes).
+    computed_zorder : bool
+        Whether matplotlib should compute the z-order of artists automatically.
+    ax_kwargs : dict | None
+        Additional keyword arguments to use when creating each 3D axis.
+    **fig_kwargs
+        Additional keyword arguments passed on to figure creation.
 
+    Returns
+    -------
+    tuple[matplotlib.figure.Figure, mpl_toolkits.mplot3d.axes3d.Axes3D]
+        A tuple of (fig, ax).
     """
     ### Set defaults
     if ax_kwargs is None:
@@ -81,13 +102,17 @@ def figure3d(
 
 def ax_is_3d(ax: matplotlib.axes.Axes = None) -> bool:
     """
-    Determines if a Matplotlib axis object is 3D or not.
+    Determine if a Matplotlib axis object is 3D or not.
 
-    Args:
-        ax: The axis object. If not given, uses the current active axes.
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axis object. If not given, uses the current active axes.
 
-    Returns: A boolean of whether the axis is 3D or not.
-
+    Returns
+    -------
+    bool
+        A boolean of whether the axis is 3D or not.
     """
     if ax is None:
         ax = plt.gca()
@@ -95,7 +120,34 @@ def ax_is_3d(ax: matplotlib.axes.Axes = None) -> bool:
     return hasattr(ax, "zaxis")
 
 
-def set_preset_3d_view_angle(preset_view: str) -> None:
+def set_preset_3d_view_angle(
+    preset_view: Literal[
+        "XY",
+        "XZ",
+        "YZ",
+        "-XY",
+        "-XZ",
+        "-YZ",
+        "left_isometric",
+        "right_isometric",
+        "front",
+        "top",
+        "side",
+    ],
+) -> None:
+    """
+    Set the view angle of the current 3D axes to a named preset.
+
+    Parameters
+    ----------
+    preset_view : str
+        The name of the preset view to use. One of: "XY", "XZ", "YZ", "-XY", "-XZ", "-YZ",
+        "left_isometric", "right_isometric", "front", "top", or "side".
+
+    Returns
+    -------
+    None
+    """
     ax = plt.gca()
 
     if not ax_is_3d(ax):

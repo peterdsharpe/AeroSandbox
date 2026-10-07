@@ -31,5 +31,24 @@ def test_softmax(plot=False):
         plt.show()
 
 
+def test_sigmoid_types():
+    """All documented sigmoid_type options should be accepted (regression
+    test: 'logistic' used to raise ValueError due to `== ("tanh" or
+    "logistic")`)."""
+    for sigmoid_type in ["tanh", "logistic", "arctan", "polynomial"]:
+        assert np.sigmoid(0, sigmoid_type=sigmoid_type) == pytest.approx(0.5)
+        assert np.sigmoid(1e9, sigmoid_type=sigmoid_type) == pytest.approx(1, abs=1e-6)
+        assert np.sigmoid(-1e9, sigmoid_type=sigmoid_type) == pytest.approx(0, abs=1e-6)
+
+    # "tanh" and "logistic" are documented as the same thing.
+    x = np.linspace(-3, 3, 7)
+    assert np.sigmoid(x, sigmoid_type="logistic") == pytest.approx(
+        np.sigmoid(x, sigmoid_type="tanh")
+    )
+
+    with pytest.raises(ValueError):
+        np.sigmoid(0, sigmoid_type="not_a_real_sigmoid")
+
+
 if __name__ == "__main__":
     pytest.main()

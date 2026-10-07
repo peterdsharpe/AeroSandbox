@@ -4,12 +4,13 @@ In short:
 
 * `pip install aerosandbox[full]` for a complete install.
 
-* `pip install aerosandbox` for a lightweight (headless) installation with minimal dependencies. All optimization, numerics, and physics models are included, but optional visualization dependencies are skipped.
+* `pip install aerosandbox` for a lighter-weight installation. All optimization, numerics, and physics models are included, along with 2D plotting via matplotlib; optional dependencies for 3D visualization, CAD export, and geometry manipulation (e.g., plotly, pyvista, trimesh, cadquery) are skipped.
 
 More detail:
 
 1. First, install Python via the Anaconda distribution, [available here](https://www.anaconda.com/products/individual). During the installation, it is recommended that you add Python to your PATH ("[What does this mean?](https://janelbrandon.medium.com/understanding-the-path-variable-6eae0936e976)"), which can be conveniently done by checking a checkbox.
-   2. The minimum-required Python version is given in [this file](./setup.py) in a line beginning with `python_requires = `. At the time of writing (July 2023), the minimum required Python version is 3.8.
+
+   * The minimum-required Python version is given by the `requires-python` line in [`pyproject.toml`](./pyproject.toml). At the time of writing, the minimum required Python version is 3.10.
 
 2. Verify that your installation has completed correctly by opening up a Terminal (Command Prompt on Windows) and executing the following commands. You should see something similar to the below:
 	
@@ -96,16 +97,18 @@ If you get any permissions issues, try the following:
     ```shell
     pip install --user aerosandbox[full] 
     ```
-2. Mac/Linux: Try running with `sudo`, so:
+2. Mac/Linux: Do not use `sudo` with `pip` - modern Linux distributions block installs into the system Python ([PEP 668](https://peps.python.org/pep-0668/)), and it can break system packages. Instead, install into a [virtual environment](https://docs.python.org/3/library/venv.html):
 
     ```bash
-    sudo pip install aerosandbox[full] 
+    python -m venv venv
+    source venv/bin/activate
+    pip install "aerosandbox[full]"
     ```
-   
-    If that still doesn't work, try also adding the `--user` flag to the installation command, so:
+
+    Or, install into your user site-packages by adding the `--user` flag:
 
     ```bash
-    sudo pip install --user aerosandbox[full]
+    pip install --user "aerosandbox[full]"
     ```
 
 ### SSL Certificate Errors

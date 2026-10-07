@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable, Any, Literal, Sequence
 import json
 import casadi as cas
@@ -5,18 +6,22 @@ import aerosandbox.numpy as np
 from aerosandbox.tools import inspect_tools
 from sortedcontainers import SortedDict
 import copy
+from aerosandbox.numpy.typing import ArrayLike, Scalar, Vectorizable
 
 
 class Opti(cas.Opti):
     """
-    The base class for mathematical optimization. For detailed usage, see the docstrings in its key methods:
-        * Opti.variable()
-        * Opti.subject_to()
-        * Opti.parameter()
-        * Opti.solve()
+    The base class for mathematical optimization.
 
-    Example usage is as follows:
+    For detailed usage, see the docstrings in its key methods:
 
+    * `Opti.variable()`
+    * `Opti.subject_to()`
+    * `Opti.parameter()`
+    * `Opti.solve()`
+
+    Examples
+    --------
     >>> opti = asb.Opti() # Initializes an optimization environment
     >>> x = opti.variable(init_guess=5) # Initializes a new variable in that environment
     >>> f = x ** 2 # Evaluates a (in this case, nonlinear) function based on a variable
@@ -29,12 +34,61 @@ class Opti(cas.Opti):
     def __init__(
         self,
         variable_categories_to_freeze: Sequence[str] | str | None = None,
-        cache_filename: str = None,
+        cache_filename: Path | str | None = None,
         load_frozen_variables_from_cache: bool = False,
         save_to_cache_on_solve: bool = False,
         ignore_violated_parametric_constraints: bool = False,
-        freeze_style: Literal["parameter", "frozen"] = "parameter",
-    ):  # TODO document
+        freeze_style: Literal["parameter", "float"] = "parameter",
+    ):
+        """
+        Initialize a new optimization environment.
+
+        For more usage information, see the docstrings of the key methods listed in the class
+        docstring above.
+
+        Parameters
+        ----------
+        variable_categories_to_freeze : Sequence[str] | str | None
+            A list of variable categories (as named via the `category` argument of
+            `Opti.variable()`) that should be "frozen" (i.e., fixed rather than optimized).
+            You can also pass a single category as a bare string, or the special string "all"
+            to freeze every category.
+
+            Frozen variables take on the value of their `init_guess` - unless
+            `load_frozen_variables_from_cache` is True, in which case their values are loaded
+            from the cache file at solve time. For more information on freezing, see the
+            docstring of `Opti.variable()`.
+        cache_filename : Path | str | None
+            A path to a JSON file used to save and load solved values of variables (by
+            category). Required if you use `load_frozen_variables_from_cache` or
+            `save_to_cache_on_solve`; also used by `Opti.save_solution()` and
+            `Opti.get_solution_dict_from_cache()`.
+        load_frozen_variables_from_cache : bool
+            If True, then upon calling `Opti.solve()`, the values of all frozen variables (in
+            the categories given by `variable_categories_to_freeze`) will be loaded from the
+            cache file at `cache_filename`, rather than using their `init_guess`. (Variables
+            manually frozen with `Opti.variable(freeze=True)` keep their `init_guess` value.)
+        save_to_cache_on_solve : bool
+            If True, then upon a successful `Opti.solve()`, the solved values of all
+            variables will be saved to the cache file at `cache_filename` (equivalent to
+            calling `Opti.save_solution()` after solving).
+        ignore_violated_parametric_constraints : bool
+            Determines what happens when a constraint that contains no decision variables
+            (e.g., one between frozen variables only) evaluates False. If False (default), a
+            RuntimeError is raised at `Opti.subject_to()`, since the problem is infeasible
+            as-written. If True, such constraints are silently ignored - useful when freezing
+            variables would otherwise make some constraints trivially violated.
+        freeze_style : Literal["parameter", "float"]
+            Determines how frozen variables are implemented under the hood. Options are:
+
+            * "parameter" (default): frozen variables become CasADi parameters. Their values
+              can then be swapped after declaration (e.g., when loading from a cache, or via
+              `parameter_mapping`).
+
+            * "float": frozen variables become literal floats (or arrays). This simplifies
+              the resulting expression graphs, but their values are baked in permanently at
+              declaration - so this is incompatible with `load_frozen_variables_from_cache`.
+        """
         # Default arguments
         if variable_categories_to_freeze is None:
             variable_categories_to_freeze = []
@@ -71,158 +125,182 @@ class Opti(cas.Opti):
 
     def variable(
         self,
-        init_guess: float | np.ndarray | None = None,
-        n_vars: int = None,
-        scale: float = None,
+        init_guess: Vectorizable | None = None,
+        n_vars: int | None = None,
+        scale: Vectorizable | None = None,
         freeze: bool = False,
         log_transform: bool = False,
         category: str = "Uncategorized",
-        lower_bound: float = None,
-        upper_bound: float = None,
+        lower_bound: Vectorizable | None = None,
+        upper_bound: Vectorizable | None = None,
         _stacklevel: int = 1,
-    ) -> cas.MX:
+    ) -> cas.MX | float | np.ndarray:
         """
-        Initializes a new decision variable (or vector of decision variables). You should pass an initial guess (
-        `init_guess`) upon defining a new variable. Dimensionality is inferred from this initial guess, but it can be
-        overridden; see below for syntax.
+        Initialize a new decision variable (or vector of decision variables).
 
-        It is highly, highly recommended that you provide a scale (`scale`) for each variable, especially for
-        nonconvex problems, although this is not strictly required.
+        You should pass an initial guess (`init_guess`) upon defining a new variable.
+        Dimensionality is inferred from this initial guess, but it can be overridden; see
+        below for syntax.
 
-        Usage notes:
+        It is highly, highly recommended that you provide a scale (`scale`) for each
+        variable, especially for nonconvex problems, although this is not strictly required.
 
-            When using vector variables, individual components of this vector of variables can be accessed via normal
-            indexing. Example:
-                >>> opti = asb.Opti()
-                >>> my_var = opti.variable(n_vars = 5)
-                >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
-                >>> my_sum = asb.sum(my_var)  # This will sum up all elements of `my_var`
+        When using vector variables, individual components of this vector of variables can be
+        accessed via normal indexing. Example:
 
-        Args:
+        >>> opti = asb.Opti()
+        >>> my_var = opti.variable(n_vars = 5)
+        >>> opti.subject_to(my_var[3] >= my_var[2])  # This is a valid way of indexing
+        >>> my_sum = asb.sum(my_var)  # This will sum up all elements of `my_var`
 
-            init_guess: Initial guess for the optimal value of the variable being initialized. This is where in the
-                design space the optimizer will start looking.
+        Parameters
+        ----------
+        init_guess : Vectorizable | None
+            Initial guess for the optimal value of the variable being initialized. This is
+            where in the design space the optimizer will start looking.
 
-                This can be either a float or a NumPy ndarray; the dimension of the variable (i.e. scalar,
-                vector) that is created will be automatically inferred from the shape of the initial guess you
-                provide here. (Although it can also be overridden using the `n_vars` parameter; see below.)
+            This can be either a float or a NumPy ndarray; the dimension of the variable
+            (i.e., scalar, vector) that is created will be automatically inferred from the
+            shape of the initial guess you provide here. (Although it can also be overridden
+            using the `n_vars` parameter; see below.)
 
-                For scalar variables, your initial guess should be a float:
+            For scalar variables, your initial guess should be a float:
 
-                >>> opti = asb.Opti()
-                >>> scalar_var = opti.variable(init_guess=5) # Initializes a scalar variable at a value of 5
+            >>> opti = asb.Opti()
+            >>> scalar_var = opti.variable(init_guess=5)
+            >>> # Initializes a scalar variable at a value of 5.
 
-                For vector variables, your initial guess should be either:
+            For vector variables, your initial guess should be either:
 
-                    * a float, in which case you must pass the length of the vector as `n_vars`, otherwise a scalar
-                    variable will be created:
+            * a float, in which case you must pass the length of the vector as `n_vars`,
+              otherwise a scalar variable will be created:
 
-                    >>> opti = asb.Opti()
-                    >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
-                    >>> # 10, with all 10 elements set to an initial guess of 5.
+              >>> opti = asb.Opti()
+              >>> vector_var = opti.variable(init_guess=5, n_vars=10)
+              >>> # Initializes a vector variable of length 10, with all 10 elements set to
+              >>> # an initial guess of 5.
 
-                    * a NumPy ndarray, in which case each element will be initialized to the corresponding value in
-                    the given array:
+            * a NumPy ndarray, in which case each element will be initialized to the
+              corresponding value in the given array:
 
-                    >>> opti = asb.Opti()
-                    >>> vector_var = opti.variable(init_guess=np.linspace(0, 5, 10)) # Initializes a vector variable of
-                    >>> # length 10, with all 10 elements initialized to linearly vary between 0 and 5.
+              >>> opti = asb.Opti()
+              >>> vector_var = opti.variable(init_guess=np.linspace(0, 5, 10))
+              >>> # Initializes a vector variable of length 10, with all 10 elements
+              >>> # initialized to linearly vary between 0 and 5.
 
-                In the case where the variable is to be log-transformed (see `log_transform`), the initial guess
-                should not be log-transformed as well - just supply the initial guess as usual. (Log-transform of the
-                initial guess happens under the hood.) The initial guess must, of course, be a positive number in
-                this case.
+            In the case where the variable is to be log-transformed (see `log_transform`),
+            the initial guess should not be log-transformed as well - just supply the initial
+            guess as usual. (Log-transform of the initial guess happens under the hood.) The
+            initial guess must, of course, be a positive number in this case.
+        n_vars : int | None
+            [Optional] Used to manually override the dimensionality of the variable to
+            create; if not provided, the dimensionality of the variable is inferred from the
+            initial guess `init_guess`.
 
-            n_vars: [Optional] Used to manually override the dimensionality of the variable to create; if not
-                provided, the dimensionality of the variable is inferred from the initial guess `init_guess`.
+            The only real case where you need to use this argument would be if you are
+            initializing a vector variable to a scalar value, but you don't feel like using
+            `init_guess=value * np.ones(n_vars)`. For example:
 
-                The only real case where you need to use this argument would be if you are initializing a vector
-                variable to a scalar value, but you don't feel like using `init_guess=value * np.ones(n_vars)`.
-                For example:
+            >>> opti = asb.Opti()
+            >>> vector_var = opti.variable(init_guess=5, n_vars=10)
+            >>> # Initializes a vector variable of length 10, with all 10 elements set to an
+            >>> # initial guess of 5.
+        scale : Vectorizable | None
+            [Optional] Approximate scale of the variable.
 
-                    >>> opti = asb.Opti()
-                    >>> vector_var = opti.variable(init_guess=5, n_vars=10) # Initializes a vector variable of length
-                    >>> # 10, with all 10 elements set to an initial guess of 5.
+            For example, if you're optimizing the design of an automobile and setting the
+            tire diameter as an optimization variable, you might choose `scale=0.5`,
+            corresponding to 0.5 meters.
 
-            scale: [Optional] Approximate scale of the variable.
+            Properly scaling your variables can have a huge impact on solution speed (or even
+            if the optimizer converges at all). Although most modern second-order optimizers
+            (such as IPOPT, used here) are theoretically scale-invariant, numerical precision
+            issues due to floating-point arithmetic can make solving poorly-scaled problems
+            really difficult or impossible. See here for more info:
+            https://web.casadi.org/blog/nlp-scaling/
 
-                For example, if you're optimizing the design of a automobile and setting the tire diameter as an
-                optimization variable, you might choose `scale=0.5`, corresponding to 0.5 meters.
+            If not specified, the code will try to pick a sensible value by defaulting to the
+            `init_guess`.
+        freeze : bool
+            [Optional] This boolean tells the optimizer to "freeze" the variable at a
+            specific value. In order to determine the value to freeze the variable at, the
+            optimizer will use the following logic:
 
-                Properly scaling your variables can have a huge impact on solution speed (or even if the optimizer
-                converges at all). Although most modern second-order optimizers (such as IPOPT, used here) are
-                theoretically scale-invariant, numerical precision issues due to floating-point arithmetic can make
-                solving poorly-scaled problems really difficult or impossible. See here for more info:
-                https://web.casadi.org/blog/nlp-scaling/
+            * If you initialize a new variable with the parameter `freeze=True`: the
+              optimizer will freeze the variable at the value of the initial guess.
 
-                If not specified, the code will try to pick a sensible value by defaulting to the `init_guess`.
+              >>> opti = Opti()
+              >>> my_var = opti.variable(init_guess=5, freeze=True)
+              >>> # This will freeze my_var at a value of 5.
 
-            freeze: [Optional] This boolean tells the optimizer to "freeze" the variable at a specific value. In
-                order to select the determine to freeze the variable at, the optimizer will use the following logic:
+            * If the Opti instance is associated with a cache file, and you told it to freeze
+              a specific category(s) of variables that your variable is a member of, and you
+              didn't manually specify to freeze the variable: the variable will be frozen
+              based on the value in the cache file (and ignore the `init_guess`). Example:
 
-                    * If you initialize a new variable with the parameter `freeze=True`: the optimizer will freeze
-                    the variable at the value of initial guess.
+              >>> opti = Opti(cache_filename="my_file.json",
+              ...             variable_categories_to_freeze=["Wheel Sizing"])
+              >>> # Assume, for example, that `my_file.json` was from a previous run where
+              >>> # my_var=10.
+              >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing")
+              >>> # This will freeze my_var at a value of 10 (from the cache file, not the
+              >>> # init_guess)
 
-                        >>> opti = Opti()
-                        >>> my_var = opti.variable(init_guess=5, freeze=True) # This will freeze my_var at a value of 5.
+            * If the Opti instance is associated with a cache file, and you told it to freeze
+              a specific category(s) of variables that your variable is a member of, but you
+              then manually specified that the variable should be frozen: the variable will
+              once again be frozen at the value of `init_guess`:
 
-                    * If the Opti instance is associated with a cache file, and you told it to freeze a specific
-                    category(s) of variables that your variable is a member of, and you didn't manually specify to
-                    freeze the variable: the variable will be frozen based on the value in the cache file (and ignore
-                    the `init_guess`). Example:
+              >>> opti = Opti(cache_filename="my_file.json",
+              ...             variable_categories_to_freeze=["Wheel Sizing"])
+              >>> # Assume, for example, that `my_file.json` was from a previous run where
+              >>> # my_var=10.
+              >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing", freeze=True)
+              >>> # This will freeze my_var at a value of 5 (`freeze` overrides category
+              >>> # loading.)
 
-                        >>> opti = Opti(cache_filename="my_file.json", variable_categories_to_freeze=["Wheel Sizing"])
-                        >>> # Assume, for example, that `my_file.json` was from a previous run where my_var=10.
-                        >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing")
-                        >>> # This will freeze my_var at a value of 10 (from the cache file, not the init_guess)
+            Motivation for freezing variables:
 
-                    * If the Opti instance is associated with a cache file, and you told it to freeze a specific
-                    category(s) of variables that your variable is a member of, but you then manually specified that
-                    the variable should be frozen: the variable will once again be frozen at the value of `init_guess`:
+            The ability to freeze variables is exceptionally useful when designing
+            engineering systems. Let's say we're designing an airplane. In the beginning of
+            the design process, we're doing "clean-sheet" design - any variable is up for
+            grabs for us to optimize on, because the airplane doesn't exist yet! However, the
+            farther we get into the design process, the more things get "locked in" - we may
+            have ordered jigs, settled on a wingspan, chosen an engine, et cetera. So, if
+            something changes later (let's say that we discover that one of our assumptions
+            was too optimistic halfway through the design process), we have to make up for
+            that lost margin using only the variables that are still free. To do this, we
+            would freeze the variables that are already decided on.
 
-                        >>> opti = Opti(cache_filename="my_file.json", variable_categories_to_freeze=["Wheel Sizing"])
-                        >>> # Assume, for example, that `my_file.json` was from a previous run where my_var=10.
-                        >>> my_var = opti.variable(init_guess=5, category="Wheel Sizing", freeze=True)
-                        >>> # This will freeze my_var at a value of 5 (`freeze` overrides category loading.)
+            By categorizing variables, you can also freeze entire categories of variables.
+            For example, you can freeze all of the wing design variables for an airplane but
+            leave all of the fuselage variables free.
 
-                Motivation for freezing variables:
+            This idea of freezing variables can also be used to look at off-design
+            performance - freeze a design, but change the operating conditions.
+        log_transform : bool
+            [Optional] Advanced use only. A flag of whether to internally-log-transform this
+            variable before passing it to the optimizer. Good for known positive engineering
+            quantities that become nonsensical if negative (e.g., mass). Log-transforming
+            these variables can also help maintain convexity.
+        category : str
+            [Optional] What category of variables does this belong to? # TODO expand docs
+        lower_bound : Vectorizable | None
+            [Optional] If provided, defines a bounds constraint on the new variable that
+            keeps the variable above a given value.
+        upper_bound : Vectorizable | None
+            [Optional] If provided, defines a bounds constraint on the new variable that
+            keeps the variable below a given value.
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where variables are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.variable_declaration()`.
 
-                    The ability to freeze variables is exceptionally useful when designing engineering systems. Let's say
-                    we're designing an airplane. In the beginning of the design process, we're doing "clean-sheet" design
-                    - any variable is up for grabs for us to optimize on, because the airplane doesn't exist yet!
-                    However, the farther we get into the design process, the more things get "locked in" - we may have
-                    ordered jigs, settled on a wingspan, chosen an engine, et cetera. So, if something changes later (
-                    let's say that we discover that one of our assumptions was too optimistic halfway through the design
-                    process), we have to make up for that lost margin using only the variables that are still free. To do
-                    this, we would freeze the variables that are already decided on.
-
-                    By categorizing variables, you can also freeze entire categories of variables. For example,
-                    you can freeze all of the wing design variables for an airplane but leave all of the fuselage
-                    variables free.
-
-                    This idea of freezing variables can also be used to look at off-design performance - freeze a
-                    design, but change the operating conditions.
-
-            log_transform: [Optional] Advanced use only. A flag of whether to internally-log-transform this variable
-                before passing it to the optimizer. Good for known positive engineering quantities that become nonsensical
-                if negative (e.g. mass). Log-transforming these variables can also help maintain convexity.
-
-            category: [Optional] What category of variables does this belong to? # TODO expand docs
-
-            lower_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
-                variable above a given value.
-
-            upper_bound: [Optional] If provided, defines a bounds constraint on the new variable that keeps the
-                variable below a given value.
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-                variables are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-                stacklevel of the declaration tracked, which is then presented using
-                `aerosandbox.Opti.variable_declaration()`.
-
-        Returns:
+        Returns
+        -------
+        cas.MX | float | np.ndarray
             The variable itself as a symbolic CasADi variable (MX type).
-
         """
         ### Set defaults
         if init_guess is None:
@@ -353,11 +431,29 @@ class Opti(cas.Opti):
                     )
             else:
                 if lower_bound is not None:
+                    if not np.is_casadi_type(lower_bound, recursive=False) and np.any(
+                        np.array(lower_bound) < 0
+                    ):
+                        raise ValueError(
+                            "You can't give a negative `lower_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (Taking the log of this bound would "
+                            "create an invalid constraint.)\n"
+                            "Either remove the `lower_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale >= np.log(lower_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
                     )
                 if upper_bound is not None:
+                    if not np.is_casadi_type(upper_bound, recursive=False) and np.any(
+                        np.array(upper_bound) <= 0
+                    ):
+                        raise ValueError(
+                            "You can't give a non-positive `upper_bound` to a log-transformed variable, since a "
+                            "log-transformed variable is always positive. (This constraint could never be "
+                            "satisfied.)\n"
+                            "Either change the `upper_bound`, or don't log-transform this variable."
+                        )
                     self.subject_to(
                         log_var / log_scale <= np.log(upper_bound) / log_scale,
                         _stacklevel=_stacklevel + 1,
@@ -367,53 +463,66 @@ class Opti(cas.Opti):
 
     def subject_to(
         self,
-        constraint: cas.MX | bool | list,  # TODO add scale
+        constraint: Vectorizable
+        | bool
+        | Sequence["Vectorizable | bool"],  # TODO add scale
         _stacklevel: int = 1,
-    ) -> cas.MX | None | list[cas.MX]:
+    ) -> cas.MX | None | list[cas.MX | None]:
         """
         Initialize a new equality or inequality constraint(s).
 
-        Args:
-            constraint: A constraint that you want to hold true at the optimum.
+        Parameters
+        ----------
+        constraint : Vectorizable | bool | Sequence["Vectorizable | bool"]
+            A constraint that you want to hold true at the optimum.
 
-                Inequality example:
+            Inequality example:
 
-                >>> x = opti.variable()
-                >>> opti.subject_to(x >= 5)
+            >>> x = opti.variable()
+            >>> opti.subject_to(x >= 5)
 
-                Equality example; also showing that you can directly constrain functions of variables:
+            Equality example; also showing that you can directly constrain functions of
+            variables:
 
-                >>> x = opti.variable()
-                >>> f = np.sin(x)
-                >>> opti.subject_to(f == 0.5)
+            >>> x = opti.variable()
+            >>> f = np.sin(x)
+            >>> opti.subject_to(f == 0.5)
 
-                You can also pass in a list of multiple constraints using list syntax. For example:
+            You can also pass in multiple constraints as a sequence (list, tuple, etc.):
 
-                >>> x = opti.variable()
-                >>> opti.subject_to([
-                >>>     x >= 5,
-                >>>     x <= 10
-                >>> ])
+            >>> x = opti.variable()
+            >>> opti.subject_to([
+            >>>     x >= 5,
+            >>>     x <= 10
+            >>> ])
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.constraint_declaration()`.
 
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.constraint_declaration()`.
-
-        Returns:
-            The dual variable associated with the new constraint. If the `constraint` input is a list, returns
-            a list of dual variables.
-
+        Returns
+        -------
+        cas.MX | None | list[cas.MX | None]
+            The dual variable associated with the new constraint. If the `constraint` input
+            is a list, returns a list of dual variables.
         """
-        # Determine whether you're dealing with a single (possibly vectorized) constraint or a list of constraints.
-        # If the latter, recursively apply them.
-        if type(constraint) in (list, tuple):
-            return [
-                self.subject_to(
-                    each_constraint, _stacklevel=_stacklevel + 2
-                )  # return the dual of each constraint
-                for each_constraint in constraint
-            ]
+        ### Handle sequences of constraints by recursively applying each one
+        # Exclude str (iterable but not a constraint list) and array-like types
+        # (np.ndarray, cas.MX, etc.) which represent single vectorized constraints.
+        is_constraint_sequence = isinstance(constraint, Sequence) and not isinstance(
+            constraint, (str, np.ndarray, cas.MX, cas.DM, cas.SX)
+        )
+        if is_constraint_sequence:
+            # Note: use a plain for-loop rather than a list comprehension here, so that the number of
+            # stack frames between this call and the recursive `subject_to` call is the same on all
+            # Python versions. (PEP 709, in Python 3.12, inlined comprehensions, removing their stack frame.)
+            duals = []
+            for each_constraint in constraint:
+                duals.append(  # return the dual of each constraint
+                    self.subject_to(each_constraint, _stacklevel=_stacklevel + 1)
+                )
+            return duals
 
         # If it's a proper constraint (MX-type and non-parametric),
         # pass it into the parent class Opti formulation and be done with it.
@@ -483,69 +592,113 @@ class Opti(cas.Opti):
 
     def minimize(
         self,
-        f: cas.MX,
+        f: Scalar,
     ) -> None:
+        """
+        Set the objective function that the optimizer will attempt to minimize upon `Opti.solve()`.
+
+        Parameters
+        ----------
+        f : Scalar
+            The objective: a scalar expression, typically a function of the optimization
+            variables.
+
+            For best solver performance, scale the objective so that it is of order ~1 at the
+            optimum (analogous to the guidance for the `scale` argument of `Opti.variable()`).
+
+        Returns
+        -------
+        None
+            Sets the objective in-place.
+        """
         # f = cas.cse(f)
         super().minimize(f)
 
     def maximize(
         self,
-        f: cas.MX,
+        f: Scalar,
     ) -> None:
+        """
+        Set the objective function that the optimizer will attempt to maximize upon `Opti.solve()`.
+
+        This is syntactic sugar for `opti.minimize(-f)`; see `Opti.minimize()` for details.
+
+        Parameters
+        ----------
+        f : Scalar
+            The objective: a scalar expression, typically a function of the optimization
+            variables.
+
+        Returns
+        -------
+        None
+            Sets the objective in-place.
+        """
         # f = cas.cse(f)
         super().minimize(-1 * f)
 
     def parameter(
         self,
-        value: float | np.ndarray = 0.0,
-        n_params: int = None,
+        value: float | int | np.ndarray = 0.0,
+        n_params: int | None = None,
     ) -> cas.MX:
         """
-        Initializes a new parameter (or vector of parameters). You must pass a value (`value`) upon defining a new
-        parameter. Dimensionality is inferred from this value, but it can be overridden; see below for syntax.
+        Initialize a new parameter (or vector of parameters).
 
-        Args:
+        You must pass a value (`value`) upon defining a new parameter. Dimensionality is
+        inferred from this value, but it can be overridden; see below for syntax.
 
-            value: Value to set the new parameter to.
+        Parameters
+        ----------
+        value : float | int | np.ndarray
+            Value to set the new parameter to.
 
-                This can either be a float or a NumPy ndarray; the dimension of the parameter (i.e. scalar,
-                vector) that is created will be automatically inferred from the shape of the value you provide here.
-                (Although it can be overridden using the `n_params` parameter; see below.)
+            This can either be a float or a NumPy ndarray; the dimension of the parameter
+            (i.e., scalar, vector) that is created will be automatically inferred from the
+            shape of the value you provide here. (Although it can be overridden using the
+            `n_params` parameter; see below.)
 
-                For scalar parameters, your value should be a float:
-                >>> opti = asb.Opti()
-                >>> scalar_param = opti.parameter(value=5) # Initializes a scalar parameter and sets its value to 5.
+            For scalar parameters, your value should be a float:
 
-                For vector variables, your value should be either:
+            >>> opti = asb.Opti()
+            >>> scalar_param = opti.parameter(value=5)
+            >>> # Initializes a scalar parameter and sets its value to 5.
 
-                    * a float, in which case you must pass the length of the vector as `n_params`, otherwise a scalar
-                    parameter will be created:
+            For vector parameters, your value should be either:
 
-                    >>> opti = asb.Opti()
-                    >>> vector_param = opti.parameter(value=5, n_params=10) # Initializes a vector parameter of length
-                    >>> # 10, with all 10 elements set to value of 5.
+            * a float, in which case you must pass the length of the vector as `n_params`,
+              otherwise a scalar parameter will be created:
 
-                    * a NumPy ndarray, in which case each element will be set to the corresponding value in the given
-                    array:
+              >>> opti = asb.Opti()
+              >>> vector_param = opti.parameter(value=5, n_params=10)
+              >>> # Initializes a vector parameter of length 10, with all 10 elements set to
+              >>> # a value of 5.
 
-                    >>> opti = asb.Opti()
-                    >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10)) # Initializes a vector parameter of
-                    >>> # length 10, with all 10 elements set to a value varying from 0 to 5.
+            * a NumPy ndarray, in which case each element will be set to the corresponding
+              value in the given array:
 
-            n_params: [Optional] Used to manually override the dimensionality of the parameter to create; if not
-                provided, the dimensionality of the parameter is inferred from `value`.
+              >>> opti = asb.Opti()
+              >>> vector_param = opti.parameter(value=np.linspace(0, 5, 10))
+              >>> # Initializes a vector parameter of length 10, with all 10 elements set to
+              >>> # a value varying from 0 to 5.
+        n_params : int | None
+            [Optional] Used to manually override the dimensionality of the parameter to
+            create; if not provided, the dimensionality of the parameter is inferred from
+            `value`.
 
-                The only real case where you need to use this argument would be if you are initializing a vector
-                parameter to a scalar value, but you don't feel like using `value=my_value * np.ones(n_vars)`.
-                For example:
+            The only real case where you need to use this argument would be if you are
+            initializing a vector parameter to a scalar value, but you don't feel like using
+            `value=my_value * np.ones(n_vars)`. For example:
 
-                    >>> opti = asb.Opti()
-                    >>> vector_param = opti.parameter(value=5, n_params=10) # Initializes a vector parameter of length
-                    >>> # 10, with all 10 elements set to a value of 5.
+            >>> opti = asb.Opti()
+            >>> vector_param = opti.parameter(value=5, n_params=10)
+            >>> # Initializes a vector parameter of length 10, with all 10 elements set to a
+            >>> # value of 5.
 
-        Returns:
+        Returns
+        -------
+        cas.MX
             The parameter itself as a symbolic CasADi variable (MX type).
-
         """
         # Infer dimensionality from value if it is not provided
         if n_params is None:
@@ -564,7 +717,7 @@ class Opti(cas.Opti):
         parameter_mapping: dict[cas.MX, float] | None = None,
         max_iter: int = 1000,
         max_runtime: float = 1e20,
-        callback: Callable[[int], Any] = None,
+        callback: Callable[[int], Any] | None = None,
         verbose: bool = True,
         jit: bool = False,  # TODO document, add unit tests for jit
         detect_simple_bounds: bool = False,  # TODO document
@@ -575,58 +728,72 @@ class Opti(cas.Opti):
         """
         Solve the optimization problem using CasADi with IPOPT backend.
 
-        Args:
-            parameter_mapping: [Optional] Allows you to specify values for parameters.
-                Dictionary where the key is the parameter and the value is the value to be set to.
+        Parameters
+        ----------
+        parameter_mapping : dict[cas.MX, float] | None
+            [Optional] Allows you to specify values for parameters. Dictionary where the key
+            is the parameter and the value is the value to be set to.
 
-                Example: # TODO update syntax for required init_guess
-                    >>> opti = asb.Opti()
-                    >>> x = opti.variable()
-                    >>> p = opti.parameter()
-                    >>> opti.minimize(x ** 2)
-                    >>> opti.subject_to(x >= p)
-                    >>> sol = opti.solve(
-                    >>>     {
-                    >>>         p: 5 # Sets the value of parameter p to 5, then solves.
-                    >>>     }
-                    >>> )
+            Example: # TODO update syntax for required init_guess
 
-            max_iter: [Optional] The maximum number of iterations allowed before giving up.
+            >>> opti = asb.Opti()
+            >>> x = opti.variable()
+            >>> p = opti.parameter()
+            >>> opti.minimize(x ** 2)
+            >>> opti.subject_to(x >= p)
+            >>> sol = opti.solve(
+            >>>     {
+            >>>         p: 5 # Sets the value of parameter p to 5, then solves.
+            >>>     }
+            >>> )
+        max_iter : int
+            [Optional] The maximum number of iterations allowed before giving up.
+        max_runtime : float
+            [Optional] Gives the maximum allowable runtime before giving up.
+        callback : Callable[[int], Any] | None
+            [Optional] A function to be called at each iteration of the optimization
+            algorithm. Useful for printing progress or displaying intermediate results.
 
-            max_runtime: [Optional] Gives the maximum allowable runtime before giving up.
+            The callback function `func` should have the syntax `func(iteration_number)`,
+            where `iteration_number` is an integer corresponding to the current iteration
+            number. In order to access intermediate quantities of optimization variables
+            (e.g., for plotting), use the `Opti.debug.value(x)` syntax for each variable `x`.
+        verbose : bool
+            Controls the verbosity of the solver. If True, IPOPT will print its progress to
+            the console.
+        jit : bool
+            Experimental. If True, the optimization problem will be compiled to C++ and then
+            JIT-compiled using the CasADi JIT compiler. This can lead to significant
+            speedups, but may also lead to unexpected behavior, and may not work on all
+            platforms.
+        detect_simple_bounds : bool
+            Passed through to the CasADi solver interface as the `detect_simple_bounds`
+            option.
+        expand : bool
+            Passed through to the CasADi solver interface as the `expand` option.
+        options : dict | None
+            [Optional] A dictionary of options to pass to IPOPT. See the IPOPT documentation
+            for a list of available options.
+        behavior_on_failure : Literal["raise", "return_last"]
+            [Optional] What should we do if the optimization fails? Options are:
 
-            callback: [Optional] A function to be called at each iteration of the optimization algorithm.
-                Useful for printing progress or displaying intermediate results.
+            * "raise": Raise an exception. This is the default behavior.
 
-                The callback function `func` should have the syntax `func(iteration_number)`, where iteration_number
-                is an integer corresponding to the current iteration number. In order to access intermediate
-                quantities of optimization variables (e.g. for plotting), use the `Opti.debug.value(x)` syntax for
-                each variable `x`.
+            * "return_last": Returns the solution from the last iteration, and raises a
+              warning.
 
-            verbose: Controls the verbosity of the solver. If True, IPOPT will print its progress to the console.
+              NOTE: The returned solution may not be feasible! (It also may not be optimal.)
 
-            jit: Experimental. If True, the optimization problem will be compiled to C++ and then JIT-compiled
-                using the CasADi JIT compiler. This can lead to significant speedups, but may also lead to
-                unexpected behavior, and may not work on all platforms.
-
-            options: [Optional] A dictionary of options to pass to IPOPT. See the IPOPT documentation for a list of
-                available options.
-
-            behavior_on_failure: [Optional] What should we do if the optimization fails? Options are:
-
-                * "raise": Raise an exception. This is the default behavior.
-
-                * "return_last": Returns the solution from the last iteration, and raise a warning.
-
-                    NOTE: The returned solution may not be feasible! (It also may not be optimal.)
-
-        Returns: An OptiSol object that contains the solved optimization problem. To extract values, use
-            my_optisol(variable).
+        Returns
+        -------
+        OptiSol
+            An `OptiSol` object that contains the solved optimization problem. To extract
+            values, use `my_optisol(variable)`.
 
             Example:
-                >>> sol = opti.solve()
-                >>> x_opt = sol(x) # Get the value of variable x at the optimum.
 
+            >>> sol = opti.solve()
+            >>> x_opt = sol(x) # Get the value of variable x at the optimum.
         """
         if parameter_mapping is None:
             parameter_mapping = {}
@@ -634,7 +801,18 @@ class Opti(cas.Opti):
         ### If you're loading frozen variables from cache, do it here:
         if self.load_frozen_variables_from_cache:
             solution_dict = self.get_solution_dict_from_cache()
-            for category in self.variable_categories_to_freeze:
+
+            # Normalize `variable_categories_to_freeze` to a list of category names. (A bare string is
+            # allowed - `Opti.variable()` handles that case too - and "all" means every category.)
+            if isinstance(self.variable_categories_to_freeze, str):
+                if self.variable_categories_to_freeze == "all":
+                    categories_to_freeze = list(self.variables_categorized.keys())
+                else:
+                    categories_to_freeze = [self.variable_categories_to_freeze]
+            else:
+                categories_to_freeze = self.variable_categories_to_freeze
+
+            for category in categories_to_freeze:
                 category_variables = self.variables_categorized[category]
                 category_values = solution_dict[category]
 
@@ -647,6 +825,17 @@ class Opti(cas.Opti):
                     )
 
                 for var, val in zip(category_variables, category_values):
+                    if not np.is_casadi_type(var, recursive=False):
+                        # This happens when `freeze_style="float"`: frozen variables are stored as
+                        # literal floats/arrays, whose values are baked in at declaration and cannot
+                        # be overridden here. (Previously, this crashed with an opaque AttributeError.)
+                        raise RuntimeError(
+                            f'Cannot load frozen variables from the cache, since `freeze_style="float"` was used: '
+                            f'variables in category "{category}" were frozen as literal constants at declaration, '
+                            f"so their values can no longer be replaced with cached ones.\n"
+                            f'Use `freeze_style="parameter"` (the default) if you want to load frozen variables '
+                            f"from a cache file."
+                        )
                     if not var.is_manually_frozen:
                         parameter_mapping = {**parameter_mapping, var: val}
 
@@ -664,12 +853,18 @@ class Opti(cas.Opti):
             except AttributeError:
                 size_v = 1
             if size_k != size_v:
-                raise RuntimeError(
-                    """Problem with loading cached solution: it looks like the length of a vectorized 
-                variable has changed since the cached solution was saved (or variables were defined in a different order). 
-                Because of this, the cache cannot be loaded. 
-                Re-run the original optimization study to regenerate the cached solution."""
+                message = (
+                    f"Problem with a parameter mapping: a parameter has {size_k} element(s), "
+                    f"but the value given for it has {size_v} element(s)."
                 )
+                if self.load_frozen_variables_from_cache:
+                    message += (
+                        "\nSince frozen variables are being loaded from a cache, it looks like the length of a "
+                        "vectorized variable has changed since the cached solution was saved (or variables were "
+                        "defined in a different order). Because of this, the cache cannot be loaded. "
+                        "Re-run the original optimization study to regenerate the cached solution."
+                    )
+                raise RuntimeError(message)
 
             self.set_value(k, v)
 
@@ -725,6 +920,11 @@ class Opti(cas.Opti):
                 warnings.warn("Optimization failed. Returning last solution.")
 
                 sol = OptiSol(opti=self, cas_optisol=self.debug)
+        else:
+            raise ValueError(
+                f"Invalid value of `behavior_on_failure`: got {behavior_on_failure!r}, "
+                f'but it must be one of "raise" or "return_last".'
+            )
 
         if self.save_to_cache_on_solve:
             self.save_solution()
@@ -734,12 +934,56 @@ class Opti(cas.Opti):
     def solve_sweep(
         self,
         parameter_mapping: dict[cas.MX, np.ndarray],
-        update_initial_guesses_between_solves=False,
-        verbose=True,
+        update_initial_guesses_between_solves: bool = False,
+        verbose: bool = True,
         solve_kwargs: dict | None = None,
         return_callable: bool = False,
         garbage_collect_between_runs: bool = False,
     ) -> np.ndarray | Callable[[cas.MX], np.ndarray]:
+        """
+        Solve the optimization problem repeatedly over a sweep of parameter values.
+
+        The problem is solved once for each combination of parameter values given, and the
+        resulting solutions are returned. Useful for parameter sweeps (e.g., a drag polar
+        over a range of lift coefficients).
+
+        Parameters
+        ----------
+        parameter_mapping : dict[cas.MX, np.ndarray]
+            A dictionary where each key is a parameter (created via `Opti.parameter()`) and
+            each value is an array of values to sweep that parameter over. If multiple
+            parameters are given, the value arrays are broadcast against each other (using
+            NumPy broadcasting rules), and one solve is performed for each element of the
+            broadcasted result.
+        update_initial_guesses_between_solves : bool
+            If True, each successful solve is used to warm-start the next one (via
+            `Opti.set_initial_from_sol()`). Useful for continuation of a sweep along a
+            parameter.
+        verbose : bool
+            If True, prints a progress line for each run, along with its parameter values
+            and whether it succeeded or failed.
+        solve_kwargs : dict | None
+            A dictionary of keyword arguments to pass through to each underlying
+            `Opti.solve()` call. (Defaults to `dict(verbose=False, max_iter=200)`; any
+            options you provide are merged on top of these.)
+        return_callable : bool
+            Changes the return type of this method; see below.
+        garbage_collect_between_runs : bool
+            If True, runs a garbage-collection pass (`gc.collect()`) before each solve,
+            which can mitigate memory buildup during large sweeps.
+
+        Returns
+        -------
+        np.ndarray | Callable[[cas.MX], np.ndarray]
+            If `return_callable` is False (default): a NumPy object-array of `OptiSol`
+            objects, with the same shape as the broadcasted parameter value arrays. Runs
+            where the solver failed contain None instead of an `OptiSol`.
+
+            If `return_callable` is True: a function which, given any expression `x` (e.g.,
+            a variable or a function of variables), returns an array of that expression's
+            value in each solution (i.e., elementwise `sol.value(x)`), with NaN entries for
+            runs where the solver failed.
+        """
         # Handle defaults
         if solve_kwargs is None:
             solve_kwargs = {}
@@ -762,7 +1006,7 @@ class Opti(cas.Opti):
         n_runs = np.broadcast(*values).size
         run_number = 1
 
-        def run(*args: tuple[float]) -> "OptiSol" | None:
+        def run(*args: tuple[float]) -> "OptiSol | None":
             # Collect garbage before each run, to avoid memory issues.
             if garbage_collect_between_runs:
                 import gc
@@ -843,6 +1087,26 @@ class Opti(cas.Opti):
         use_full_filename: bool = False,
         return_string: bool = False,
     ) -> str | None:
+        """
+        Find where in code the decision variable at a given index was declared.
+
+        Parameters
+        ----------
+        index : int
+            The index of the variable (i.e., its position within the vector of all declared
+            decision variables) to look up.
+        use_full_filename : bool
+            If True, shows the full path of the file containing the declaration; otherwise,
+            shows only its filename.
+        return_string : bool
+            If True, returns the resulting description as a string rather than printing it.
+
+        Returns
+        -------
+        str | None
+            The description string if `return_string` is True; otherwise None (the
+            description is printed to the console).
+        """
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -886,6 +1150,26 @@ class Opti(cas.Opti):
     def find_constraint_declaration(
         self, index: int, use_full_filename: bool = False, return_string: bool = False
     ) -> str | None:
+        """
+        Find where in code the constraint at a given index was declared.
+
+        Parameters
+        ----------
+        index : int
+            The index of the constraint (i.e., its position within the vector of all
+            declared constraints) to look up.
+        use_full_filename : bool
+            If True, shows the full path of the file containing the declaration; otherwise,
+            shows only its filename.
+        return_string : bool
+            If True, returns the resulting description as a string rather than printing it.
+
+        Returns
+        -------
+        str | None
+            The description string if `return_string` is True; otherwise None (the
+            description is printed to the console).
+        """
         ### Check inputs
         if index < 0:
             raise ValueError("Indices must be nonnegative.")
@@ -935,14 +1219,25 @@ class Opti(cas.Opti):
         initialize_duals=True,
     ) -> None:
         """
-        Sets the initial value of all variables in the Opti object to the solution of another Opti instance. Useful
-        for warm-starting an Opti instance based on the result of another instance.
+        Set the initial value of all variables to the solution of another Opti instance.
 
-        Args: sol: Takes in the solution object. Assumes that sol corresponds to exactly the same optimization
-        problem as this Opti instance, perhaps with different parameter values.
+        Useful for warm-starting an Opti instance based on the result of another instance.
 
-        Returns: None (in-place)
+        Parameters
+        ----------
+        sol : cas.OptiSol
+            Takes in the solution object. Assumes that `sol` corresponds to exactly the same
+            optimization problem as this Opti instance, perhaps with different parameter
+            values.
+        initialize_primals : bool
+            If True, sets the initial values of the primal (decision) variables.
+        initialize_duals : bool
+            If True, sets the initial values of the dual variables.
 
+        Returns
+        -------
+        None
+            Modifies this Opti instance in-place.
         """
         if initialize_primals:
             self.set_initial(self.x, sol.value(self.x))
@@ -950,6 +1245,17 @@ class Opti(cas.Opti):
             self.set_initial(self.lam_g, sol.value(self.lam_g))
 
     def save_solution(self):
+        """
+        Save the solved values of all variables (grouped by category) to the cache file.
+
+        Requires that a `cache_filename` was provided when initializing this Opti instance.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping each category name [str] to a list of the solved values of
+            the variables in that category.
+        """
         if self.cache_filename is None:
             raise ValueError(
                 """In order to use the save feature, you need to supply a filepath for the cache upon
@@ -980,6 +1286,18 @@ class Opti(cas.Opti):
         return solution_dict
 
     def get_solution_dict_from_cache(self):
+        """
+        Load a dictionary of solved variable values (grouped by category) from the cache file.
+
+        Requires that a `cache_filename` was provided when initializing this Opti instance.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping each category name [str] to a list of the values of the
+            variables in that category, with vectorized variables converted back into NumPy
+            arrays.
+        """
         if self.cache_filename is None:
             raise ValueError(
                 """In order to use the load feature, you need to supply a filepath for the cache upon
@@ -1001,93 +1319,98 @@ class Opti(cas.Opti):
     def derivative_of(
         self,
         variable: cas.MX,
-        with_respect_to: np.ndarray | cas.MX,
-        derivative_init_guess: float | np.ndarray,  # TODO add default
-        derivative_scale: float | np.ndarray | None = None,
+        with_respect_to: ArrayLike,
+        derivative_init_guess: Vectorizable,  # TODO add default
+        derivative_scale: Vectorizable | None = None,
         method: str = "trapezoidal",
         explicit: bool = False,  # TODO implement explicit
         _stacklevel: int = 1,
-    ) -> cas.MX:
+    ) -> cas.MX | float | np.ndarray:
         """
-        Returns a quantity that is either defined or constrained to be a derivative of an existing variable.
+        Return a quantity that is either defined or constrained to be a derivative of a variable.
 
-        For example:
+        Parameters
+        ----------
+        variable : cas.MX
+            The variable or quantity that you are taking the derivative of. The "numerator"
+            of the derivative, in colloquial parlance.
+        with_respect_to : ArrayLike
+            The variable or quantity that you are taking the derivative with respect to. The
+            "denominator" of the derivative, in colloquial parlance.
 
+            In a typical example case, this `with_respect_to` parameter would be time. Please
+            make sure that the value of this parameter is monotonically increasing, otherwise
+            you may get nonsensical answers.
+        derivative_init_guess : Vectorizable
+            Initial guess for the value of the derivative. Should be either a float (in
+            which case the initial guess will be a vector equal to this value) or a vector
+            of initial guesses with the same length as `variable`. For more info, look at
+            the docstring of `Opti.variable()`'s `init_guess` parameter.
+        derivative_scale : Vectorizable | None
+            Scale factor for the value of the derivative. For more info, look at the
+            docstring of `Opti.variable()`'s `scale` parameter.
+        method : str
+            The type of integrator to use to define this derivative. (Method names are
+            case-insensitive, and spaces may equivalently be given as underscores.) Options
+            are:
+
+            * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal
+              method
+
+              Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
+
+            * "forward euler" - a first-order-accurate forward Euler method
+
+              Citation: https://en.wikipedia.org/wiki/Euler_method
+
+            * "backward euler" - a first-order-accurate backward Euler method
+
+              Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+
+            * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods
+              based on Simpson's rule, using a parabolic fit over each interval plus its
+              forward (respectively, backward) neighboring point
+
+              Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+
+            * "cubic" or "cubic spline" - a method based on a cubic fit over each interval
+              plus its two neighboring points
+
+            See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative
+            list of supported methods.
+        explicit : bool
+            If True, returns an explicit derivative rather than an implicit one. In other
+            words, this *defines* the output to be a derivative of the input rather than
+            *constraining* the output to be a derivative of the input.
+
+            Explicit derivatives result in smaller, denser systems of equations that are
+            more akin to shooting-type methods. Implicit derivatives result in larger,
+            sparser systems of equations that are more akin to collocation methods. Explicit
+            derivatives are better for simple, stable systems with few states, while
+            implicit derivatives are better for complex, potentially-unstable systems with
+            many states.
+
+            # TODO implement explicit
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.variable_declaration()` and
+            `aerosandbox.Opti.constraint_declaration()`.
+
+        Returns
+        -------
+        cas.MX | float | np.ndarray
+            A vector consisting of the derivative of the parameter `variable` with respect
+            to `with_respect_to`.
+
+        Examples
+        --------
         >>> opti = Opti()
         >>> position = opti.variable(init_guess=0, n_vars=100)
         >>> time = np.linspace(0, 1, 100)
         >>> velocity = opti.derivative_of(position, with_respect_to=time)
         >>> acceleration = opti.derivative_of(velocity, with_respect_to=time)
-
-        Args:
-
-            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
-            derivative, in colloquial parlance.
-
-            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
-            "denominator" of the derivative, in colloquial parlance.
-
-                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
-                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
-
-            derivative_init_guess: Initial guess for the value of the derivative. Should be either a float (in which
-            case the initial guess will be a vector equal to this value) or a vector of initial guesses with the same
-            length as `variable`. For more info, look at the docstring of opti.variable()'s `init_guess` parameter.
-
-            derivative_scale: Scale factor for the value of the derivative. For more info, look at the docstring of
-            opti.variable()'s `scale` parameter.
-
-            method: The type of integrator to use to define this derivative. Options are:
-
-                * "forward euler" - a first-order-accurate forward Euler method
-
-                    Citation: https://en.wikipedia.org/wiki/Euler_method
-
-                * "backwards euler" - a first-order-accurate backwards Euler method
-
-                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
-
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
-
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
-
-                * "simpson" - Simpson's rule for integration
-
-                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
-
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
-
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
-
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
-
-            explicit: If true, returns an explicit derivative rather than an implicit one. In other words,
-            this *defines* the output to be a derivative of the input rather than *constraining* the output to the a
-            derivative of the input.
-
-                Explicit derivatives result in smaller, denser systems of equations that are more akin to
-                shooting-type methods. Implicit derivatives result in larger, sparser systems of equations that are
-                more akin to collocation methods. Explicit derivatives are better for simple, stable systems with few
-                states, while implicit derivatives are better for complex, potentially-unstable systems with many
-                states.
-
-                # TODO implement explicit
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
-
-
-        Returns: A vector consisting of the derivative of the parameter `variable` with respect to `with_respect_to`.
-
         """
         ### Set defaults
         # if with_respect_to is None:
@@ -1111,6 +1434,7 @@ class Opti(cas.Opti):
                 init_guess=derivative_init_guess,
                 n_vars=N,
                 scale=derivative_scale,
+                _stacklevel=_stacklevel + 1,
             )
 
             self.constrain_derivative(
@@ -1138,74 +1462,78 @@ class Opti(cas.Opti):
 
     def constrain_derivative(
         self,
-        derivative: cas.MX,
-        variable: cas.MX,
-        with_respect_to: np.ndarray | cas.MX,
+        derivative: ArrayLike,
+        variable: ArrayLike,
+        with_respect_to: ArrayLike,
         method: str = "trapezoidal",
         _stacklevel: int = 1,
-    ) -> None:
+    ) -> cas.MX | None | list[cas.MX]:
         """
-        Adds a constraint to the optimization problem such that:
+        Add a constraint such that `d(variable) / d(with_respect_to) == derivative`.
 
-            d(variable) / d(with_respect_to) == derivative
+        Can be used directly; also called indirectly by `Opti.derivative_of()` for implicit
+        derivative creation.
 
-        Can be used directly; also called indirectly by opti.derivative_of() for implicit derivative creation.
-
-        Args:
-            derivative: The derivative that is to be constrained here.
-
-            variable: The variable or quantity that you are taking the derivative of. The "numerator" of the
-            derivative, in colloquial parlance.
-
-            with_respect_to: The variable or quantity that you are taking the derivative with respect to. The
+        Parameters
+        ----------
+        derivative : ArrayLike
+            The derivative that is to be constrained here.
+        variable : ArrayLike
+            The variable or quantity that you are taking the derivative of. The "numerator"
+            of the derivative, in colloquial parlance.
+        with_respect_to : ArrayLike
+            The variable or quantity that you are taking the derivative with respect to. The
             "denominator" of the derivative, in colloquial parlance.
 
-                In a typical example case, this `with_respect_to` parameter would be time. Please make sure that the
-                value of this parameter is monotonically increasing, otherwise you may get nonsensical answers.
+            In a typical example case, this `with_respect_to` parameter would be time. Please
+            make sure that the value of this parameter is monotonically increasing, otherwise
+            you may get nonsensical answers.
+        method : str
+            The type of integrator to use to define this derivative. (Method names are
+            case-insensitive, and spaces may equivalently be given as underscores.) Options
+            are:
 
-            method: The type of integrator to use to define this derivative. Options are:
+            * "trapezoidal" or "trapezoid" (default) - a second-order-accurate trapezoidal
+              method
 
-                * "forward euler" - a first-order-accurate forward Euler method
+              Citation: https://en.wikipedia.org/wiki/Trapezoidal_rule
 
-                    Citation: https://en.wikipedia.org/wiki/Euler_method
+            * "forward euler" - a first-order-accurate forward Euler method
 
-                * "backwards euler" - a first-order-accurate backwards Euler method
+              Citation: https://en.wikipedia.org/wiki/Euler_method
 
-                    Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
+            * "backward euler" - a first-order-accurate backward Euler method
 
-                * "midpoint" or "trapezoid" - a second-order-accurate midpoint method
+              Citation: https://en.wikipedia.org/wiki/Backward_Euler_method
 
-                    Citation: https://en.wikipedia.org/wiki/Midpoint_method
+            * "simpson" (equivalently, "forward simpson") or "backward simpson" - methods
+              based on Simpson's rule, using a parabolic fit over each interval plus its
+              forward (respectively, backward) neighboring point
 
-                * "simpson" - Simpson's rule for integration
+              Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
 
-                    Citation: https://en.wikipedia.org/wiki/Simpson%27s_rule
+            * "cubic" or "cubic spline" - a method based on a cubic fit over each interval
+              plus its two neighboring points
 
-                * "runge-kutta" or "rk4" - a fourth-order-accurate Runge-Kutta method. I suppose that technically,
-                "forward euler", "backward euler", and "midpoint" are all (lower-order) Runge-Kutta methods...
+            See `aerosandbox.numpy.integrate_discrete_intervals()` for the authoritative
+            list of supported methods.
 
-                    Citation: https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods#The_Runge%E2%80%93Kutta_method
+            Note that all methods are expressed as integrators rather than differentiators;
+            this prevents singularities from forming in the limit of timestep approaching
+            zero. (For those coming from the PDE world, this is analogous to using finite
+            volume methods rather than finite difference methods to allow shock capturing.)
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is
+            then presented using `aerosandbox.Opti.variable_declaration()` and
+            `aerosandbox.Opti.constraint_declaration()`.
 
-                * "runge-kutta-3/8" - A modified version of the Runge-Kutta 4 proposed by Kutta in 1901. Also
-                fourth-order-accurate, but all of the error coefficients are smaller than they are in the standard
-                Runge-Kutta 4 method. The downside is that more floating point operations are required per timestep,
-                as the Butcher tableau is more dense (i.e. not banded).
-
-                    Citation: Kutta, Martin (1901), "Beitrag zur näherungsweisen Integration totaler
-                    Differentialgleichungen", Zeitschrift für Mathematik und Physik, 46: 435–453
-
-            Note that all methods are expressed as integrators rather than differentiators; this prevents
-            singularities from forming in the limit of timestep approaching zero. (For those coming from the PDE
-            world, this is analogous to using finite volume methods rather than finite difference methods to allow
-            shock capturing.)
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
-
-        Returns: None (adds constraint in-place).
-
+        Returns
+        -------
+        cas.MX | None | list[cas.MX]
+            The dual variable(s) associated with the newly added constraint(s). (The
+            constraint itself is added to the optimization problem in-place.)
         """
         try:
             derivative[0]
@@ -1227,37 +1555,48 @@ class Opti(cas.Opti):
 
 
 class OptiSol:
+    """
+    A solution to an optimization problem, as produced by `Opti.solve()`.
+    """
+
     def __init__(self, opti: Opti, cas_optisol: cas.OptiSol):
         """
-        An OptiSol object represents a solution to an optimization problem. This class is a wrapper around CasADi's
-        `OptiSol` class that provides convenient solution query utilities for various Python data types.
+        Initialize an OptiSol object, which represents a solution to an optimization problem.
 
-        Args:
-            opti: The `Opti` object that generated this solution.
+        This class is a wrapper around CasADi's `OptiSol` class that provides convenient
+        solution query utilities for various Python data types.
 
-            cas_optisol: The `casadi.OptiSol` object from CasADi's optimization solver.
+        Parameters
+        ----------
+        opti : Opti
+            The `Opti` object that generated this solution.
+        cas_optisol : cas.OptiSol
+            The `casadi.OptiSol` object from CasADi's optimization solver.
 
-        Returns:
+        Returns
+        -------
+        OptiSol
             An `OptiSol` object.
 
-        Usage:
-            >>> # Initialize an Opti object.
-            >>> opti = asb.Opti()
-            >>>
-            >>> # Define a scalar variable.
-            >>> x = opti.variable(init_guess=2.0)
-            >>>
-            >>> # Define an objective function.
-            >>> opti.minimize(x ** 2)
-            >>>
-            >>> # Solve the optimization problem. `sol` is now a
-            >>> sol = opti.solve()
-            >>>
-            >>> # Retrieve the value of the variable x in the solution:
-            >>> x_value = sol(x)
-            >>>
-            >>> # Or, to be more concise:
-            >>> x_value = sol(x)
+        Examples
+        --------
+        >>> # Initialize an Opti object.
+        >>> opti = asb.Opti()
+        >>>
+        >>> # Define a scalar variable.
+        >>> x = opti.variable(init_guess=2.0)
+        >>>
+        >>> # Define an objective function.
+        >>> opti.minimize(x ** 2)
+        >>>
+        >>> # Solve the optimization problem. `sol` is now an `OptiSol` object.
+        >>> sol = opti.solve()
+        >>>
+        >>> # Retrieve the value of the variable x in the solution:
+        >>> x_value = sol(x)
+        >>>
+        >>> # Or, to be more concise:
+        >>> x_value = sol(x)
         """
         self.opti = opti
         self._sol = cas_optisol
@@ -1266,33 +1605,43 @@ class OptiSol:
         self, x: cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
     ) -> Any:
         """
-        A shorthand alias for `sol.value(x)`. See `OptiSol.value()` documentation for details.
+        Return the value of `x` at the solution point; a shorthand alias for `sol.value(x)`.
 
-        Args:
-            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+        See `OptiSol.value()` documentation for details.
 
-        Returns:
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
+            A Python data structure to substitute values into, using the solution in this
+            OptiSol object.
 
-            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
-            have been converted to float or array values.
-
+        Returns
+        -------
+        Any
+            A copy of `x`, where all symbolic optimization variables (recursively
+            substituted at unlimited depth) have been converted to float or array values.
         """
         return self.value(x)
 
     def _value_scalar(self, x: cas.MX | np.ndarray | float | int) -> float | np.ndarray:
         """
-        Gets the value of a variable at the solution point. For developer use - see following paragraph.
+        Get the value of a variable at the solution point. For developer use.
 
         This method is basically a less-powerful version of calling `sol(x)` - if you're a
-            user and not a developer, you almost-certainly want to use that method instead, as those are less
-            fragile with respect to various input data types. This method exists only as an abstraction to make it easier
-            for other developers to subclass OptiSol, if they wish to intercept the variable substitution process.
+        user and not a developer, you almost-certainly want to use that method instead, as
+        those are less fragile with respect to various input data types. This method exists
+        only as an abstraction to make it easier for other developers to subclass OptiSol,
+        if they wish to intercept the variable substitution process.
 
-        Args:
-            x:
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int
+            The variable or expression to evaluate at the solution point.
 
-        Returns:
-
+        Returns
+        -------
+        float | np.ndarray
+            The value of `x` at the solution point.
         """
         return self._sol.value(x)
 
@@ -1303,37 +1652,43 @@ class OptiSol:
         warn_on_unknown_types: bool = False,
     ) -> Any:
         """
-        Gets the value of a variable (or a data structure) at the solution point. This solution point is the optimum,
-            if the optimization process solved successfully.
+        Get the value of a variable (or a data structure) at the solution point.
 
-        On a computer science level, this method converts a symbolic optimization variable to a concrete float or
-            array value. More generally, it converts any Python data structure (along with any of its contents,
-            recursively, at unlimited depth), replacing any symbolic optimization variables it finds with concrete float
-            or array values.
+        This solution point is the optimum, if the optimization process solved successfully.
+
+        On a computer science level, this method converts a symbolic optimization variable
+        to a concrete float or array value. More generally, it converts any Python data
+        structure (along with any of its contents, recursively, at unlimited depth),
+        replacing any symbolic optimization variables it finds with concrete float or array
+        values.
 
         Note that, for convenience, you can simply call:
+
         >>> sol(x)
+
         if you prefer. This is equivalent to calling this method with the syntax:
+
         >>> sol.value(x)
+
         (these are aliases of each other)
 
-        Args:
-            x: A Python data structure to substitute values into, using the solution in this OptiSol object.
+        Parameters
+        ----------
+        x : cas.MX | np.ndarray | float | int | list | tuple | set | dict | Any
+            A Python data structure to substitute values into, using the solution in this
+            OptiSol object.
+        recursive : bool
+            If True, the substitution will be performed recursively. Otherwise, only the
+            top-level data structure will be converted.
+        warn_on_unknown_types : bool
+            If True, a warning will be issued if a data type that cannot be converted or
+            parsed as definitively un-convertable is encountered.
 
-            recursive: If True, the substitution will be performed recursively. Otherwise, only the top-level data
-                structure will be converted.
-
-            warn_on_unknown_types: If True, a warning will be issued if a data type that cannot be converted or
-                parsed as definitively un-convertable is encountered.
-
-        Returns:
-            A copy of `x`, where all symbolic optimization variables (recursively substituted at unlimited depth)
-                have been converted to float or array values.
-
-        Usage:
-
-
-
+        Returns
+        -------
+        Any
+            A copy of `x`, where all symbolic optimization variables (recursively
+            substituted at unlimited depth) have been converted to float or array values.
         """
         if not recursive:
             return self._value_scalar(x)
@@ -1344,15 +1699,25 @@ class OptiSol:
 
         t = type(x)
 
+        # Shorthand for recursive calls, propagating the keyword arguments given to this call.
+        def _value(item):
+            return self.value(
+                item,
+                recursive=recursive,
+                warn_on_unknown_types=warn_on_unknown_types,
+            )
+
         # If it's a Python iterable, recursively convert it, and preserve the type as best as possible.
         if issubclass(t, list):
-            return [self.value(i) for i in x]
+            return [_value(i) for i in x]
         if issubclass(t, tuple):
-            return tuple([self.value(i) for i in x])
-        if issubclass(t, (set, frozenset)):
-            return {self.value(i) for i in x}
+            return tuple([_value(i) for i in x])
+        if issubclass(t, frozenset):
+            return frozenset(_value(i) for i in x)
+        if issubclass(t, set):
+            return {_value(i) for i in x}
         if issubclass(t, dict):
-            return {self.value(k): self.value(v) for k, v in x.items()}
+            return {_value(k): _value(v) for k, v in x.items()}
 
         # Skip certain Python types
         if issubclass(
@@ -1388,7 +1753,7 @@ class OptiSol:
             new_x = copy.copy(x)
 
             for k, v in x.__dict__.items():
-                setattr(new_x, k, self.value(v))
+                setattr(new_x, k, _value(v))
 
             return new_x
 
@@ -1415,29 +1780,49 @@ class OptiSol:
         return x
 
     def stats(self) -> dict[str, Any]:
+        """
+        Return statistics from the solver run that produced this solution.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary of solver statistics (e.g., iteration count), as given by the
+            underlying CasADi `OptiSol.stats()`.
+        """
         return self._sol.stats()
 
     def value_variables(self):
+        """
+        Return the result of `value_variables()` from the underlying CasADi `OptiSol` object.
+        """
         return self._sol.value_variables()
 
     def value_parameters(self):
+        """
+        Return the result of `value_parameters()` from the underlying CasADi `OptiSol` object.
+        """
         return self._sol.value_parameters()
 
     def show_infeasibilities(self, tol: float = 1e-3) -> None:
         """
-        Prints a summary of any violated constraints in the solution.
+        Print a summary of any violated constraints in the solution.
 
-        Args:
+        Parameters
+        ----------
+        tol : float
+            The tolerance for violation. If the constraint is violated by less than this
+            amount, it will not be printed.
 
-            tol: The tolerance for violation. If the constraint is violated by less than this amount, it will not be
-                printed.
-
-        Returns: None (prints to console)
+        Returns
+        -------
+        None
+            Prints to the console.
         """
-        lbg = self(self.opti.lbg)
-        ubg = self(self.opti.ubg)
+        # Note: atleast_1d is needed since evaluating a single scalar constraint yields a plain float.
+        lbg = np.atleast_1d(self(self.opti.lbg))
+        ubg = np.atleast_1d(self(self.opti.ubg))
 
-        g = self(self.opti.g)
+        g = np.atleast_1d(self(self.opti.g))
 
         constraint_violated = np.logical_or(g + tol < lbg, g - tol > ubg)
 

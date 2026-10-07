@@ -1,11 +1,12 @@
 import aerosandbox.numpy as np
 from aerosandbox import ExplicitAnalysis, AeroSandboxObject
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane, Wing, Fuselage
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
 )
-from typing import Dict, Any, List, Union, Tuple
+from typing import Any
+from collections.abc import MutableMapping
 from functools import cached_property, partial
 from dataclasses import dataclass
 from abc import abstractmethod, ABC
@@ -14,14 +15,56 @@ from abc import abstractmethod, ABC
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
+    """
+    Reshape an array into a tall (Nx1) column vector.
+    """
     return np.reshape(array, (-1, 1))
 
 
 def wide(array):
+    """
+    Reshape an array into a wide (1xN) row vector.
+    """
     return np.reshape(array, (1, -1))
 
 
 immutable_dataclass = partial(dataclass, frozen=True, repr=False)
+
+
+class _IdentityDict(MutableMapping):
+    """
+    A minimal dict-like container that keys entries by object identity rather than hash/equality.
+
+    Entries are keyed by `id(key)`. This allows unhashable objects to be used as keys.
+    (AeroSandbox geometry objects, like Wing and Fuselage, are unhashable, since they define
+    `__eq__` without `__hash__`.)
+    """
+
+    def __init__(self, items=()):
+        self._data = {}
+        for key, value in items:
+            self[key] = value
+
+    def __getitem__(self, key):
+        try:
+            return self._data[id(key)][1]
+        except KeyError:
+            raise KeyError(key) from None
+
+    def __setitem__(self, key, value):
+        self._data[id(key)] = (key, value)
+
+    def __delitem__(self, key):
+        try:
+            del self._data[id(key)]
+        except KeyError:
+            raise KeyError(key) from None
+
+    def __iter__(self):
+        return iter([key for key, value in self._data.values()])
+
+    def __len__(self):
+        return len(self._data)
 
 
 class LinearPotentialFlow(ExplicitAnalysis):
@@ -29,13 +72,13 @@ class LinearPotentialFlow(ExplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
-        wing_model: Union[str, Dict[Wing, str]] = "vortex_lattice_all_horseshoe",
-        fuselage_model: Union[str, Dict[Fuselage, str]] = "none",
-        wing_options: Union[Dict[str, Any], Dict[Wing, Dict[str, Any]]] = None,
-        fuselage_options: Union[Dict[str, Any], Dict[Fuselage, Dict[str, Any]]] = None,
+        wing_model: str | dict[Wing, str] = "vortex_lattice_all_horseshoe",
+        fuselage_model: str | dict[Fuselage, str] = "none",
+        wing_options: dict[str, Any] | dict[Wing, dict[str, Any]] | None = None,
+        fuselage_options: dict[str, Any] | dict[Fuselage, dict[str, Any]] | None = None,
     ):
         import warnings
 
@@ -61,21 +104,24 @@ class LinearPotentialFlow(ExplicitAnalysis):
         self.verbose = verbose
 
         ##### Set up the modeling methods
+        # Note: `_IdentityDict` is used rather than a plain dict, since Wing/Fuselage objects are unhashable.
         if isinstance(wing_model, str):
-            wing_model = {wing: wing_model for wing in self.airplane.wings}
+            wing_model = _IdentityDict(
+                (wing, wing_model) for wing in self.airplane.wings
+            )
         if isinstance(fuselage_model, str):
-            fuselage_model = {
-                fuselage: fuselage_model for fuselage in self.airplane.fuselages
-            }
+            fuselage_model = _IdentityDict(
+                (fuselage, fuselage_model) for fuselage in self.airplane.fuselages
+            )
 
-        self.wing_model: Dict[Wing, str] = wing_model
-        self.fuselage_model: Dict[Fuselage, str] = fuselage_model
+        self.wing_model: dict[Wing, str] = wing_model
+        self.fuselage_model: dict[Fuselage, str] = fuselage_model
 
         ##### Set up the modeling options
         ### Check the format of the wing options
         if not (
             all([isinstance(k, str) for k in wing_options.keys()])
-            or all([issubclass(k, Wing) for k in wing_options.keys()])
+            or all([isinstance(k, Wing) for k in wing_options.keys()])
         ):
             raise ValueError(
                 "`wing_options` must be either:\n"
@@ -83,12 +129,14 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 "    - A nested dictionary of the form `{Wing: {str: value}}`, which is applied to the corresponding Wings\n"
             )
         elif all([isinstance(k, str) for k in wing_options.keys()]):
-            wing_options = {wing: wing_options for wing in self.airplane.wings}
+            wing_options = _IdentityDict(
+                (wing, wing_options) for wing in self.airplane.wings
+            )
 
         ### Check the format of the fuselage options
         if not (
             all([isinstance(k, str) for k in fuselage_options.keys()])
-            or all([issubclass(k, Fuselage) for k in fuselage_options.keys()])
+            or all([isinstance(k, Fuselage) for k in fuselage_options.keys()])
         ):
             raise ValueError(
                 "`fuselage_options` must be either:\n"
@@ -96,13 +144,13 @@ class LinearPotentialFlow(ExplicitAnalysis):
                 "    - A nested dictionary of the form `{Fuselage: {str: value}}`, which is applied to the corresponding Fuselages\n"
             )
         elif all([isinstance(k, str) for k in fuselage_options.keys()]):
-            fuselage_options = {
-                fuselage: fuselage_options for fuselage in self.airplane.fuselages
-            }
+            fuselage_options = _IdentityDict(
+                (fuselage, fuselage_options) for fuselage in self.airplane.fuselages
+            )
 
         ### Set user-specified values
-        self.wing_options: Dict[Wing, Dict[str, Any]] = wing_options
-        self.fuselage_options: Dict[Fuselage, Dict[str, Any]] = fuselage_options
+        self.wing_options: dict[Wing, dict[str, Any]] = wing_options
+        self.fuselage_options: dict[Fuselage, dict[str, Any]] = fuselage_options
 
         ### Set default values
         wing_model_default_options = {
@@ -283,7 +331,7 @@ class LinearPotentialFlow(ExplicitAnalysis):
             points: np.ndarray,
             vortex_strengths: np.ndarray,
             sum_across_elements: bool = True,
-        ) -> Tuple[np.ndarray]:
+        ) -> tuple[float | np.ndarray, float | np.ndarray, float | np.ndarray]:
             u_induced, v_induced, w_induced = calculate_induced_velocity_horseshoe(
                 x_field=tall(points[:, 0]),
                 y_field=tall(points[:, 1]),
@@ -327,15 +375,19 @@ class LinearPotentialFlow(ExplicitAnalysis):
     @cached_property
     def discretization(self):
         """
+        Discretize the airplane into a list of singularity elements.
 
-        Returns: A list of dictionaries, where each item in the list represents a single element.
+        Returns
+        -------
+        list
+            A list of dictionaries, where each item in the list represents a single element.
 
-            Each item in the list is a namedtuple (effectively, a dictionary), and one of the following types:
+            Each item in the list is a namedtuple (effectively, a dictionary), and one of the
+            following types:
 
-                    * `wing_vlm_element`
-                    * `wing_lifting_line_element`
-                    * `fuselage_prescribed_source_line`
-
+                * `wing_vlm_element`
+                * `wing_lifting_line_element`
+                * `fuselage_prescribed_source_line`
         """
         ### Initialize
         discretization = []
@@ -436,11 +488,14 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
         return A
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
-        Computes the aerodynamic forces.
+        Compute the aerodynamic forces.
 
-        Returns a dictionary with keys:
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -461,7 +516,8 @@ class LinearPotentialFlow(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the LinearPotentialFlow.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            LinearPotentialFlow.airplane object.
         """
 
         raise NotImplementedError
@@ -474,19 +530,19 @@ class LinearPotentialFlow(ExplicitAnalysis):
 
     def get_streamlines(
         self,
-        seed_points: np.ndarray = None,
+        seed_points: np.ndarray | None = None,
         n_steps: int = 300,
-        length: float = None,
+        length: float | None = None,
     ):
         raise NotImplementedError
 
     def draw(
         self,
-        c: np.ndarray = None,
-        cmap: str = None,
-        colorbar_label: str = None,
+        c: np.ndarray | None = None,
+        cmap: str | None = None,
+        colorbar_label: str | None = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
         draw_streamlines=True,
         recalculate_streamlines=False,
         backend: str = "pyvista",

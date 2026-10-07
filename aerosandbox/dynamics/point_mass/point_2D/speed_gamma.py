@@ -2,13 +2,15 @@ from aerosandbox.dynamics.point_mass.point_3D.speed_gamma_track import (
     DynamicsPointMass3DSpeedGammaTrack,
 )
 from aerosandbox.weights.mass_properties import MassProperties
-import aerosandbox.numpy as np
-from typing import Union, Dict
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
     """
+    Simulate point-mass dynamics in 2D, with velocity parameterized in speed-gamma space.
+
     Dynamics instance:
+
     * simulating a point mass
     * in 2D
     * with velocity parameterized in speed-gamma space.
@@ -25,17 +27,16 @@ class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
     Control variables:
         Fx_w: Force along the wind-x axis. [N]
         Fz_w: Force along the wind-z axis. [N]
-
     """
 
     def __init__(
         self,
-        mass_props: MassProperties = None,
-        x_e: Union[float, np.ndarray] = 0,
-        z_e: Union[float, np.ndarray] = 0,
-        speed: Union[float, np.ndarray] = 0,
-        gamma: Union[float, np.ndarray] = 0,
-        alpha: Union[float, np.ndarray] = 0,
+        mass_props: MassProperties | None = None,
+        x_e: Vectorizable = 0,
+        z_e: Vectorizable = 0,
+        speed: Vectorizable = 0,
+        gamma: Vectorizable = 0,
+        alpha: Vectorizable = 0,
     ):
         # Initialize state variables
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -58,7 +59,7 @@ class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
         self.Fz_w = 0
 
     @property
-    def state(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state(self) -> dict[str, Vectorizable]:
         return {
             "x_e": self.x_e,
             "z_e": self.z_e,
@@ -67,14 +68,14 @@ class DynamicsPointMass2DSpeedGamma(DynamicsPointMass3DSpeedGammaTrack):
         }
 
     @property
-    def control_variables(self) -> Dict[str, Union[float, np.ndarray]]:
+    def control_variables(self) -> dict[str, Vectorizable]:
         return {
             "alpha": self.alpha,
             "Fx_w": self.Fx_w,
             "Fz_w": self.Fz_w,
         }
 
-    def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state_derivatives(self) -> dict[str, Vectorizable]:
         derivatives = super().state_derivatives()
         return {k: derivatives[k] for k in self.state.keys()}
 

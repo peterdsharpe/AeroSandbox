@@ -1,61 +1,79 @@
 import aerosandbox.numpy as np
-from typing import Union
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def calculate_induced_velocity_horseshoe(
-    x_field: Union[float, np.ndarray],
-    y_field: Union[float, np.ndarray],
-    z_field: Union[float, np.ndarray],
-    x_left: Union[float, np.ndarray],
-    y_left: Union[float, np.ndarray],
-    z_left: Union[float, np.ndarray],
-    x_right: Union[float, np.ndarray],
-    y_right: Union[float, np.ndarray],
-    z_right: Union[float, np.ndarray],
-    gamma: Union[float, np.ndarray] = 1,
-    trailing_vortex_direction: np.ndarray = None,
+    x_field: Vectorizable,
+    y_field: Vectorizable,
+    z_field: Vectorizable,
+    x_left: Vectorizable,
+    y_left: Vectorizable,
+    z_left: Vectorizable,
+    x_right: Vectorizable,
+    y_right: Vectorizable,
+    z_right: Vectorizable,
+    gamma: Vectorizable = 1,
+    trailing_vortex_direction: np.ndarray | None = None,
     vortex_core_radius: float = 0,
-) -> [Union[float, np.ndarray], Union[float, np.ndarray], Union[float, np.ndarray]]:
+) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
     """
-    Calculates the induced velocity at a point:
-        [x_field, y_field, z_field]
-    in a 3D potential-flow flowfield.
+    Calculate the induced velocity due to a horseshoe vortex in a 3D potential-flow flowfield.
+
+    The velocity is evaluated at the field point [x_field, y_field, z_field].
 
     In this flowfield, the following singularity elements are assumed:
-        * A single horseshoe vortex consisting of a bound leg and two trailing legs
 
-    This function consists entirely of scalar, elementwise NumPy ufunc operations - so it can be vectorized as
-    desired assuming input dimensions/broadcasting are compatible.
+    * A single horseshoe vortex consisting of a bound leg and two trailing legs
 
-    Args:
-        x_field: x-coordinate of the field point
+    This function is vectorized, with the following shape requirements:
 
-        y_field: y-coordinate of the field point
+    * The field-point coordinates (`x_field`, `y_field`, `z_field`) must all have the same shape
+      as each other (e.g., all scalars, or all arrays of the same shape). Mixing scalars and
+      arrays within this group raises a ValueError.
 
-        z_field: z-coordinate of the field point
+    * Likewise, the vortex-vertex coordinates (`x_left` ... `z_right`) must all have the same
+      shape as each other.
 
-        x_left: x-coordinate of the left vertex of the bound vortex
+    * The field-point group and the vortex-vertex group are then combined following standard
+      NumPy broadcasting rules. For example, to compute the velocity induced by M horseshoe
+      vortices at each of N field points, pass field coordinates with shape (N, 1) and vertex
+      coordinates with shape (M,), yielding outputs of shape (N, M).
 
-        y_left: y-coordinate of the left vertex of the bound vortex
+    Parameters
+    ----------
+    x_field : Vectorizable
+        x-coordinate of the field point.
+    y_field : Vectorizable
+        y-coordinate of the field point.
+    z_field : Vectorizable
+        z-coordinate of the field point.
+    x_left : Vectorizable
+        x-coordinate of the left vertex of the bound vortex.
+    y_left : Vectorizable
+        y-coordinate of the left vertex of the bound vortex.
+    z_left : Vectorizable
+        z-coordinate of the left vertex of the bound vortex.
+    x_right : Vectorizable
+        x-coordinate of the right vertex of the bound vortex.
+    y_right : Vectorizable
+        y-coordinate of the right vertex of the bound vortex.
+    z_right : Vectorizable
+        z-coordinate of the right vertex of the bound vortex.
+    gamma : Vectorizable
+        The strength of the horseshoe vortex filament.
+    trailing_vortex_direction : np.ndarray | None
+        The direction that the trailing legs of the horseshoe vortex extend. Given as a single
+        3-element vector, shared by all horseshoe vortices. Usually, this is modeled as the
+        direction of the freestream.
+    vortex_core_radius : float
+        To prevent a vortex singularity, here we use a Kaufmann vortex model. This parameter
+        governs the radius of this vortex model. It should be significantly smaller (e.g., at
+        least an order of magnitude smaller) than the smallest bound leg in the analysis in
+        question.
 
-        z_left: z-coordinate of the left vertex of the bound vortex
-
-        x_right: x-coordinate of the right vertex of the bound vortex
-
-        y_right: y-coordinate of the right vertex of the bound vortex
-
-        z_right: z-coordinate of the right vertex of the bound vortex
-
-        gamma: The strength of the horseshoe vortex filament.
-
-        trailing_vortex_direction: The direction that the trailing legs of the horseshoe vortex extend. Usually,
-        this is modeled as the direction of the freestream.
-
-        vortex_core_radius: To prevent a vortex singularity, here we use a Kaufmann vortex model. This parameter
-        governs the radius of this vortex model. It should be significantly smaller (e.g., at least an order of
-        magnitude smaller) than the smallest bound leg in the analysis in question.
-
-    Returns: u, v, and w:
+    Returns
+    -------
+    u, v, w : tuple[Vectorizable, Vectorizable, Vectorizable]
         The x-, y-, and z-direction induced velocities.
     """
     if trailing_vortex_direction is None:
@@ -93,7 +111,7 @@ def calculate_induced_velocity_horseshoe(
 
     # Handle the special case where the field point is on one of the legs (either bound or trailing)
     def smoothed_inv(x):
-        "Approximates 1/x with a function that sharply goes to 0 in the x -> 0 limit."
+        """Approximate 1/x with a function that sharply goes to 0 in the x -> 0 limit."""
         if not np.all(vortex_core_radius == 0):
             return x / (x**2 + vortex_core_radius**2)
         else:

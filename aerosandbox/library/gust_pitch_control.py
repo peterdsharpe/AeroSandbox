@@ -1,22 +1,31 @@
 import matplotlib.pyplot as plt
 import aerosandbox.numpy as np
-from aerosandbox.common import *
-from aerosandbox.library.aerodynamics.unsteady import *
+from aerosandbox.common import ImplicitAnalysis
+from aerosandbox.library.aerodynamics.unsteady import (
+    wagners_function,
+    kussners_function,
+    calculate_reduced_time,
+    top_hat_gust,
+)
 
 
 class TransverseGustPitchControl(ImplicitAnalysis):
     """
-    An implicit analysis that calculates the optimal pitching maneuver
-    through a specified transverse gust, with the goal of minimzing the
-    deviation from a specified lift coefficient. It utilizes differentiable
-    duhamel superposition integrals for Kussner's gust model and Wagner's
-    pitching model, as well as any additional lift from the added mass.
+    Calculate the optimal pitching maneuver through a specified transverse gust.
 
-    Args:
-        reduced_time (np.ndarray) : Reduced time, equal to the number of semichords travelled. See function reduced_time in the unsteady aero library
-        gust_profile (np.ndarray) : An array that specifies the gust velocity at each reduced time
-        velocity (float) : The velocity of the aircraft
+    An implicit analysis with the goal of minimizing the deviation from a specified lift
+    coefficient. It utilizes differentiable Duhamel superposition integrals for Kussner's gust
+    model and Wagner's pitching model, as well as any additional lift from the added mass.
 
+    Parameters
+    ----------
+    reduced_time : np.ndarray
+        Reduced time, equal to the number of semichords travelled. See the function
+        `calculate_reduced_time` in the unsteady aero library.
+    gust_profile : np.ndarray
+        An array that specifies the gust velocity at each reduced time.
+    velocity : float
+        The velocity of the aircraft.
     """
 
     @ImplicitAnalysis.initialize
@@ -44,7 +53,7 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         da_ds = (self.angles_of_attack[1:] - self.angles_of_attack[:-1]) / ds
         init_term = self.angles_of_attack[0] * wagner[:-1]
         for i in range(self.timesteps - 1):
-            integral_term = np.sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
+            integral_term = sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
             self.lift_coefficients[i] = 2 * np.pi * (integral_term + init_term[i])
 
         # Calculate unsteady lift due to transverse gust
@@ -72,6 +81,12 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         self.opti.minimize(lift_squared_integral)
 
     def calculate_transients(self):
+        """
+        Compute and store the transient lift histories of the optimized pitching maneuver.
+
+        Populates the `optimal_pitching_profile_rad`, `optimal_pitching_profile_deg`,
+        `optimal_lift_history`, `pitching_lift`, `gust_lift`, and `added_mass_lift` attributes.
+        """
         self.optimal_pitching_profile_rad = self.opti.value(self.angles_of_attack)
         self.optimal_pitching_profile_deg = np.rad2deg(
             self.optimal_pitching_profile_rad
@@ -88,7 +103,7 @@ class TransverseGustPitchControl(ImplicitAnalysis):
         ) / ds
         init_term = self.optimal_pitching_profile_rad[0] * wagner[:-1]
         for i in range(self.timesteps - 1):
-            integral_term = np.sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
+            integral_term = sum(da_ds[j] * wagner[i - j] * ds[j] for j in range(i))
             self.pitching_lift[i] = 2 * np.pi * (integral_term + init_term[i])
 
         self.gust_lift = np.zeros(self.timesteps - 1)

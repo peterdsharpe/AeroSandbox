@@ -106,7 +106,7 @@ def test_nonuniform_spacing():
 
     ### Compute expected via manual trapezoidal rule
     expected = 0.0
-    for i in range(len(x) - 1):
+    for i in range(np.length(x) - 1):
         expected += (f[i] + f[i + 1]) / 2 * (x[i + 1] - x[i])
 
     assert np.isclose(integral, expected, rtol=1e-10)
@@ -134,7 +134,7 @@ def test_no_x_specified():
 
     result = integrate_discrete_intervals(f, method="trapezoidal")
     expected = integrate_discrete_intervals(
-        f, x=np.arange(len(f)), method="trapezoidal"
+        f, x=np.arange(np.length(f)), method="trapezoidal"
     )
 
     assert np.allclose(result, expected)
@@ -148,9 +148,8 @@ def test_method_endpoints_lower_order():
     result = integrate_discrete_intervals(
         f, x, method="cubic", method_endpoints="lower_order"
     )
-    integral = np.sum(result)
 
-    assert len(result) == len(x) - 1
+    assert np.length(result) == np.length(x) - 1
     assert not np.any(np.isnan(result))
 
 
@@ -175,9 +174,9 @@ def test_method_endpoints_ignore():
 
     ### With 'ignore', forward_simpson gives N-2 intervals (missing last interval due to endpoint)
     ### With 'lower_order', all N-1 intervals are returned
-    assert len(result_ignore_no_dx) == len(x) - 2
-    assert len(result_ignore_with_dx) == len(x) - 2
-    assert len(result_lower) == len(x) - 1
+    assert np.length(result_ignore_no_dx) == np.length(x) - 2
+    assert np.length(result_ignore_with_dx) == np.length(x) - 2
+    assert np.length(result_lower) == np.length(x) - 1
 
     ### Verify the bug fix: result_ignore_with_dx should be result_ignore_no_dx * dx
     dx = np.diff(x)
@@ -192,7 +191,7 @@ def test_sinusoidal_integration_accuracy():
     ### Exact integral of sin(x) from 0 to 2*pi is 0
     expected = 0.0
 
-    for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
+    for method in ("trapezoidal", "forward_simpson", "backward_simpson", "cubic"):
         result = integrate_discrete_intervals(f, x, method=method)
         integral = np.sum(result)
         assert np.abs(integral - expected) < 0.01, f"Method {method} failed"
@@ -221,7 +220,7 @@ def test_squared_curvature_sine_wave():
     ### Integral of sin^2(x) from 0 to 2*pi is pi
     expected = np.pi
 
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.1), (
@@ -238,7 +237,7 @@ def test_squared_curvature_parabola():
     ### Integral of 4 from 0 to 10 is 40
     expected = 40.0
 
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.05), (
@@ -255,7 +254,7 @@ def test_squared_curvature_cubic():
     ### Integral of 36x^2 from 0 to 5 is 36 * [x^3/3]_0^5 = 36 * 125/3 = 1500
     expected = 1500.0
 
-    for method in ["cubic", "simpson", "hybrid_simpson_cubic"]:
+    for method in ("cubic", "simpson", "hybrid_simpson_cubic"):
         result = integrate_discrete_squared_curvature(f, x, method=method)
         integral = np.sum(result)
         assert np.isclose(integral, expected, rtol=0.05), (
@@ -269,7 +268,7 @@ def test_invalid_method_raises_error():
     f = x**2
 
     with pytest.raises(ValueError):
-        integrate_discrete_intervals(f, x, method="invalid_method")
+        integrate_discrete_intervals(f, x, method="invalid_method")  # type: ignore[arg-type]
 
 
 def test_invalid_method_endpoints_raises_error():
@@ -279,7 +278,7 @@ def test_invalid_method_endpoints_raises_error():
 
     with pytest.raises(ValueError):
         integrate_discrete_intervals(
-            f, x, method="cubic", method_endpoints="invalid_endpoint_method"
+            f, x, method="cubic", method_endpoints="invalid_endpoint_method"  # type: ignore[arg-type]
         )
 
 
@@ -298,16 +297,21 @@ def test_invalid_squared_curvature_method():
     f = x**2
 
     with pytest.raises(ValueError):
-        integrate_discrete_squared_curvature(f, x, method="invalid_method")
+        integrate_discrete_squared_curvature(f, x, method="invalid_method")  # type: ignore[arg-type]
 
 
 def test_midpoint_deprecation_warning():
-    """Test that 'midpoint' method raises PendingDeprecationWarning."""
+    """The accepted (soon-to-be-deprecated) 'midpoint' alias should emit a
+    PendingDeprecationWarning and compute the trapezoidal result (regression
+    test: it used to raise the warning class as an exception)."""
     x = np.linspace(0, 10, 11)
     f = x**2
 
-    with pytest.raises(PendingDeprecationWarning):
-        integrate_discrete_intervals(f, x, method="midpoint")
+    with pytest.warns(PendingDeprecationWarning):
+        result = integrate_discrete_intervals(f, x, method="midpoint")
+
+    expected = integrate_discrete_intervals(f, x, method="trapezoidal")
+    assert np.allclose(result, expected)
 
 
 def test_all_method_aliases():
@@ -318,26 +322,37 @@ def test_all_method_aliases():
     ### Test forward Euler aliases
     result_forward = integrate_discrete_intervals(f, x, method="forward_euler")
     for alias in ["forward", "euler_forward", "left", "left_riemann"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_forward, result_alias)
 
     ### Test backward Euler aliases
     result_backward = integrate_discrete_intervals(f, x, method="backward_euler")
     for alias in ["backward", "euler_backward", "right", "right_riemann"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_backward, result_alias)
 
     ### Test trapezoidal aliases
     result_trapz = integrate_discrete_intervals(f, x, method="trapezoidal")
     for alias in ["trapezoid", "trapz"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_trapz, result_alias)
 
     ### Test Simpson aliases
     result_simpson = integrate_discrete_intervals(f, x, method="forward_simpson")
     for alias in ["simpson_forward", "simpson"]:
-        result_alias = integrate_discrete_intervals(f, x, method=alias)
+        result_alias = integrate_discrete_intervals(f, x, method=alias)  # type: ignore[arg-type]
         assert np.allclose(result_simpson, result_alias)
+
+
+def test_available_in_np_namespace():
+    """The trapz() deprecation message tells users to migrate to
+    asb.numpy.integrate_discrete_intervals, so that name (and its sibling)
+    must be importable from the aerosandbox.numpy namespace (regression
+    test: they used to raise AttributeError)."""
+    assert np.integrate_discrete_intervals is integrate_discrete_intervals
+    assert (
+        np.integrate_discrete_squared_curvature is integrate_discrete_squared_curvature
+    )
 
 
 def test_zero_function():
@@ -345,7 +360,7 @@ def test_zero_function():
     x = np.linspace(0, 10, 50)
     f = np.zeros_like(x)
 
-    for method in ["trapezoidal", "forward_simpson", "backward_simpson", "cubic"]:
+    for method in ("trapezoidal", "forward_simpson", "backward_simpson", "cubic"):
         result = integrate_discrete_intervals(f, x, method=method)
         assert np.allclose(result, 0.0)
 

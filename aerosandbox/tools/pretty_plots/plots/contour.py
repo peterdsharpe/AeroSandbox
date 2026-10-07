@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
-from typing import Dict, Union, Callable, List
+from typing import Callable
 from aerosandbox.tools.string_formatting import eng_string
 
 
 def contour(
     *args,
-    levels: Union[int, List, np.ndarray] = 31,
+    levels: int | list | np.ndarray = 31,
     colorbar: bool = True,
     linelabels: bool = True,
     cmap=None,
@@ -16,24 +16,24 @@ def contour(
     linecolor="k",
     linewidths: float = 0.5,
     extendrect: bool = True,
-    linelabels_format: Union[str, Callable[[float], str]] = eng_string,
+    linelabels_format: str | Callable[[float], str] = eng_string,
     linelabels_fontsize: float = 8,
     max_side_length_nondim: float = np.inf,
-    colorbar_label: str = None,
+    colorbar_label: str | None = None,
     x_log_scale: bool = False,
     y_log_scale: bool = False,
     z_log_scale: bool = False,
-    mask: np.ndarray = None,
-    drop_nans: bool = None,
-    # smooth: Union[bool, int] = False, # TODO implement
-    contour_kwargs: Dict = None,
-    contourf_kwargs: Dict = None,
-    colorbar_kwargs: Dict = None,
-    linelabels_kwargs: Dict = None,
+    mask: np.ndarray | None = None,
+    drop_nans: bool | None = None,
+    # smooth: bool | int = False, # TODO implement
+    contour_kwargs: dict | None = None,
+    contourf_kwargs: dict | None = None,
+    colorbar_kwargs: dict | None = None,
+    linelabels_kwargs: dict | None = None,
     **kwargs,
 ):
     """
-    An analogue for plt.contour and plt.tricontour and friends that produces a much prettier default graph.
+    Draw an analogue for plt.contour and plt.tricontour and friends with prettier defaults.
 
     Can take inputs with either contour or tricontour syntax.
 
@@ -43,48 +43,68 @@ def contour(
         https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontour.html
         https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.tricontourf.html
 
-    Args:
-        X: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Parameters
+    ----------
+    X
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Y
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    Z
+        If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
+    levels : int | list | np.ndarray
+        See contour docs.
+    colorbar : bool
+        Should we draw a colorbar?
+    linelabels : bool
+        Should we add line labels?
+    cmap
+        What colormap should we use?
+    alpha : float
+        What transparency should all plot elements be?
+    extend : str
+        See contour docs.
+    linecolor
+        What color should the line labels be?
+    linewidths : float
+        See contour docs.
+    extendrect : bool
+        See colorbar docs.
+    linelabels_format : str | Callable[[float], str]
+        See ax.clabel docs.
+    linelabels_fontsize : float
+        See ax.clabel docs.
+    max_side_length_nondim : float
+        When plotting unstructured (tricontour-style) data, any triangles whose
+        nondimensionalized side length exceeds this value are masked out of the triangulation.
+    colorbar_label : str | None
+        If given, a label to add to the colorbar.
+    x_log_scale : bool
+        If True, sets the x-axis to a log scale.
+    y_log_scale : bool
+        If True, sets the y-axis to a log scale.
+    z_log_scale : bool
+        If True, the contour levels and colorbar are log-spaced. Requires all `Z` values to be
+        positive.
+    mask : np.ndarray | None
+        If given, a boolean mask applied to the `X`, `Y`, and `Z` inputs before plotting.
+    drop_nans : bool | None
+        Whether to drop any points where `X`, `Y`, or `Z` is NaN before plotting. If None
+        (default), NaNs are dropped if and only if the data is unstructured (non-gridded).
+    contour_kwargs : dict | None
+        Additional keyword arguments for contour.
+    contourf_kwargs : dict | None
+        Additional keyword arguments for contourf.
+    colorbar_kwargs : dict | None
+        Additional keyword arguments for colorbar.
+    linelabels_kwargs : dict | None
+        Additional keyword arguments for the line labels (ax.clabel).
+    **kwargs
+        Additional keywords, which are passed to both contour and contourf.
 
-        Y: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
-
-        Z: If dataset is gridded, follow `contour` syntax. Otherwise, follow `tricontour` syntax.
-
-        levels: See contour docs.
-
-        colorbar: Should we draw a colorbar?
-
-        linelabels: Should we add line labels?
-
-        cmap: What colormap should we use?
-
-        alpha: What transparency should all plot elements be?
-
-        extend: See contour docs.
-
-        linecolor: What color should the line labels be?
-
-        linewidths: See contour docs.
-
-        extendrect: See colorbar docs.
-
-        linelabels_format: See ax.clabel docs.
-
-        linelabels_fontsize: See ax.clabel docs.
-
-        contour_kwargs: Additional keyword arguments for contour.
-
-        contourf_kwargs: Additional keyword arguments for contourf.
-
-        colorbar_kwargs: Additional keyword arguments for colorbar.
-
-        linelabels_kwargs: Additional keyword arguments for the line labels (ax.clabel).
-
-        **kwargs: Additional keywords, which are passed to both contour and contourf.
-
-
-    Returns: A tuple of (contour, contourf, colorbar) objects.
-
+    Returns
+    -------
+    tuple
+        A tuple of (contour, contourf, colorbar) objects.
     """
     bad_signature_error = ValueError(
         "Call signature should be one of:\n"
@@ -144,22 +164,26 @@ def contour(
     if z_log_scale:
         if np.any(Z <= 0):
             raise ValueError(
-                "All values of the `Z` input to `contour()` should be nonnegative if `z_log_scale` is True!"
+                "All values of the `Z` input to `contour()` should be positive if `z_log_scale` is True!"
             )
 
         Z_ratio = np.nanmax(Z) / np.nanmin(Z)
-        log10_ceil_z_max = np.ceil(np.log10(np.nanmax(Z)))
-        log10_floor_z_min = np.floor(np.log10(np.nanmin(Z)))
 
         try:
             default_levels = int(levels)
         except TypeError:
             default_levels = 31
-        divisions_per_decade = np.ceil(default_levels / np.log10(Z_ratio)).astype(int)
 
-        if Z_ratio > 1e8:
+        if Z_ratio <= 1 or Z_ratio > 1e8:
+            # If Z is constant (Z_ratio == 1), the subdivision computation
+            # below is undefined (division by log10(1) == 0), and for very
+            # large ranges it would be too dense - so fall back to the
+            # default LogLocator in both cases.
             locator = mpl.ticker.LogLocator()
         else:
+            divisions_per_decade = np.ceil(
+                default_levels / np.log10(Z_ratio)
+            ).astype(int)
             locator = mpl.ticker.LogLocator(
                 subs=np.geomspace(1, 10, divisions_per_decade + 1)[:-1]
             )

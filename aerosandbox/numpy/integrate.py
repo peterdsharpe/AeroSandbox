@@ -1,7 +1,36 @@
+"""Integration functions for the AeroSandbox NumPy-like interface.
+
+This module provides quadrature and ODE-integration functions that work with
+both NumPy inputs (via scipy.integrate) and CasADi symbolic expressions (via
+CasADi's CVODES integrator). Attributes not defined here fall back to
+scipy.integrate.
+"""
+
 import aerosandbox.numpy as np
 import casadi as _cas
+import numpy as _onp
 from typing import Callable, Literal, Sequence
-from scipy import integrate
+from scipy import integrate as _scipy_integrate
+
+
+def __getattr__(name: str):
+    """Look up any attribute not defined by this module on scipy.integrate.
+
+    Historically, `aerosandbox.numpy.integrate` leaked the name `integrate`
+    (bound to scipy.integrate) into the `aerosandbox.numpy` namespace via the
+    star-import in aerosandbox/numpy/__init__.py, shadowing this submodule.
+    This fallback keeps access patterns like `np.integrate.trapezoid` or
+    `np.integrate.odeint` working, while `np.integrate.quad` and
+    `np.integrate.solve_ivp` now resolve to the dual-backend (NumPy + CasADi)
+    implementations defined here.
+    """
+    try:
+        return getattr(_scipy_integrate, name)
+    except AttributeError:
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r} "
+            f"(also tried scipy.integrate)"
+        ) from None
 
 
 def quad(
@@ -10,8 +39,50 @@ def quad(
     b: float,
     full_output: bool = False,
     variable_of_integration: _cas.MX | None = None,
+    **kwargs,
 ) -> tuple[float, float] | tuple[float, float, dict]:
+    """Compute a definite integral, analogous to scipy.integrate.quad.
+
+    If ``func`` is a CasADi expression, it is integrated using CasADi's CVODES
+    integrator (allowing symbolic differentiation through the result); otherwise,
+    the call is passed through to scipy.integrate.quad.
+
+    Parameters
+    ----------
+    func : Callable | casadi.MX
+        The integrand: either a Python callable (as in scipy.integrate.quad) or a
+        CasADi expression.
+    a : float
+        Lower limit of integration.
+    b : float
+        Upper limit of integration.
+    full_output : bool, optional
+        If True, also return additional integrator output. Default is False.
+    variable_of_integration : casadi.MX, optional
+        [CasADi backend only] The variable to integrate with respect to. Required
+        if ``func`` contains more than one symbolic variable.
+    **kwargs
+        Additional keyword arguments, passed through to scipy.integrate.quad.
+        Only allowed for the non-CasADi case.
+
+    Returns
+    -------
+    tuple[float, float] | tuple[float, float, dict]
+        The integral of ``func`` from ``a`` to ``b``, and an estimate of the
+        absolute error. If ``full_output`` is True, additional integrator output
+        is returned as a third element.
+
+    See Also
+    --------
+    scipy.integrate.quad : The underlying NumPy implementation.
+    """
     if np.is_casadi_type(func):
+        if kwargs:
+            raise TypeError(
+                f"Got unexpected keyword arguments for a CasADi-type `func`: {list(kwargs.keys())}\n"
+                f"(Extra keyword arguments are only passed through to scipy.integrate.quad, "
+                f"which handles the non-CasADi case.)"
+            )
         all_vars = _cas.symvar(func)  # All variables found in the expression graph
 
         if variable_of_integration is None:
@@ -54,11 +125,12 @@ def quad(
             return res["xf"], tol
 
     else:
-        return integrate.quad(
+        return _scipy_integrate.quad(
             func=func,
             a=a,
             b=b,
             full_output=full_output,
+            **kwargs,
         )
 
 
@@ -76,99 +148,113 @@ def solve_ivp(
     y_variables: _cas.MX | tuple[_cas.MX] | None = None,
     **options,
 ):
-    """
-    Solve an initial value problem for a system of ODEs.
+    """Solve an initial value problem for a system of ODEs.
 
     This function wraps scipy.integrate.solve_ivp for NumPy functions and provides
     a CasADi-compatible implementation for symbolic differentiation through ODEs.
 
-    Analogous to scipy.integrate.solve_ivp with additional support for CasADi types.
+    Analogous to scipy.integrate.solve_ivp, with additional support for CasADi types.
 
-    Args:
-        fun: Right-hand side of the system. The calling signature depends on the backend:
+    Parameters
+    ----------
+    fun : Callable | casadi.MX
+        Right-hand side of the system. The calling signature depends on the backend:
 
-            - For NumPy functions: `fun(t, y, *args)` where t is a scalar and y is an ndarray
-              with shape (n,). Must return an array_like with shape (n,).
+        - For NumPy functions: ``fun(t, y, *args)``, where ``t`` is a scalar and
+          ``y`` is an ndarray with shape (n,). Must return an array_like with
+          shape (n,).
+        - For CasADi symbolic: either a Callable that returns CasADi expressions,
+          or a CasADi expression directly. If providing an expression, you must
+          also provide ``t_variable``.
+    t_span : tuple[float, float]
+        Interval of integration (t0, tf). The solver starts at t0 and integrates
+        until it reaches tf.
+    y0 : ndarray | casadi.MX
+        Initial state. Array of shape (n,) or CasADi MX.
+    method : {'RK45', 'RK23', 'DOP853', 'Radau', 'BDF', 'LSODA'}, optional
+        Integration method to use. Only applies to the NumPy backend. Options are:
 
-            - For CasADi symbolic: Either a Callable that returns CasADi expressions, or
-              a CasADi expression directly. If providing an expression, must also provide
-              `t_variable`.
+        - 'RK45' (default): Explicit Runge-Kutta method of order 5(4). Good
+          general-purpose solver.
+        - 'RK23': Explicit Runge-Kutta method of order 3(2). Faster but less
+          accurate than RK45.
+        - 'DOP853': Explicit Runge-Kutta method of order 8. High accuracy for
+          smooth problems.
+        - 'Radau': Implicit Runge-Kutta method of order 5. Good for stiff problems.
+        - 'BDF': Implicit multi-step variable-order (1 to 5) method. Good for
+          stiff problems.
+        - 'LSODA': Adams/BDF method with automatic stiffness detection.
 
-        t_span: Interval of integration (t0, tf). The solver starts at t0 and integrates
-            until it reaches tf.
+        Note: for the CasADi backend (symbolic differentiation), this parameter is
+        ignored and the solver uses CVODES internally.
+    t_eval : ndarray | casadi.MX, optional
+        Times at which to store the computed solution. If None (default), uses
+        solver-internal time points. For the CasADi backend, if None, returns the
+        solution at 100 evenly-spaced points.
+    dense_output : bool, optional
+        Whether to compute a continuous solution. Only supported for the NumPy
+        backend. Default is False.
+    events : Callable | Sequence[Callable], optional
+        Event functions to track. Only supported for the NumPy backend.
+    vectorized : bool, optional
+        Whether ``fun`` may be called in a vectorized fashion. Only applies to the
+        NumPy backend. Default is False.
+    args : tuple, optional
+        Additional arguments to pass to ``fun``. Only supported for the NumPy
+        backend.
+    t_variable : casadi.MX, optional
+        [CasADi backend only] If ``fun`` is a CasADi expression (not a Callable),
+        you must specify which variable represents time.
+    y_variables : casadi.MX | tuple[casadi.MX], optional
+        [CasADi backend only] The state variables. If None, inferred automatically
+        as all variables in ``fun`` except ``t_variable``.
+    **options
+        Additional options to pass to the solver.
 
-        y0: Initial state. Array of shape (n,) or CasADi MX.
+    Returns
+    -------
+    OdeResult
+        Object with the following fields:
 
-        method: Integration method to use. Only applies to NumPy backend. Options are:
+        - t: array of time points
+        - y: array of solution values at each time point
+        - sol: (NumPy backend only) interpolating function for the solution
+        - t_events, y_events: (NumPy backend only) event information
+        - nfev, njev, nlu: (NumPy backend only) solver statistics
+        - status: 0 for success
+        - message: human-readable status description
+        - success: boolean indicating whether the solver succeeded
 
-            - 'RK45' (default): Explicit Runge-Kutta method of order 5(4). Good general-purpose solver.
-            - 'RK23': Explicit Runge-Kutta method of order 3(2). Faster but less accurate than RK45.
-            - 'DOP853': Explicit Runge-Kutta method of order 8. High accuracy for smooth problems.
-            - 'Radau': Implicit Runge-Kutta method of order 5. Good for stiff problems.
-            - 'BDF': Implicit multi-step variable-order (1 to 5) method. Good for stiff problems.
-            - 'LSODA': Adams/BDF method with automatic stiffness detection.
+    See Also
+    --------
+    scipy.integrate.solve_ivp : The underlying NumPy implementation.
 
-            Note: For CasADi backend (symbolic differentiation), this parameter is ignored
-            and the solver uses CVODES internally.
+    Examples
+    --------
+    Exponential decay:
 
-        t_eval: Times at which to store the computed solution. If None (default), uses
-            solver-internal time points. For CasADi backend, if None, returns solution at
-            100 evenly-spaced points.
+    >>> def exponential_decay(t, y):
+    ...     return -0.5 * y
+    >>> sol = solve_ivp(exponential_decay, t_span=(0, 10), y0=[2.5])
 
-        dense_output: Whether to compute a continuous solution. Only supported for NumPy backend.
+    Lorenz system:
 
-        events: Event functions to track. Only supported for NumPy backend.
-
-        vectorized: Whether `fun` may be called in a vectorized fashion. Only applies to
-            NumPy backend.
-
-        args: Additional arguments to pass to `fun`. Only supported for NumPy backend.
-
-        t_variable: [CasADi backend only] If `fun` is a CasADi expression (not a Callable),
-            you must specify which variable represents time.
-
-        y_variables: [CasADi backend only] The state variables. If None, inferred automatically
-            as all variables in `fun` except `t_variable`.
-
-        **options: Additional options to pass to the solver.
-
-    Returns:
-        OdeResult object with the following fields:
-
-            - t: array of time points
-            - y: array of solution values at each time point
-            - sol: (NumPy backend only) Interpolating function for the solution
-            - t_events, y_events: (NumPy backend only) Event information
-            - nfev, njev, nlu: (NumPy backend only) Solver statistics
-            - status: 0 for success
-            - message: Human-readable status description
-            - success: Boolean indicating whether solver succeeded
-
-    Examples:
-        Exponential decay:
-
-        >>> def exponential_decay(t, y):
-        ...     return -0.5 * y
-        >>> sol = solve_ivp(exponential_decay, t_span=(0, 10), y0=[2.5])
-
-        Lorenz system:
-
-        >>> def lorenz(t, y):
-        ...     sigma, rho, beta = 10, 28, 8/3
-        ...     return [sigma * (y[1] - y[0]),
-        ...             y[0] * (rho - y[2]) - y[1],
-        ...             y[0] * y[1] - beta * y[2]]
-        >>> sol = solve_ivp(lorenz, t_span=(0, 40), y0=[0, 1, 1.05])
-
-    See Also:
-        scipy.integrate.solve_ivp: The underlying NumPy implementation
+    >>> def lorenz(t, y):
+    ...     sigma, rho, beta = 10, 28, 8/3
+    ...     return [sigma * (y[1] - y[0]),
+    ...             y[0] * (rho - y[2]) - y[1],
+    ...             y[0] * y[1] - beta * y[2]]
+    >>> sol = solve_ivp(lorenz, t_span=(0, 40), y0=[0, 1, 1.05])
     """
     # Determine which backend to use
     if np.is_casadi_type(fun, recursive=False):
         backend = "casadi_expr"
     else:
         try:
-            f = np.array(fun(t_span[0], y0))
+            # Probe `fun` with an array-converted y0 (scipy also converts y0
+            # before calling fun, so e.g. a plain-list y0 must work here) and
+            # with `args`, if given.
+            f = np.array(fun(t_span[0], np.array(y0), *(args or ())))
             if np.is_casadi_type(f):
                 backend = "casadi_func"
             else:
@@ -210,7 +296,7 @@ def solve_ivp(
             )
 
     if backend == "numpy_func":
-        return integrate.solve_ivp(
+        return _scipy_integrate.solve_ivp(
             fun=fun,
             t_span=t_span,
             y0=y0,
@@ -251,6 +337,7 @@ def solve_ivp(
         * `t_variable` is a CasADi variable (cas.MX)
         * `y_variables` is a CasADi variable (cas.MX), possibly a vector of variables
         """
+        assert y_variables is not None  # Type narrowing for type checker
 
         t0 = t_span[0]
         tf = t_span[1]
@@ -282,7 +369,23 @@ def solve_ivp(
             *[var for var in all_vars if not variable_is_t_or_y(var)]
         )
 
-        simtime_eval = np.linspace(0, 1, 100)
+        if t_eval is None:
+            simtime_eval = np.linspace(0, 1, 100)
+        else:
+            # Map the requested times onto normalized time in [0, 1].
+            if np.is_casadi_type(t_eval, recursive=True) or np.is_casadi_type(
+                [t0, tf], recursive=True
+            ):
+                raise NotImplementedError(
+                    "For the CasADi backend, `t_eval` is only supported when both "
+                    "`t_eval` and `t_span` are numeric (not CasADi types). "
+                    "Leave `t_eval` as None to get the solution at 100 evenly-spaced points."
+                )
+            simtime_eval = (_onp.asarray(t_eval, dtype=float).reshape(-1) - t0) / (
+                tf - t0
+            )
+            if _onp.any(simtime_eval < 0) or _onp.any(simtime_eval > 1):
+                raise ValueError("Values in `t_eval` are not within `t_span`.")
 
         # Define the integrator
         integrator = _cas.integrator(
@@ -308,7 +411,7 @@ def solve_ivp(
             p=parameters,
         )
 
-        return integrate._ivp.ivp.OdeResult(
+        return _scipy_integrate._ivp.ivp.OdeResult(
             t=t0 + (tf - t0) * res["qf"],
             y=res["xf"],
             t_events=None,

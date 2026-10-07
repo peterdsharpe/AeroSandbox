@@ -10,7 +10,7 @@ def test_euler_angles_equivalence_to_general_3D():
     rot_euler = np.rotation_matrix_from_euler_angles(phi, theta, psi)
     rot_manual = (
         np.rotation_matrix_3D(psi, np.array([0, 0, 1]))
-        @ np.rotation_matrix_3D(theta, np.array([0, 1, 0]))
+        @ np.rotation_matrix_3D(theta, np.array([0, 1, 0]))  # type: ignore[operator]
         @ np.rotation_matrix_3D(phi, np.array([1, 0, 0]))
     )
 

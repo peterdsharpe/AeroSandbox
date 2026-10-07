@@ -1,0 +1,724 @@
+---
+execute:
+  warning: false
+---
+
+# Aircraft Aerodynamics {#sec-aircraft-aerodynamics}
+
+```{python}
+#| echo: false
+import _common  # applies the book-wide matplotlib house style
+```
+
+You have an airplane geometry. Now you need forces and moments: how much lift at this angle of attack, how much drag at that cruise condition, whether the airplane is stable, and how all of that changes as the optimizer morphs the design. This chapter covers AeroSandbox's built-in 3D aerodynamics analyses — what each one models, what each one costs, and how much to trust them. You will learn to run the same airplane through four solvers of increasing fidelity, extract stability derivatives, do a first aerodynamic shape optimization, and finally check all four methods against wind-tunnel data on a swept flying wing.
+
+Every analysis here shares one interface: construct it from an `asb.Airplane` (@sec-geometry) and an `asb.OperatingPoint`, call `.run()`, and get back a dictionary of forces, moments, and nondimensional coefficients with identical keys. Because the methods are interchangeable, you can prototype a design study with the fastest one and swap in a higher-fidelity one with a two-line change. And because every method is written in `aerosandbox.numpy`, each one is automatically differentiable — any of them can sit inside an `asb.Opti` problem as a design constraint.
+
+## The fidelity ladder {#sec-aircraft-aero-ladder}
+
+There is no single "best" aerodynamics model — only the right tool for the current design question. AeroSandbox gives you a ladder:
+
+| Method | Class | Physics | Viscous? | Valid envelope | Relative cost |
+|---|---|---|---|---|---|
+| Component buildup | `asb.AeroBuildup` | DATCOM-style analytic + empirical buildup, incl. fuselages | Yes | Any $\alpha, \beta$ (±180°), subsonic through supersonic (reduced accuracy transonic) | Fastest; vectorizes over operating points |
+| Vortex lattice | `asb.VortexLatticeMethod` | 3D lifting-surface potential flow | No | Attached flow, small-ish angles | Fast; scales with panel count |
+| Lifting line | `asb.LiftingLine` | Spanwise horseshoe-vortex system + NeuralFoil 2D viscous data | Yes | Attached flow, moderate angles | Fast |
+| Nonlinear lifting line | `asb.NonlinearLiftingLine` | Same, but circulation solved consistently with *nonlinear* 2D polars (implicit solve) | Yes | Attached flow, into early stall | Slowest (iterative solve) |
+
+: The 3D aerodynamics methods in AeroSandbox, ordered roughly by cost. {#tbl-aero-ladder}
+
+A good default workflow: use `AeroBuildup` for design-space exploration and full-envelope work (it is the only method here that models fuselage aerodynamics and remains well-behaved at extreme attitudes), then spot-check the converged design with the vortex lattice or lifting-line methods — or with external codes like AVL and XFoil (@sec-external-tools).
+
+## The running example {#sec-aircraft-aero-testcase}
+
+Concrete first: we need an airplane. Here is a small RC-glider-class aircraft — a main wing, tail surfaces (with an elevator on the horizontal stabilizer), and a streamlined fuselage. The geometry classes themselves are covered in @sec-geometry; skim the code and note only that distances are in meters and angles in degrees.
+
+```{python}
+import aerosandbox as asb
+import aerosandbox.numpy as np
+
+wing_airfoil = asb.Airfoil("sd7037")
+tail_airfoil = asb.Airfoil("naca0010")
+
+airplane = asb.Airplane(
+    name="Peter's Glider",
+    xyz_ref=[0, 0, 0],  # CG location; also the moment reference point
+    wings=[
+        asb.Wing(
+            name="Main Wing",
+            symmetric=True,
+            xsecs=[
+                asb.WingXSec(  # Root
+                    xyz_le=[0, 0, 0],
+                    chord=0.18,
+                    twist=2,  # deg
+                    airfoil=wing_airfoil,
+                ),
+                asb.WingXSec(  # Mid
+                    xyz_le=[0.01, 0.5, 0],
+                    chord=0.16,
+                    twist=0,
+                    airfoil=wing_airfoil,
+                ),
+                asb.WingXSec(  # Tip
+                    xyz_le=[0.08, 1, 0.1],
+                    chord=0.08,
+                    twist=-2,
+                    airfoil=wing_airfoil,
+                ),
+            ],
+        ),
+        asb.Wing(
+            name="Horizontal Stabilizer",
+            symmetric=True,
+            xsecs=[
+                asb.WingXSec(  # Root
+                    xyz_le=[0, 0, 0],
+                    chord=0.1,
+                    twist=-10,
+                    airfoil=tail_airfoil,
+                    control_surfaces=[
+                        asb.ControlSurface(
+                            name="Elevator",
+                            symmetric=True,  # Deflects together on both sides
+                            hinge_point=0.75,  # Hinge at 75% chord
+                        )
+                    ],
+                ),
+                asb.WingXSec(  # Tip
+                    xyz_le=[0.02, 0.17, 0],
+                    chord=0.08,
+                    twist=-10,
+                    airfoil=tail_airfoil,
+                ),
+            ],
+        ).translate([0.6, 0, 0.06]),
+        asb.Wing(
+            name="Vertical Stabilizer",
+            symmetric=False,
+            xsecs=[
+                asb.WingXSec(
+                    xyz_le=[0, 0, 0],
+                    chord=0.1,
+                    airfoil=tail_airfoil,
+                ),
+                asb.WingXSec(
+                    xyz_le=[0.04, 0, 0.15],
+                    chord=0.06,
+                    airfoil=tail_airfoil,
+                ),
+            ],
+        ).translate([0.6, 0, 0.07]),
+    ],
+    fuselages=[
+        asb.Fuselage(
+            name="Fuselage",
+            xsecs=[
+                asb.FuselageXSec(
+                    xyz_c=[0.8 * xi - 0.1, 0, 0.1 * xi - 0.03],
+                    radius=0.6 * asb.Airfoil("dae51").local_thickness(x_over_c=xi),
+                )
+                for xi in np.cosspace(0, 1, 30)
+            ],
+        )
+    ],
+)
+```
+
+```{python}
+#| label: fig-glider-three-view
+#| fig-cap: "Three-view (plus isometric) of the example glider, drawn with `airplane.draw_three_view()`."
+airplane.draw_three_view()
+```
+
+```{python}
+#| echo: false
+# draw_three_view lazily imports aerosandbox.tools.pretty_plots, which mutates
+# global matplotlib style; restore the book's house style.
+import importlib
+import _common
+importlib.reload(_common)
+```
+
+## AeroBuildup: the workhorse {#sec-aircraft-aero-aerobuildup}
+
+`asb.AeroBuildup` computes forces and moments the way a classical conceptual-design workbook does: component by component, combining analytic theory (lifting-surface slopes, slender-body theory) with empirical corrections for viscous and compressible effects. Its formulation is heavily inspired by the [USAF Digital DATCOM](https://en.wikipedia.org/wiki/United_States_Air_Force_Stability_and_Control_Digital_DATCOM), and many submodels are shared with it. Two properties make it the workhorse of this chapter:
+
+1. **It works everywhere.** It returns finite, smoothly-varying answers across all 360° of angle of attack and sideslip, at arbitrary angular rates, from low subsonic through supersonic. (Accuracy degrades far from normal flight — an answer at $\alpha = 90°$ is order-of-magnitude correct, not precise — but it never explodes, which is exactly what an optimizer crawling through bad intermediate designs needs.)
+2. **It is fast and vectorized.** Analyzing thousands of operating points in a single call costs milliseconds per point, as we will measure below.
+
+### A single operating point
+
+An analysis takes the airplane plus an `asb.OperatingPoint` describing the flight condition — velocity, altitude (via an `asb.Atmosphere`), $\alpha$, $\beta$, and body rates $p, q, r$:
+
+```{python}
+op_point = asb.OperatingPoint(
+    velocity=10,  # m/s
+    alpha=5,  # deg
+)
+
+aero = asb.AeroBuildup(
+    airplane=airplane,
+    op_point=op_point,
+).run()
+
+
+def scalar(x):
+    """Collapse a size-1 array to a plain float, for printing."""
+    return float(np.ravel(x)[0])
+
+
+for key in ["L", "D", "CL", "CD", "Cm"]:
+    print(f"{key:>2} = {scalar(aero[key]):8.4f}")
+```
+
+At 10 m/s and $\alpha = 5°$, the glider makes `{python} f"{scalar(aero['L']):.1f}"` N of lift against `{python} f"{scalar(aero['D']):.2f}"` N of drag — a lift-to-drag ratio of `{python} f"{scalar(aero['L']) / scalar(aero['D']):.1f}"`.
+
+The returned dictionary contains much more than these five entries. Forces `F` and moments `M` come as $[x, y, z]$ vectors in three frames, distinguished by suffix:
+
+| Frame | Keys | Orientation |
+|---|---|---|
+| Geometry | `F_g`, `M_g` | $+x$ aft, $+y$ out the right wing, $+z$ up — same frame the geometry is defined in |
+| Body | `F_b`, `M_b` | $+x$ out the nose, $+y$ out the right wing, $+z$ down |
+| Wind | `F_w`, `M_w` | $+x$ along the flight velocity (into the relative wind), $+z$ down |
+
+: Axes conventions for force and moment outputs. {#tbl-axes}
+
+The scalar entries are breakouts of these vectors: lift `L`, drag `D`, and sideforce `Y` (wind axes, with $L = -F_{w,z}$ and $D = -F_{w,x}$); rolling/pitching/yawing moments `l_b`, `m_b`, `n_b` (body axes); and their nondimensional counterparts `CL`, `CD`, `CY`, `Cl`, `Cm`, `Cn`. Coefficients are normalized by `airplane.s_ref`, `c_ref`, and `b_ref`, which you can set explicitly or let AeroSandbox derive from the first wing. Moments are taken about `xyz_ref` — by default the airplane's `xyz_ref`, so make sure that point is where you think your CG is.
+
+### Polars: vectorizing over operating points
+
+`AeroBuildup` accepts array-valued operating points, so sweeping $\alpha$ is one call, not a loop. Let's measure how fast:
+
+```{python}
+import time
+
+alpha = np.linspace(-15, 15, 300)
+
+t_start = time.time()
+aero = asb.AeroBuildup(
+    airplane=airplane,
+    op_point=asb.OperatingPoint(velocity=10, alpha=alpha),
+).run()
+t_sweep = time.time() - t_start
+
+print(f"{len(alpha)} operating points analyzed in {t_sweep * 1e3:.0f} ms "
+      f"({t_sweep / len(alpha) * 1e3:.1f} ms per point)")
+```
+
+That speed — about `{python} f"{t_sweep / len(alpha) * 1e3:.0f}"` ms per operating point for a complete airplane, viscous drag and all, with the per-point cost falling further for larger batches — is what makes AeroBuildup usable inside optimization loops and mission simulations. The resulting polars:
+
+```{python}
+#| label: fig-aerobuildup-polars
+#| fig-cap: "Whole-airplane polars from a single vectorized `AeroBuildup` call: lift, drag, pitching moment, and aerodynamic efficiency versus angle of attack."
+import _common  # book-wide plot style
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(4, 1, figsize=(7, 9.5), sharex=True)
+
+ax[0].plot(alpha, aero["CL"], color=_common.SERIES[0])
+ax[0].set_ylabel("$C_L$ [-]")
+ax[0].set_title("Lift grows linearly, then softens toward stall")
+
+ax[1].plot(alpha, aero["CD"], color=_common.SERIES[0])
+ax[1].set_ylabel("$C_D$ [-]")
+ax[1].set_ylim(bottom=0)
+ax[1].set_title("Drag: friction floor plus induced-drag parabola")
+
+ax[2].plot(alpha, aero["Cm"], color=_common.SERIES[0])
+ax[2].axhline(0, color=_common.TEXT_SECONDARY, linewidth=0.8, linestyle="--")
+ax[2].set_ylabel("$C_m$ [-]")
+ax[2].set_title("Pitching moment: negative slope = statically stable")
+
+ax[3].plot(alpha, aero["CL"] / aero["CD"], color=_common.SERIES[0])
+ax[3].set_ylabel("$C_L/C_D$ [-]")
+ax[3].set_xlabel(r"Angle of attack $\alpha$ [deg]")
+ax[3].set_title("Aerodynamic efficiency peaks at a moderate angle of attack")
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| echo: false
+i_best = np.argmax(aero["CL"] / aero["CD"])
+LD_max = (aero["CL"] / aero["CD"])[i_best]
+alpha_best = alpha[i_best]
+```
+
+Reading @fig-aerobuildup-polars like an aerodynamicist: the lift curve is linear in the attached-flow regime with softening at the extremes; drag has a friction-dominated bucket near zero lift and grows quadratically with lift (induced drag); the pitching-moment slope is negative, so the airplane is statically stable in pitch; and efficiency peaks at $L/D$ = `{python} f"{LD_max:.1f}"` around $\alpha$ = `{python} f"{alpha_best:.1f}"`°.
+
+### The full envelope: any $\alpha$, any $\beta$
+
+Most aerodynamics tools quietly assume small angles. `AeroBuildup` does not — you can ask for the whole $(\alpha, \beta)$ envelope, which matters for spin analysis, high-angle trajectory simulation (e.g., rocket or re-entry-vehicle work), and making sure an optimizer can recover from absurd intermediate iterates. Here is the glider's lift coefficient over ±90° in both angles — about 3,700 operating points, again in one vectorized call:
+
+```{python}
+#| label: fig-aerobuildup-envelope
+#| fig-cap: "Lift coefficient across the full attitude envelope. The gray box marks the ±15° α, ±10° β region where conventional attached-flow analyses live; AeroBuildup returns smooth, plausible values far beyond it."
+import _common
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
+Beta, Alpha = np.meshgrid(np.linspace(-90, 90, 61), np.linspace(-90, 90, 61))
+
+aero_grid = asb.AeroBuildup(
+    airplane=airplane,
+    op_point=asb.OperatingPoint(
+        velocity=10,
+        alpha=Alpha.flatten(),
+        beta=Beta.flatten(),
+    ),
+).run()
+
+CL_grid = aero_grid["CL"].reshape(Alpha.shape)
+
+fig, ax = plt.subplots(figsize=(7, 5.8))
+vmax = np.max(np.abs(CL_grid))
+cf = ax.contourf(Beta, Alpha, CL_grid, levels=21, cmap="RdBu_r",
+                 vmin=-vmax, vmax=vmax, alpha=0.85)
+cs = ax.contour(Beta, Alpha, CL_grid, levels=11, colors="white", linewidths=0.7)
+ax.clabel(cs, fontsize=7, fmt="%.1f")
+fig.colorbar(cf, label="Lift coefficient $C_L$ [-]")
+
+ax.add_patch(Rectangle((-10, -15), 20, 30, fill=False,
+                       edgecolor=_common.TEXT_PRIMARY, linewidth=1.2))
+ax.annotate("conventional-analysis\nenvelope", xy=(12, -14),
+            fontsize=8, color=_common.TEXT_PRIMARY, va="top")
+
+ax.set_xlabel(r"Sideslip angle $\beta$ [deg]")
+ax.set_ylabel(r"Angle of attack $\alpha$ [deg]")
+ax.set_aspect("equal")
+plt.show()
+```
+
+### Control surfaces and trim
+
+`AeroBuildup` also models control-surface deflections. We declared an `asb.ControlSurface` named `"Elevator"` on the horizontal stabilizer back in @sec-aircraft-aero-testcase; `airplane.with_control_deflections()` returns a copy of the airplane with a deflection applied (positive = trailing edge down, by convention). Sweeping the elevator shifts the pitching-moment curve, which moves the trim point — the angle of attack where $C_m = 0$ and the airplane is in pitch equilibrium:
+
+```{python}
+#| label: fig-trim
+#| fig-cap: "Pitching-moment curves for several elevator deflections. Each dot marks the trim point (where the moment about the CG vanishes); up-elevator (negative deflection) trims the glider to a higher angle of attack."
+import _common
+import matplotlib.pyplot as plt
+
+alpha_trim_sweep = np.linspace(-8, 12, 60)
+deflections = [-6, -3, 0, 3, 6]  # deg
+alpha_trims = []
+
+fig, ax = plt.subplots(figsize=(7, 4.5))
+for i, deflection in enumerate(deflections):
+    aero_defl = asb.AeroBuildup(
+        airplane=airplane.with_control_deflections({"Elevator": deflection}),
+        op_point=asb.OperatingPoint(velocity=10, alpha=alpha_trim_sweep),
+    ).run()
+
+    # Trim: interpolate for the alpha where Cm crosses zero.
+    # (Cm decreases with alpha, so flip the arrays for np.interp.)
+    alpha_trim = np.interp(0, aero_defl["Cm"][::-1], alpha_trim_sweep[::-1])
+    alpha_trims.append(alpha_trim)
+
+    color = _common.SERIES[i]
+    ax.plot(alpha_trim_sweep, aero_defl["Cm"], color=color)
+    ax.plot(alpha_trim, 0, "o", color=color, markersize=6, zorder=4)
+    _common.label_line(
+        ax, alpha_trim_sweep[-1], aero_defl["Cm"][-1],
+        rf"$\delta_e = {deflection:+d}°$", color, dx=0.3,
+    )
+
+ax.axhline(0, color=_common.TEXT_SECONDARY, linewidth=0.8, linestyle="--")
+ax.set_xlabel(r"Angle of attack $\alpha$ [deg]")
+ax.set_ylabel("Pitching moment coefficient $C_m$ [-]")
+ax.set_xlim(right=17)  # room for the direct labels
+plt.show()
+```
+
+```{python}
+#| echo: false
+trim_sensitivity = (alpha_trims[-1] - alpha_trims[0]) / (deflections[-1] - deflections[0])
+```
+
+Each degree of down-elevator retrims the glider about `{python} f"{abs(trim_sensitivity):.2f}"`° lower in angle of attack over this range — the kind of control-authority number you need when sizing tail surfaces.
+
+## Stability derivatives {#sec-aircraft-aero-stability}
+
+Static stability analysis needs the *derivatives* of forces and moments with respect to flight condition — quantities like $C_{m_\alpha}$ (pitch stiffness) and $C_{n_\beta}$ (weathercock stability). Because every AeroSandbox model is automatically differentiable, you don't need finite-difference sweeps: `run_with_stability_derivatives()` returns exact derivatives alongside the baseline results. (This method exists on `AeroBuildup`, `VortexLatticeMethod`, and `LiftingLine` alike.)
+
+```{python}
+derivs = asb.AeroBuildup(
+    airplane=airplane,
+    op_point=asb.OperatingPoint(velocity=10, alpha=5),
+).run_with_stability_derivatives()  # computes d/d{alpha, beta, p, q, r}
+
+for key in ["CLa", "Cma", "Cmq", "Clb", "Clp", "Cnb", "Cnr", "x_np"]:
+    print(f"{key:>4} = {scalar(derivs[key]):+8.4f}")
+```
+
+The key entries, and how to read their signs:
+
+| Derivative | Value | Meaning | Stable sign |
+|---|---|---|---|
+| $C_{L_\alpha}$ | `{python} f"{scalar(derivs['CLa']):+.2f}"` /rad | Lift-curve slope | — |
+| $C_{m_\alpha}$ | `{python} f"{scalar(derivs['Cma']):+.2f}"` /rad | Pitch stiffness | negative |
+| $C_{m_q}$ | `{python} f"{scalar(derivs['Cmq']):+.2f}"` /rad | Pitch damping | negative |
+| $C_{l_\beta}$ | `{python} f"{scalar(derivs['Clb']):+.3f}"` /rad | Dihedral effect (roll due to sideslip) | negative |
+| $C_{l_p}$ | `{python} f"{scalar(derivs['Clp']):+.2f}"` /rad | Roll damping | negative |
+| $C_{n_\beta}$ | `{python} f"{scalar(derivs['Cnb']):+.3f}"` /rad | Weathercock (yaw) stability | positive |
+| $C_{n_r}$ | `{python} f"{scalar(derivs['Cnr']):+.3f}"` /rad | Yaw damping | negative |
+
+: Stability derivatives for the glider at $\alpha = 5°$, from `AeroBuildup`. {#tbl-stability-derivs}
+
+```{python}
+#| echo: false
+x_np = scalar(derivs["x_np"])
+static_margin = (x_np - airplane.xyz_ref[0]) / airplane.c_ref
+```
+
+Longitudinally, the report card is good: $C_{m_\alpha}$ is strongly negative, and the neutral point sits at $x_{np}$ = `{python} f"{x_np * 1e3:.0f}"` mm — behind the CG at $x = 0$, for a static margin of `{python} f"{static_margin * 100:.0f}"`% of the reference chord. Directionally, though, AeroBuildup flags a problem: $C_{n_\beta}$ = `{python} f"{scalar(derivs['Cnb']):+.3f}"` /rad is slightly *negative*, meaning the destabilizing fuselage side-force slightly overpowers the small vertical tail. This is exactly the kind of cheap, early red flag you want from a conceptual-stage model: enlarging the vertical tail is free at the concept stage, and expensive after the airplane is built.
+
+::: {.callout-tip}
+## Derivatives of derivatives
+
+Since `run_with_stability_derivatives()` is itself built from differentiable operations, its outputs are differentiable too. You can put a constraint like `derivs["Cma"] < -0.5` — or a static-margin band — directly into an `asb.Opti` problem, and the optimizer will reshape the airplane to satisfy it.
+:::
+
+## Vortex lattice method {#sec-aircraft-aero-vlm}
+
+One rung up the ladder, `asb.VortexLatticeMethod` (VLM) solves an actual 3D flow problem: it meshes the lifting surfaces into panels of horseshoe vortices, enforces flow tangency at collocation points, and solves the resulting linear system. Unlike AeroBuildup's empirical buildup, the VLM *derives* the lift distribution, induced drag, and surface interference from potential-flow physics — so it captures planform effects (sweep, taper, twist, multi-surface interaction) with much higher fidelity. The price: it models inviscid, attached flow only. There is no friction or separation drag in a VLM answer, and fuselages are ignored.
+
+The interface is identical:
+
+```{python}
+vlm = asb.VortexLatticeMethod(
+    airplane=airplane,
+    op_point=asb.OperatingPoint(velocity=10, alpha=5),
+)
+
+vlm_aero = vlm.run()
+
+for key in ["CL", "CD", "Cm"]:
+    print(f"{key:>2} = {vlm_aero[key]:8.4f}")
+```
+
+At the same condition, the VLM gives $C_L$ = `{python} f"{vlm_aero['CL']:.3f}"` versus AeroBuildup's `{python} f"{scalar(aero['CL'][np.argmin(np.abs(alpha - 5))]):.3f}"` — agreement to within about `{python} f"{abs(vlm_aero['CL'] / scalar(aero['CL'][np.argmin(np.abs(alpha - 5))]) - 1) * 100:.0f}"`% in the linear regime, which is typical. The VLM's $C_D$ = `{python} f"{vlm_aero['CD']:.4f}"` is *induced drag only* and should never be compared directly against a viscous drag number.
+
+A solved VLM object can draw its own paneling, colored by vortex strength, with streamlines traced through the computed flowfield:
+
+```{python}
+#| label: fig-vlm-mesh
+#| fig-cap: "The VLM panel mesh of the glider, colored by vortex strength, with computed streamlines. Note the tip vortices rolling off the wing and the downwash field washing over the tail."
+vlm.draw(show_kwargs=dict(jupyter_backend="static", window_size=(1000, 640)));
+```
+
+Panel density is controlled by `spanwise_resolution` and `chordwise_resolution` arguments (subdivisions per wing section), trading accuracy against cost.
+
+### Shape optimization teaser: recovering the elliptical wing
+
+Because the VLM is differentiable, it can serve as the physics inside a shape optimization — no gradient wiring required. Here is the classic textbook problem: *among planar, untwisted wings of fixed span and fixed area, find the chord distribution that minimizes induced drag at a given lift.* Prandtl's lifting-line theory says the answer is an elliptical lift distribution, achieved by an elliptical chord distribution, with induced drag
+
+$$
+C_{D_i} = \frac{C_L^2}{\pi \, A\!R}.
+$$
+
+We pose exactly that problem to IPOPT, with the section chords (and the angle of attack needed to hit the lift target) as design variables:
+
+```{python}
+opti = asb.Opti()
+
+N = 12  # Number of spanwise stations to optimize
+section_y = np.sinspace(0, 1, N, reverse_spacing=True)  # Cluster near the tip
+
+chords = opti.variable(init_guess=np.ones(N))  # Initial guess: rectangular wing
+
+wing = asb.Wing(
+    symmetric=True,
+    xsecs=[
+        asb.WingXSec(
+            xyz_le=[-0.25 * chords[i], section_y[i], 0],  # Straight quarter-chord line
+            chord=chords[i],
+            airfoil=asb.Airfoil("naca0012"),
+        )
+        for i in range(N)
+    ],
+)
+
+opti.subject_to([
+    chords > 0,
+    wing.area() == 0.25,  # Fixed area (with fixed span => fixed aspect ratio)
+    np.diff(chords) <= 0,  # Chord shrinks toward the tip (regularizes the problem)
+])
+
+alpha_wing = opti.variable(init_guess=5, lower_bound=0, upper_bound=30)
+
+wing_aero = asb.VortexLatticeMethod(
+    airplane=asb.Airplane(wings=[wing]),
+    op_point=asb.OperatingPoint(velocity=1, alpha=alpha_wing),
+    spanwise_resolution=1,  # 1 VLM strip per optimized section
+    chordwise_resolution=6,
+).run()
+
+opti.subject_to(wing_aero["CL"] == 1)  # Fixed lift
+opti.minimize(wing_aero["CD"])
+
+sol = opti.solve(verbose=False)
+
+AR = 2**2 / 0.25  # (span)^2 / area
+CDi_theory = 1**2 / (np.pi * AR)
+print(f"CDi (VLM, optimized) : {sol(wing_aero['CD']):.5f}")
+print(f"CDi (lifting-line theory) : {CDi_theory:.5f}")
+print(f"Solved in {sol.stats()['iter_count']} IPOPT iterations")
+```
+
+The optimizer, knowing nothing about Prandtl, rediscovers the elliptical planform:
+
+```{python}
+#| label: fig-elliptic-wing
+#| fig-cap: "Chord distribution found by minimizing VLM induced drag at fixed span, area, and lift — compared against the analytic elliptical optimum."
+import _common
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(7, 4))
+
+y_analytic = np.linspace(0, 1, 300)
+c_root_analytic = 4 * 0.25 / (np.pi * 2)  # ellipse with S=0.25, b=2
+ax.plot(
+    y_analytic,
+    c_root_analytic * np.sqrt(1 - y_analytic**2),
+    color=_common.TEXT_SECONDARY,
+)
+_common.label_line(ax, 0.28, 0.128, "analytic ellipse", _common.TEXT_SECONDARY, dy=-0.018)
+
+ax.plot(section_y, sol(chords), ".-", color=_common.SERIES[0], markersize=9)
+_common.label_line(ax, 0.42, 0.155, "VLM optimum", _common.SERIES[0], dy=0.006)
+
+ax.set_xlabel("Spanwise station $y$ [m]")
+ax.set_ylabel("Chord $c$ [m]")
+ax.set_ylim(bottom=0)
+plt.show()
+```
+
+The computed induced drag lands within `{python} f"{abs(sol(wing_aero['CD']) / CDi_theory - 1) * 100:.0f}"`% of the theoretical value; the residual gap is discretization error on both sides (the VLM's finite paneling, and the theory's small-angle and simplified tip treatment). This composability — geometry variables, flow solver, and operating point all inside one optimization problem — is the pattern behind the full design studies in @sec-aerostructural-wing.
+
+## Lifting-line methods {#sec-aircraft-aero-liftingline}
+
+Between AeroBuildup's empiricism and the VLM's inviscid panels sit two lifting-line methods. Both model each wing as a line of horseshoe vortices (as in classical Prandtl theory, generalized for sweep, dihedral, and multiple surfaces), and both use [NeuralFoil](https://github.com/peterdsharpe/NeuralFoil) — the same neural-network airfoil model from @sec-airfoil-aerodynamics — for 2D viscous sectional data. That gives them something the VLM fundamentally lacks: profile drag and Reynolds-number effects, resolved section by section along the span.
+
+For these and the validation study, we switch to a cleaner test case: a swept flying wing tested by NACA in the early 1950s (NACA RM A50K27), for which published wind-tunnel data exists.
+
+```{python}
+airfoil = asb.Airfoil(
+    name="n64_1_A612",
+    coordinates="assets/flying-wing/n64_1_A612.dat",  # NACA 64(1)-A612 section
+)
+
+flying_wing = asb.Airplane(
+    name="NACA RM A50K27 flying wing",
+    xyz_ref=[0.585, 0, 0],  # Moment reference point, matching the report
+    wings=[
+        asb.Wing(
+            name="Main Wing",
+            symmetric=True,
+            xsecs=[
+                asb.WingXSec(xyz_le=[0, 0, 0], chord=0.4120, airfoil=airfoil),
+                asb.WingXSec(xyz_le=[1.1362, 1.5490, 0], chord=0.2060, airfoil=airfoil),
+            ],
+        )
+    ],
+    c_ref=0.32,  # Reference chord used in the report
+)
+
+op_point = asb.OperatingPoint(
+    atmosphere=asb.Atmosphere(altitude=0),
+    velocity=91.3,  # m/s, matching the test's Reynolds number
+)
+
+print(f"Aspect ratio : {flying_wing.wings[0].aspect_ratio():.1f}")
+print(f"LE sweep     : {np.arctan2d(1.1362, 1.5490):.1f} deg")
+print(f"Re (c_ref)   : {op_point.reynolds(reference_length=flying_wing.c_ref):.2e}")
+```
+
+```{python}
+#| label: fig-flying-wing
+#| fig-cap: "The NACA RM A50K27 test article: a high-aspect-ratio swept, tapered flying wing — no fuselage, no tail."
+flying_wing.draw_three_view()
+```
+
+```{python}
+#| echo: false
+import importlib
+import _common
+importlib.reload(_common)  # restore house style after draw_three_view
+```
+
+### `asb.LiftingLine`: quasi-linear
+
+`asb.LiftingLine` solves a single linear system for the spanwise circulation (like a one-panel-chordwise VLM), then evaluates NeuralFoil at each section's local flow condition to add viscous drag and moment. One linear solve plus one network evaluation makes it nearly VLM-cheap while still capturing viscous effects:
+
+```{python}
+op = op_point.copy()
+op.alpha = 5
+
+t_start = time.time()
+ll_aero = asb.LiftingLine(
+    airplane=flying_wing,
+    op_point=op,
+).run()
+t_ll = time.time() - t_start
+
+print(f"CL = {ll_aero['CL']:.4f}, CD = {ll_aero['CD']:.4f}  ({t_ll:.2f} s)")
+```
+
+Note the drag: `{python} f"{ll_aero['CD']:.4f}"` includes profile drag, so it is directly comparable to wind-tunnel measurements — unlike a bare VLM number.
+
+### `asb.NonlinearLiftingLine`: implicit and stall-aware
+
+The quasi-linear method computes circulation from *linearized* aerodynamics, then applies nonlinear sectional data afterward. `asb.NonlinearLiftingLine` closes that loop: it solves for a circulation distribution that is *self-consistent* with the full nonlinear NeuralFoil polars, so the lift distribution can respond to sections approaching stall. It is an `ImplicitAnalysis` — the governing equations become residual constraints solved by IPOPT:
+
+```{python}
+t_start = time.time()
+nlll_aero = asb.NonlinearLiftingLine(
+    airplane=flying_wing,
+    op_point=op,
+    spanwise_resolution=6,  # Downsampled from the default of 8, for speed
+).run()
+t_nlll = time.time() - t_start
+
+print(f"CL = {nlll_aero['CL']:.4f}, CD = {nlll_aero['CD']:.4f}  ({t_nlll:.1f} s)")
+```
+
+In the linear regime it reproduces the quasi-linear answer (here, $C_L$ within `{python} f"{abs(nlll_aero['CL'] / ll_aero['CL'] - 1) * 100:.1f}"`%), but each analysis costs an iterative solve — `{python} f"{t_nlll:.0f}"` s here versus `{python} f"{t_ll:.2f}"` s. Reach for it when sections are working near their sectional $C_{l,\max}$ and the lift *distribution* near stall is the question. If you call it standalone via `.run()`, it creates and solves its own `asb.Opti` internally; you can instead pass `opti=` to embed its residuals inside a larger optimization problem, so your design optimization and the aerodynamic solve converge simultaneously.
+
+## Validation: four methods vs. the wind tunnel {#sec-aircraft-aero-validation}
+
+Talk is cheap; let's check all four methods against the NACA wind-tunnel measurements. We sweep angle of attack with each method (AeroBuildup vectorizes; the others loop — an `OperatingPoint` with an array attribute is iterable, which makes the loops tidy), then overlay the published data. For context we also include results from AVL + XFoil, a classic external-tool pairing (@sec-external-tools).
+
+```{python}
+# --- AeroBuildup: one vectorized call
+ab_op = op_point.copy()
+ab_op.alpha = np.linspace(-12, 14, 50)
+ab_sweep = asb.AeroBuildup(airplane=flying_wing, op_point=ab_op).run()
+ab_sweep["alpha"] = ab_op.alpha
+
+
+def sweep(analysis_class, alphas, **kwargs):
+    """Run a (non-vectorized) analysis at each alpha; stack results into arrays."""
+    op_sweep = op_point.copy()
+    op_sweep.alpha = alphas
+    runs = [
+        analysis_class(airplane=flying_wing, op_point=op_i, **kwargs).run()
+        for op_i in op_sweep  # a vectorized OperatingPoint is iterable
+    ]
+    result = {k: np.array([r[k] for r in runs]) for k in ["CL", "CD", "Cm"]}
+    result["alpha"] = alphas
+    return result
+
+
+vlm_sweep = sweep(asb.VortexLatticeMethod, np.linspace(-12, 14, 14),
+                  spanwise_resolution=5)
+ll_sweep = sweep(asb.LiftingLine, np.linspace(-12, 14, 14))
+nlll_sweep = sweep(asb.NonlinearLiftingLine, np.linspace(-8, 8, 5),
+                   spanwise_resolution=6)  # fewer points: each is an implicit solve
+```
+
+```{python}
+# --- Wind-tunnel data (NACA RM A50K27) and AVL+XFoil results
+import pandas as pd
+from scipy import interpolate
+
+wt_CL = pd.read_excel("assets/flying-wing/NACA-RM-A50K27.xlsx", sheet_name="CL")
+wt_CD = pd.read_excel("assets/flying-wing/NACA-RM-A50K27.xlsx", sheet_name="CD")
+wt_Cm = pd.read_excel("assets/flying-wing/NACA-RM-A50K27.xlsx", sheet_name="CM")
+
+# The report gives Cm vs. CL; recover alpha by interpolating the CL-vs-alpha data.
+wt_Cm["alpha"] = interpolate.interp1d(
+    wt_CL["CL"], wt_CL["alpha"], fill_value="extrapolate"
+)(wt_Cm["CL"])
+
+avl = pd.read_csv("assets/flying-wing/avl_and_xfoil.csv")  # columns: alpha, CL, CD, Cm
+```
+
+```{python}
+#| label: fig-validation
+#| fig-cap: "Lift, drag, and moment polars for the NACA RM A50K27 flying wing: AeroSandbox's four built-in methods and AVL+XFoil versus wind-tunnel data."
+import _common
+import matplotlib.pyplot as plt
+
+methods = {
+    "AeroBuildup": (ab_sweep, _common.SERIES[0]),
+    "VLM (inviscid)": (vlm_sweep, _common.SERIES[1]),
+    "LiftingLine": (ll_sweep, _common.SERIES[2]),
+    "NonlinearLiftingLine": (nlll_sweep, _common.SERIES[4]),
+    "AVL + XFoil": (avl, _common.TEXT_SECONDARY),
+}
+wt_format = dict(color="black", linewidth=0, marker=".", markersize=6,
+                 label="Wind tunnel", zorder=5)
+
+fig, ax = plt.subplots(3, 1, figsize=(7, 11))
+
+for name, (data, color) in methods.items():
+    ax[0].plot(data["alpha"], data["CL"], color=color, alpha=0.8, label=name)
+    ax[1].plot(data["CD"], data["CL"], color=color, alpha=0.8)
+    ax[2].plot(data["alpha"], data["Cm"], color=color, alpha=0.8)
+
+ax[0].plot(wt_CL["alpha"], wt_CL["CL"], **wt_format)
+ax[1].plot(wt_CD["CD"], wt_CD["CL"], **wt_format)
+ax[2].plot(wt_Cm["alpha"], wt_Cm["Cm"], **wt_format)
+
+ax[0].set_title("Lift: all methods agree while the flow stays attached")
+ax[0].set_xlabel(r"Angle of attack $\alpha$ [deg]")
+ax[0].set_ylabel("$C_L$ [-]")
+ax[0].legend(fontsize=8, loc="lower right")
+
+ax[1].set_title("Drag: viscous methods bracket the data; the bare VLM cannot")
+ax[1].set_xlabel("$C_D$ [-]")
+ax[1].set_ylabel("$C_L$ [-]")
+ax[1].set_xlim(0, 1.1 * wt_CD["CD"].max())
+
+ax[2].set_title("Moment: attached-flow methods miss the stall pitch-break")
+ax[2].set_xlabel(r"Angle of attack $\alpha$ [deg]")
+ax[2].set_ylabel("$C_m$ [-]")
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| echo: false
+def lift_slope(alphas, CLs):
+    """Lift-curve slope [1/rad] from a +/-4 deg secant."""
+    return float(
+        (np.interp(4, alphas, CLs) - np.interp(-4, alphas, CLs)) / np.radians(8)
+    )
+
+slopes = {
+    "Wind tunnel": lift_slope(np.array(wt_CL["alpha"]), np.array(wt_CL["CL"])),
+    "AeroBuildup": lift_slope(ab_sweep["alpha"], ab_sweep["CL"]),
+    "VLM": lift_slope(vlm_sweep["alpha"], vlm_sweep["CL"]),
+    "LiftingLine": lift_slope(ll_sweep["alpha"], ll_sweep["CL"]),
+    "NonlinearLiftingLine": lift_slope(nlll_sweep["alpha"], nlll_sweep["CL"]),
+}
+wt_slope = slopes["Wind tunnel"]
+```
+
+Quantitatively, the lift-curve slopes over ±4° come out as:
+
+```{python}
+#| echo: false
+#| output: asis
+lines = ["| Source | $C_{L_\\alpha}$ [1/rad] | vs. wind tunnel |", "|---|---|---|"]
+for name, slope in slopes.items():
+    error = "—" if name == "Wind tunnel" else f"{(slope / wt_slope - 1) * 100:+.0f}%"
+    lines.append(f"| {name} | {slope:.2f} | {error} |")
+print("\n".join(lines))
+```
+
+What @fig-validation teaches about the fidelity ladder:
+
+- **In the attached-flow regime (roughly $-6° < \alpha < 7°$), the trends are right across the board — but accuracy differs.** AeroBuildup and the VLM match the measured lift-curve slope to within a few percent; remarkably, AeroBuildup gets there without ever solving a flow equation. The lifting-line methods read about `{python} f"{abs(slopes['LiftingLine'] / wt_slope - 1) * 100:.0f}"`% low on lift-curve slope here: this planform's `{python} f"{np.arctan2d(1.1362, 1.5490):.0f}"`° of sweep is exactly where a line-of-horseshoe-vortices model is weakest. Match the method to the geometry — on a high-aspect-ratio, low-sweep wing, the lifting-line methods shine.
+- **Drag separates the methods.** The bare VLM polar hugs the $C_D \approx C_{D_i}$ boundary — it is missing all profile drag, roughly the entire drag budget at low lift. AeroBuildup and both lifting-line methods, which include viscous sectional data, track the measured drag polar well through the drag bucket and its rise with lift.
+- **Stall breaks everything.** Above $\alpha \approx 7°$ the measured lift curve bends over and the measured pitching moment breaks sharply nose-up — the classic tip-stall pitch-up of swept wings, driven by separated flow that none of these attached-flow methods represent. The lesson is not "find a better fast model"; it is *know your model's envelope, and constrain your designs to stay inside it* (e.g., impose a $C_L$ margin below stall in your optimization problem).
+
+## Where to go next {#sec-aircraft-aero-next}
+
+- The 2D sectional models that power the lifting-line methods — NeuralFoil's polars, their accuracy envelope, and airfoil shape optimization — are covered in @sec-airfoil-aerodynamics.
+- To anchor these analyses against external codes (AVL, XFoil, OpenVSP) and learn when that's worth the friction, see @sec-external-tools.
+- To see `VortexLatticeMethod` embedded in a full design loop — coupled with structures into a wing aerostructural optimization — jump to @sec-aerostructural-wing.

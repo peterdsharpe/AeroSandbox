@@ -1,16 +1,42 @@
+"""Linear algebra functions for the AeroSandbox NumPy-like interface.
+
+This module provides linear algebra functions that work with both NumPy
+arrays and CasADi symbolic arrays.
+"""
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.arithmetic_monadic import sum, abs
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.array import asarray, max
+from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, VectorLike
 from numpy.linalg import *
+from typing import cast
 
 
-def inner(x, y, manual=False):
+def inner(x: VectorLike, y: VectorLike, manual: bool = False) -> Scalar:
+    """Compute the inner product of two arrays.
+
+    Parameters
+    ----------
+    x : VectorLike
+        First input array.
+    y : VectorLike
+        Second input array.
+    manual : bool, optional
+        If True, use a manual loop implementation. Default is False.
+
+    Returns
+    -------
+    Scalar
+        The inner product of ``x`` and ``y``.
+
+    See Also
+    --------
+    numpy.inner : https://numpy.org/doc/stable/reference/generated/numpy.inner.html
     """
-    Inner product of two arrays.
-
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.inner.html
-    """
+    x = asarray(x)
+    y = asarray(y)
     if manual:
         return sum([xi * yi for xi, yi in zip(x, y)])
 
@@ -21,12 +47,33 @@ def inner(x, y, manual=False):
         return _cas.dot(x, y)
 
 
-def outer(x, y, manual=False):
-    """
-    Compute the outer product of two vectors.
+def outer(x: VectorLike, y: VectorLike, manual: bool = False) -> Array:  # type: ignore[no-redef]
+    """Compute the outer product of two vectors.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.outer.html
+    This function intentionally shadows numpy.outer to add CasADi support
+    and a manual computation option.
+
+    Parameters
+    ----------
+    x : VectorLike
+        First input vector.
+    y : VectorLike
+        Second input vector.
+    manual : bool, optional
+        If True, use a manual loop implementation. Default is False.
+
+    Returns
+    -------
+    Array
+        The outer product of ``x`` and ``y``, a 2D array of shape
+        ``(len(x), len(y))``.
+
+    See Also
+    --------
+    numpy.outer : https://numpy.org/doc/stable/reference/generated/numpy.outer.html
     """
+    x = asarray(x)
+    y = asarray(y)
     if manual:
         return [[xi * yi for yi in y] for xi in x]
 
@@ -39,80 +86,168 @@ def outer(x, y, manual=False):
         return x @ y.T
 
 
-def solve(A, b):  # TODO get this working
-    """
-    Solve the linear system Ax=b for x.
-    Args:
-        A: A square matrix.
-        b: A vector representing the RHS of the linear system.
+def solve(A: ArrayLike, b: ArrayLike) -> Array:
+    """Solve the linear system Ax=b for x.
 
-    Returns: The solution vector x.
+    Parameters
+    ----------
+    A : ArrayLike, shape (M, M)
+        Coefficient matrix.
+    b : ArrayLike, shape (M,) or (M, N)
+        Right-hand side vector or matrix.
 
+    Returns
+    -------
+    Array, shape (M,) or (M, N)
+        Solution to the system ``A @ x = b``.
+
+    See Also
+    --------
+    numpy.linalg.solve : https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html
     """
+    A = asarray(A)
+    b = asarray(b)
     if not is_casadi_type([A, b]):
-        return _onp.linalg.solve(A, b)
+        A_np = cast(_onp.ndarray, A)
+        b_np = cast(_onp.ndarray, b)
+        return _onp.linalg.solve(A_np, b_np)
 
     else:
         return _cas.solve(A, b)
 
 
-def inv(A):
-    """
-    Returns the inverse of the matrix A.
+def inv(A: ArrayLike) -> Array:
+    """Compute the inverse of a matrix.
 
-    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.inv.html
+    Parameters
+    ----------
+    A : ArrayLike, shape (M, M)
+        Matrix to be inverted.
+
+    Returns
+    -------
+    Array, shape (M, M)
+        Inverse of the matrix ``A``.
+
+    See Also
+    --------
+    numpy.linalg.inv : https://numpy.org/doc/stable/reference/generated/numpy.linalg.inv.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.inv(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.inv(A_np)
 
     else:
         return _cas.inv(A)
 
 
-def pinv(A):
-    """
-    Returns the Moore-Penrose pseudoinverse of the matrix A.
+def pinv(A: ArrayLike) -> Array:
+    """Compute the Moore-Penrose pseudoinverse of a matrix.
 
-    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.pinv.html
+    Parameters
+    ----------
+    A : ArrayLike, shape (M, N)
+        Matrix to be pseudo-inverted.
+
+    Returns
+    -------
+    Array, shape (N, M)
+        The pseudo-inverse of the matrix ``A``.
+
+    See Also
+    --------
+    numpy.linalg.pinv : https://numpy.org/doc/stable/reference/generated/numpy.linalg.pinv.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.pinv(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.pinv(A_np)
 
     else:
         return _cas.pinv(A)
 
 
-def det(A):
-    """
-    Returns the determinant of the matrix A.
+def det(A: ArrayLike) -> Scalar:
+    """Compute the determinant of a matrix.
 
-    See: https://numpy.org/doc/stable/reference/generated/numpy.linalg.det.html
+    Parameters
+    ----------
+    A : ArrayLike, shape (M, M)
+        Input matrix.
+
+    Returns
+    -------
+    Scalar
+        Determinant of ``A``.
+
+    See Also
+    --------
+    numpy.linalg.det : https://numpy.org/doc/stable/reference/generated/numpy.linalg.det.html
     """
+    A = asarray(A)
     if not is_casadi_type(A):
-        return _onp.linalg.det(A)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.linalg.det(A_np)
 
     else:
         return _cas.det(A)
 
 
-def norm(x, ord=None, axis=None, keepdims=False):
-    """
-    Matrix or vector norm.
+def norm(
+    x: ArrayLike,
+    ord: int | float | str | None = None,
+    axis: int | tuple[int, int] | None = None,
+    keepdims: bool = False,
+) -> Scalar | Array:
+    """Compute matrix or vector norm.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
+    Parameters
+    ----------
+    x : ArrayLike
+        Input array.
+    ord : int | float | str, optional
+        Order of the norm. Default is None (2-norm for vectors, Frobenius
+        for matrices).
+    axis : int | tuple[int, int], optional
+        Axis along which to compute the norm. For CasADi arrays, only -1, 0,
+        or 1 are valid.
+    keepdims : bool, optional
+        If True, the reduced axis is retained as a dimension of size one.
+        Default is False.
+
+    Returns
+    -------
+    Scalar | Array
+        Norm of the array.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an unsupported axis or ord.
+
+    See Also
+    --------
+    numpy.linalg.norm : https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
     """
+    x = asarray(x)
     if not is_casadi_type(x):
-        return _onp.linalg.norm(x, ord=ord, axis=axis, keepdims=keepdims)
+        x_np = cast(_onp.ndarray, x)
+        return _onp.linalg.norm(x_np, ord=ord, axis=axis, keepdims=keepdims)
 
     else:
         # Figure out which axis, if any, to take a vector norm about.
+        axis_specified_by_user = axis is not None
         if axis is not None:
             if not (axis == 0 or axis == 1 or axis == -1):
                 raise ValueError("`axis` must be -1, 0, or 1 for CasADi types.")
+            if axis == -1:
+                axis = 1
         elif x.shape[0] == 1:
             axis = 1
         elif x.shape[1] == 1:
             axis = 0
+        # If axis is still None here, x is a true (2D) matrix -> matrix norms.
 
         if ord is None:
             if axis is not None:
@@ -120,58 +255,104 @@ def norm(x, ord=None, axis=None, keepdims=False):
             else:
                 ord = "fro"
 
-        if ord == 1:
-            # norm = _cas.norm_1(x)
-            norm = sum(abs(x), axis=axis)
-        elif ord == 2:
-            # norm = _cas.norm_2(x)
-            norm = sum(x**2, axis=axis) ** 0.5
-        elif ord == "fro" or ord == "frobenius":
-            norm = _cas.norm_fro(x)
-        elif ord == "inf" or _onp.isinf(ord):
-            norm = _cas.norm_inf()
-        else:
-            try:
-                norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
-            except Exception as e:
-                print(e)
-                raise ValueError(
-                    "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
-                    "as a last-ditch effort, but that didn't work."
+        is_inf_ord = ord == "inf" or (not isinstance(ord, str) and _onp.isinf(ord))
+
+        if axis is None:
+            ### Matrix norms, matching numpy.linalg.norm() conventions.
+            if ord == "fro" or ord == "frobenius":
+                norm = _cas.norm_fro(x)
+            elif ord == 1:  # Maximum column sum
+                norm = _cas.mmax(sum(abs(x), axis=0))
+            elif is_inf_ord:  # Maximum row sum
+                norm = _cas.mmax(sum(abs(x), axis=1))
+            elif ord == 2:
+                raise NotImplementedError(
+                    "The spectral norm (`ord=2`) of a matrix is not implemented for CasADi types.\n"
+                    "For the Frobenius norm, use `ord='fro'`; for vector norms, specify `axis`."
                 )
+            else:
+                try:
+                    norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
+                except Exception as e:
+                    print(e)
+                    raise ValueError(
+                        "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
+                        "as a last-ditch effort, but that didn't work."
+                    )
+        else:
+            ### Vector norms (either of a 1D-like array, or along the given axis).
+            if ord == 1:
+                # norm = _cas.norm_1(x)
+                norm = sum(abs(x), axis=axis)
+            elif ord == 2:
+                # norm = _cas.norm_2(x)
+                norm = sum(x**2, axis=axis) ** 0.5
+            elif is_inf_ord:
+                norm = max(abs(x), axis=axis)
+            elif ord == "fro" or ord == "frobenius":
+                if axis_specified_by_user:
+                    raise ValueError(
+                        "Frobenius norm is a matrix norm; it is not defined along an `axis`."
+                    )
+                norm = _cas.norm_fro(x)
+            else:
+                try:
+                    norm = sum(abs(x) ** ord, axis=axis) ** (1 / ord)
+                except Exception as e:
+                    print(e)
+                    raise ValueError(
+                        "Couldn't interpret `ord` sensibly! Tried to interpret it as a floating-point order "
+                        "as a last-ditch effort, but that didn't work."
+                    )
 
         if keepdims:
+            if axis is None:
+                return _cas.reshape(norm, (1, 1))
             new_shape = list(x.shape)
             new_shape[axis] = 1
-            return _cas.reshape(norm, new_shape)
+            return _cas.reshape(norm, tuple(new_shape))
         else:
             return norm
 
 
 def inv_symmetric_3x3(
-    m11,
-    m22,
-    m33,
-    m12,
-    m23,
-    m13,
-):
-    """
-    Explicitly computes the inverse of a symmetric 3x3 matrix.
+    m11: Scalar,
+    m22: Scalar,
+    m33: Scalar,
+    m12: Scalar,
+    m23: Scalar,
+    m13: Scalar,
+) -> tuple[Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]:
+    """Explicitly compute the inverse of a symmetric 3x3 matrix.
 
-    Input matrix (note symmetry):
+    Input matrix (note symmetry)::
 
-    [m11, m12, m13]
-    [m12, m22, m23]
-    [m13, m23, m33]
+        [m11, m12, m13]
+        [m12, m22, m23]
+        [m13, m23, m33]
 
-    Output matrix (note symmetry):
+    Output matrix (note symmetry)::
 
-    [a11, a12, a13]
-    [a12, a22, a23]
-    [a13, a23, a33]
+        [a11, a12, a13]
+        [a12, a22, a23]
+        [a13, a23, a33]
 
-    From https://math.stackexchange.com/questions/233378/inverse-of-a-3-x-3-covariance-matrix-or-any-positive-definite-pd-matrix
+    Parameters
+    ----------
+    m11, m22, m33 : Scalar
+        Diagonal elements of the symmetric matrix.
+    m12, m23, m13 : Scalar
+        Off-diagonal elements (m12=m21, m23=m32, m13=m31).
+
+    Returns
+    -------
+    tuple[Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+        The 6 unique elements of the inverse matrix, in the same order as
+        the inputs.
+
+    References
+    ----------
+    .. [1] https://math.stackexchange.com/questions/233378/
     """
     det = (
         m11 * (m33 * m22 - m23**2)

@@ -1,59 +1,115 @@
+"""Discrete integration functions for the AeroSandbox NumPy-like interface.
+
+This module provides reconstruction-based integration of discretely sampled
+functions, working with both NumPy arrays and CasADi symbolic arrays.
+"""
+
+import warnings
 from typing import Literal
-import casadi as _cas
 import numpy as _onp
-from aerosandbox.numpy.array import length, concatenate
+from aerosandbox.numpy.array import length, concatenate, asarray
+from aerosandbox.numpy.typing import ArrayLike
 
 
 def integrate_discrete_intervals(
-    f: _onp.ndarray | _cas.MX,
-    x: _onp.ndarray | _cas.MX | None = None,
+    f: ArrayLike,
+    x: ArrayLike | None = None,
     multiply_by_dx: bool = True,
     method: Literal[
+        # Primary method names
         "forward_euler",
         "backward_euler",
         "trapezoidal",
         "forward_simpson",
         "backward_simpson",
         "cubic",
+        # Aliases for forward_euler
+        "forward",
+        "euler_forward",
+        "left",
+        "left_riemann",
+        # Aliases for backward_euler
+        "backward",
+        "euler_backward",
+        "right",
+        "right_riemann",
+        # Aliases for trapezoidal
+        "trapezoid",
+        "trapz",
+        "midpoint",
+        # Aliases for forward_simpson
+        "simpson_forward",
+        "simpson",
+        # Aliases for backward_simpson
+        "simpson_backward",
+        # Aliases for cubic
+        "cubic_spline",
     ] = "trapezoidal",
     method_endpoints: Literal["lower_order", "ignore", "periodic"] = "lower_order",
 ):
+    """Integrate a discretely sampled function over each interval between points.
+
+    Given a set of sampled points (x_i, f_i) from a function, computes the integral
+    of that function over each set of adjacent points ("intervals"). Does this via a
+    reconstruction approach, with several methods available.
+
+    In general, N points will yield N-1 integrals (one for each "interval" between
+    points).
+
+    Parameters
+    ----------
+    f : ArrayLike
+        A 1D array of function values.
+    x : ArrayLike, optional
+        A 1D array of x-values where the function was evaluated. If not specified,
+        defaults to the indices of ``f``. Should be the same length as ``f`` and
+        should be monotonically increasing (i.e., x[i] < x[i+1], with no duplicated
+        points).
+    multiply_by_dx : bool, optional
+        Whether to multiply the integral by the width of the segment. Defaults to
+        True.
+
+        - If True, summing the integrals will yield the integral of the function
+          over the entire domain (x[0] to x[-1]).
+        - If False, you can think of the output as the "average function value"
+          over each interval.
+    method : str, optional
+        The integration method to use. Options are:
+
+        - "forward_euler"
+        - "backward_euler"
+        - "trapezoidal" (default)
+        - "forward_simpson"
+        - "backward_simpson"
+        - "cubic"
+
+        Note that some methods, like "cubic", approximate each segment interval by
+        looking beyond just the interval itself (i.e., f(a) and f(b)), and so are
+        not possible near the endpoints of the array.
+    method_endpoints : {"lower_order", "ignore", "periodic"}, optional
+        The integration method to use at the endpoints, for those higher-order
+        methods that require handling. Options are:
+
+        - "lower_order" (default)
+        - "ignore" (i.e., return the integral of the interior points only - note
+          that this may result in a different number of integrals than segments!)
+        - "periodic"
+
+    Returns
+    -------
+    Array
+        A 1D array of the integral over each interval (or the average function
+        value over each interval, if ``multiply_by_dx`` is False).
     """
-    Given a set of sampled points (x_i, f_i) from a function, computes the integral of that function over each set of
-    adjacent points ("intervals"). Does this via a reconstruction approach, with several methods available.
+    # Convert inputs to arrays for subscripting
+    f = asarray(f)
 
-    In general, N points will yield N-1 integrals (one for each "interval" between points).
-
-    Args:
-        f: A 1D array of function values.
-
-        x: A 1D array of x-values where the function was evaluated. If not specified, defaults to the indices of f.
-            Should be the same length as f and should be monotonically increasing (i.e. x[i] < x[i+1], with no duplicated points).
-
-        multiply_by_dx: Whether to multiply the integral by the width of the segment. Defaults to True.
-            - If True, summing the integrals will yield the integral of the function over the entire domain (x[0] to x[-1])
-            - If False, you can think of the output as the "average function value" over each interval.
-
-        method: The integration method to use. Options are:
-            - "forward_euler"
-            - "backward_euler"
-            - "trapezoidal" (default)
-            - "forward_simpson"
-            - "backward_simpson"
-            - "cubic"
-            Note that some methods, like "cubic", approximate each segment interval by looking beyond just the integral itself (i.e., f(a) and f(b)),
-             and so are not possible near the endpoints of the array.
-
-        method_endpoints: The integration method to use at the endpoints, for those higher-order methods that require handling. Options are:
-            - "lower_order" (default)
-            - "ignore" (i.e. return the integral of the interior points only - note that this may result in a different number of integrals than segments!)
-            - "periodic"
-
-    """
     # Determine if an x-array was specified, and calculate dx.
     x_is_specified = x is not None
     if not x_is_specified:
         x = _onp.arange(length(f))
+    else:
+        x = asarray(x)
 
     dx = x[1:] - x[:-1]
 
@@ -80,8 +136,10 @@ def integrate_discrete_intervals(
 
     elif method in ["trapezoidal", "trapezoid", "trapz", "midpoint"]:
         if method == "midpoint":
-            raise PendingDeprecationWarning(
-                "The 'midpoint' method will be deprecated at a future point, since 'trapezoidal' is the more accurate term here."
+            warnings.warn(
+                "The 'midpoint' method will be deprecated at a future point, since 'trapezoidal' is the more accurate term here.",
+                PendingDeprecationWarning,
+                stacklevel=2,
             )
 
         avg_f = (f[1:] + f[:-1]) / 2
@@ -266,69 +324,104 @@ def integrate_discrete_intervals(
 
 
 def integrate_discrete_squared_curvature(
-    f: _onp.ndarray | _cas.MX,
-    x: _onp.ndarray | _cas.MX | None = None,
+    f: ArrayLike,
+    x: ArrayLike | None = None,
     method: Literal[
         "cubic", "simpson", "hybrid_simpson_cubic"
     ] = "hybrid_simpson_cubic",
 ):
-    """
-    Given a set of sampled points (x_i, f_i) from a function f(x), computes the following quantity:
+    """Compute the integral of the squared curvature of a discretely sampled function.
+
+    Given a set of sampled points (x_i, f_i) from a function f(x), computes the
+    following quantity::
 
         int_{x[0]}^{x[-1]} (f''(x))^2 dx
 
-    This is useful for regularization of smooth curves (i.e., encouraging smooth functions as optimization results).
+    This is useful for regularization of smooth curves (i.e., encouraging smooth
+    functions as optimization results).
 
-    Performs this through one of several reconstruction-based methods, specified by `method`:
+    Performs this through one of several reconstruction-based methods, specified by
+    ``method``:
 
-        * "cubic": On each interval, reconstructs a piecewise cubic polynomial. This cubic is the unique polynomial
-        that passes through the two points at the endpoints of the interval, plus the next point beyond each endpoint
-        of the interval (i.e., 4 points in total). Numerically, this cubic is obtained using Bernstein polynomial
-        reconstruction, so it is numerically stable. This cubic is then analytically differentiated twice, squared,
-        and integrated over the interval. At the ends of the overall array, where this "look beyond" strategy is not
-        possible, a one-sided cubic is used instead (i.e., looks beyond the interval at one end only and uses two
-        extra points from this side).
+    - "cubic": On each interval, reconstructs a piecewise cubic polynomial. This
+      cubic is the unique polynomial that passes through the two points at the
+      endpoints of the interval, plus the next point beyond each endpoint of the
+      interval (i.e., 4 points in total). Numerically, this cubic is obtained using
+      Bernstein polynomial reconstruction, so it is numerically stable. This cubic
+      is then analytically differentiated twice, squared, and integrated over the
+      interval. At the ends of the overall array, where this "look beyond" strategy
+      is not possible, a one-sided cubic is used instead (i.e., looks beyond the
+      interval at one end only and uses two extra points from this side).
 
-        * "simpson": On each interval, makes two unique quadratic reconstructions:
+    - "simpson": On each interval, makes two unique quadratic reconstructions:
 
-            * One reconstruction that uses the two points at the endpoints of the interval, plus the next point beyond
-            the right endpoint of the interval (i.e., 3 points in total).
+      - One reconstruction that uses the two points at the endpoints of the
+        interval, plus the next point beyond the right endpoint of the interval
+        (i.e., 3 points in total).
+      - One reconstruction that uses the two points at the endpoints of the
+        interval, plus the next point beyond the left endpoint of the interval
+        (i.e., 3 points in total).
 
-            * One reconstruction that uses the two points at the endpoints of the interval, plus the next point beyond
-            the left endpoint of the interval (i.e., 3 points in total).
+      These two quadratics are then analytically differentiated twice, squared,
+      and integrated over the interval. This requires much less calculation, since
+      the quadratics have uniform curvature over the interval, causing a lot of
+      things to simplify. The result is then computed by combining the results of
+      this process for the two quadratic reconstructions.
 
-            These two quadratics are then analytically differentiated twice, squared, and integrated over the
-            interval. This requires much less calculation, since the quadratics have uniform curvature over the
-            interval, causing a lot of things to simplify. The result is then computed by combining the results of this
-            process for the two quadratic reconstructions.
+      This is similar to a Simpson's rule integration, balanced between the two
+      sides of the interval. In frequency-domain testing, this method appears to
+      be more accurate than the "cubic" strategy at every frequency, with less
+      computational effort. Thus, it should be preferred to the "cubic" strategy.
 
-            This is similar to a Simpson's rule integration, balanced between the two sides of the interval. In
-            frequency-domain testing, this method appears to be more accurate than the "cubic" strategy at every
-            frequency, with less computational effort. Thus, it should be preferred to the "cubic" strategy.
+    - "hybrid_simpson_cubic": First, starts out by estimating the first derivative
+      of the function at each point in the array (including endpoints) using a
+      quadratic reconstruction. (See `numpy.gradient()` for more information or
+      source code on this; this code uses `numpy.gradient()` directly for this
+      step.) Then, reconstructs a cubic polynomial on each interval, with the
+      following boundary conditions:
 
-        * "hybrid_simpson_cubic": First, starts out by estimating the first derivative of the function at each point
-        in the array (including endpoints) using a quadratic reconstruction. (See `numpy.gradient()` for more
-        information or source code on this; this code uses `numpy.gradient()` directly for this step.) Then,
-        reconstructs a cubic polynomial on each interval, with the following boundary conditions:
+      - The cubic passes through the two points at the endpoints of the interval.
+      - The cubic has the same first derivative as the precomputed derivatives at
+        the endpoints of the interval.
 
-            * The cubic passes through the two points at the endpoints of the interval.
+      This cubic is then analytically differentiated twice, squared, and
+      integrated over the interval.
 
-            * The cubic has the same first derivative as the precomputed derivatives at the endpoints of the interval.
+      In frequency-domain testing, this method is also more accurate than the
+      "cubic" strategy at every frequency. Compared to the "simpson" strategy, it
+      is more accurate at high frequencies and less accurate at low frequencies.
+      Because the goal of this function is to be used as a regularization term,
+      which should be more sensitive to high-frequency oscillations, this method
+      is preferred to the "simpson" strategy. This method is also preferred as its
+      estimate tends to err high rather than low, which serves well as a
+      regularization strategy. (It is still convergent to the true value in the
+      high-sample-rate limit.)
 
-            This cubic is then analytically differentiated twice, squared, and integrated over the interval.
+    Parameters
+    ----------
+    f : ArrayLike
+        A 1D array of function values.
+    x : ArrayLike, optional
+        A 1D array of x-values where the function was evaluated. If not specified,
+        defaults to the indices of ``f``.
+    method : {"cubic", "simpson", "hybrid_simpson_cubic"}, optional
+        The reconstruction-based method to use, as described above. Default is
+        "hybrid_simpson_cubic".
 
-            In frequency-domain testing, this method is also more accurate than the "cubic" strategy at every
-            frequency. Compared to the "simpson" strategy, it is more accurate at high frequencies and less accurate
-            at low frequencies. Because the goal of this function is to be used as a regularization term,
-            which should be more sensitive to high-frequency oscillations, this method is preferred to the "simpson"
-            strategy. This method is also preferred as its estimate tends to err high rather than low, which serves
-            well as a regularization strategy. (It is still convergent to the true value in the high-sample-rate limit.)
-
+    Returns
+    -------
+    Array
+        A 1D array of the integral of squared curvature over each interval.
     """
+    # Convert inputs to arrays for subscripting
+    f = asarray(f)
+
     # Determine if an x-array was specified, and calculate dx.
     x_is_specified = x is not None
     if not x_is_specified:
         x = _onp.arange(length(f))
+    else:
+        x = asarray(x)
 
     if method in ["cubic", "cubic_spline"]:
         x1 = x[:-3]

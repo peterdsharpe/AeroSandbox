@@ -17,9 +17,9 @@ If you're developing, install AeroSandbox in editable mode. In other words:
 	* For developers that have been officially added as collaborators to the ASB repository on GitHub:
 		1. Clone the AeroSandbox repository from GitHub to your computer.
 2. Then, do these steps:
-	1. On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right place, view your current directory with either `dir` or `ls` depending on your OS; you should see a file called `setup.py`.)
+	1. On your computer, open up a terminal in the AeroSandbox root directory. (To check that you're in the right place, view your current directory with either `dir` or `ls` depending on your OS; you should see a file called `pyproject.toml`.)
 	2. If you already have an AeroSandbox installation on your computer, first uninstall that (`pip uninstall aerosandbox`).
-	3. Install the cloned copy of your repository in editable mode (`-e`), and with all optional dependencies (`pip install -e .[full,test,docs]`).
+	3. Install the cloned copy of your repository in editable mode (`-e`), and with all optional dependencies (`pip install -e ".[full,test,docs]"`). Alternatively, if you use [uv](https://docs.astral.sh/uv/), run `uv sync --all-extras` to create a `.venv` with an editable install and all optional dependencies.
 	4. Switch to the develop branch for normal use (`git checkout develop`)
 	5. *While on the develop branch*, create a new branch if you want to make changes (`git checkout -b feature/insert-your-feature-name-here`)
 3. From here, you can make your changes. After you are finished:
@@ -183,6 +183,52 @@ This is all pretty standard across all scientific computing in Python:
             density = 1.225  # Standard sea level density
         return 0.5 * density * velocity ** 2
     ```
+
+  **AeroSandbox Type Aliases:**
+  
+  AeroSandbox provides type aliases in `aerosandbox.numpy.typing` for common patterns. These handle the dual NumPy/CasADi nature of the library.
+  
+  *Naming Conventions:*
+  - Types WITHOUT prefix: **Hybrid** (NumPy OR CasADi) - `Scalar`, `Array`, `Vectorizable`
+  - Types WITH `Concrete` prefix: **NumPy-only** (for external tools, I/O, plotting) - `ConcreteScalar`, `ConcreteArray`
+  - Types WITH `Like` suffix: **Permissive inputs** (accept scalars, sequences, arrays) - `ArrayLike`, `VectorLike`
+  
+  *Type Hierarchy:*
+  
+  Hybrid types extend their Concrete counterparts by adding CasADi support:
+  ```
+  ConcreteScalar → Scalar (adds CasADi)
+  ConcreteArray → Array (adds CasADi)
+  ConcreteVectorizable → Vectorizable (adds CasADi)
+  ConcreteArrayLike → ArrayLike (adds CasADi)
+  ```
+  
+  *When to Use Each Type:*
+  
+  | Type | Use For | Example |
+  |------|---------|---------|
+  | `Scalar` | Single numeric value (may be symbolic) | Function returning a single result |
+  | `Array` | N-dimensional array output | `np.linspace(...)` return type |
+  | `Vectorizable` | Parameters that optionally broadcast element-wise along 1 dimension | `OperatingPoint(velocity=..., alpha=...)` |
+  | `ArrayLike` | Permissive array input (converted via `asarray()`) | `np.sum(x)` input |
+  | `ConcreteScalar` | External tool numeric input | XFoil alpha parameter |
+  | `ConcreteArray` | External tool array I/O | Interpolation lookup table |
+  
+  *Example Usage:*
+  ```python
+  from aerosandbox.numpy.typing import ArrayLike, Array, Vectorizable
+  
+  def my_function(
+      data: ArrayLike,           # Accepts scalars, lists, arrays, CasADi
+      scale: Vectorizable = 1.0, # Broadcasts element-wise
+  ) -> Array:
+      """Process data with optional scaling."""
+      from aerosandbox.numpy import asarray
+      data = asarray(data)       # Convert permissive input to array
+      return data * scale
+  ```
+  
+  For the full type definitions and documentation, see `aerosandbox/numpy/typing.py`.
 
 * With rare exceptions, do not type the same sequence of characters more than twice. For example:
 

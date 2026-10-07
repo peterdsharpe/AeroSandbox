@@ -1,5 +1,5 @@
 """
-Utilities for making better carpet plots
+Provide utilities for making better carpet plots.
 """
 
 import aerosandbox.numpy as np
@@ -11,60 +11,86 @@ from contextlib import contextmanager
 @contextmanager
 def time_limit(seconds):
     """
-    Allows you to run a block of code with a timeout. This way, you can sweep through points to make a carpet plot
-        without getting stuck on a particular point that may not terminate in a reasonable amount of time.
+    Run a block of code with a timeout.
+
+    This way, you can sweep through points to make a carpet plot without getting stuck on a
+    particular point that may not terminate in a reasonable amount of time.
 
     Only runs on Linux!
 
-    Usage:
-        Attempt to set x equal to the value of a complicated function. If it takes longer than 5 seconds, skip it.
-        >>> try:
-        >>>     with time_limit(5):
-        >>>         x = complicated_function()
-        >>> except TimeoutException:
-        >>>     x = np.nan
+    Parameters
+    ----------
+    seconds : float
+        Duration of timeout [seconds]. May be a float.
 
-    Args:
-        seconds: Duration of timeout [seconds]
+    Examples
+    --------
+    Attempt to set x equal to the value of a complicated function. If it takes longer than 5
+    seconds, skip it.
 
-    Returns:
-
+    >>> try:
+    >>>     with time_limit(5):
+    >>>         x = complicated_function()
+    >>> except TimeoutError:
+    >>>     x = np.nan
     """
 
     def signal_handler(signum, frame):
         raise TimeoutError()
 
     try:
-        signal.signal(signal.SIGALRM, signal_handler)
+        old_handler = signal.signal(signal.SIGALRM, signal_handler)
     except AttributeError:
         raise OSError(
             "signal.SIGALRM could not be found. This is probably because you're not using Linux."
         )
-    signal.alarm(seconds)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
     try:
         yield
     finally:
-        signal.alarm(0)
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        if old_handler is not None:
+            signal.signal(signal.SIGALRM, old_handler)
 
 
 def remove_nans(array):
     """
-    Removes NaN values in a 1D array.
-    Args:
-        array: a 1D array of data.
+    Remove NaN values from a 1D array.
 
-    Returns: The array with all NaN values stripped.
+    Parameters
+    ----------
+    array
+        A 1D array of data.
 
+    Returns
+    -------
+    ndarray
+        The array with all NaN values stripped.
     """
     return array[~np.isnan(array)]
 
 
-def patch_nans(array):  # TODO remove modification on incoming values; only patch nans
+def patch_nans(array, verbose: bool = True):
     """
-    Patches NaN values in a 2D array. Can patch holes or entire regions. Uses Laplacian smoothing.
-    :param array:
-    :return:
+    Patch NaN values in a 2D array.
+
+    Can patch holes or entire regions. Uses Laplacian smoothing.
+
+    The input array is not modified; a patched copy is returned.
+
+    Parameters
+    ----------
+    array
+        The 2D array to patch.
+    verbose : bool
+        Should we print the patching progress to the console?
+
+    Returns
+    -------
+    ndarray
+        A copy of the array with all NaN values patched.
     """
+    array = np.copy(array)
     original_nans = np.isnan(array)
 
     def nanfrac(array):
@@ -79,10 +105,12 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
             return np.nan
 
     def print_title(name):
-        return print(f"{name}\nIter | NaN Fraction")
+        if verbose:
+            print(f"{name}\nIter | NaN Fraction")
 
     def print_progress(iter):
-        return print(f"{iter:4} | {nanfrac(array):.6f}")
+        if verbose:
+            print(f"{iter:4} | {nanfrac(array):.6f}")
 
     # Bridging
     print_title("Bridging")
@@ -109,7 +137,7 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
 
                     if not (np.isnan(a) or np.isnan(b)):
                         array[i, j] = (a + b) / 2
-                        continue
+                        break  # Bridge with the first valid pair (pairs are in priority order)
         print_progress(iter)
         making_progress = nanfrac(array) != last_nanfrac
         last_nanfrac = nanfrac(array)
@@ -159,7 +187,8 @@ def patch_nans(array):  # TODO remove modification on incoming values; only patc
         "Diffusing"
     )  # TODO Perhaps use skimage gaussian blur kernel or similar instead of "+" stencil?
     for iter in range(50):
-        print(f"{iter + 1:4}")
+        if verbose:
+            print(f"{iter + 1:4}")
         for i in range(array.shape[0]):
             for j in range(array.shape[1]):
                 if original_nans[i, j]:

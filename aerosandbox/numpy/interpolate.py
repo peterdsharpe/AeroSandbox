@@ -1,23 +1,60 @@
+"""Interpolation functions for the AeroSandbox NumPy-like interface.
+
+This module provides 1D and multidimensional interpolation functions that
+work with both NumPy arrays and CasADi symbolic arrays.
+"""
+
 import numpy as _onp
 import casadi as _cas
 from aerosandbox.numpy.determine_type import is_casadi_type
 from aerosandbox.numpy.array import array, zeros_like
+from aerosandbox.numpy.arithmetic_dyadic import mod as _mod
 from aerosandbox.numpy.conditionals import where
 from aerosandbox.numpy.logicals import all, any, logical_or
-from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, ConcreteVector, ConcreteArray
+from typing import Literal, Sequence
 from scipy import interpolate as _interpolate
 
 
-def interp(x, xp, fp, left=None, right=None, period=None):
-    """
-    One-dimensional linear interpolation, analogous to numpy.interp().
+def interp(
+    x: Vectorizable,
+    xp: Vectorizable,
+    fp: Vectorizable,
+    left: float | None = None,
+    right: float | None = None,
+    period: float | None = None,
+) -> Vectorizable:
+    """Perform one-dimensional linear interpolation, analogous to numpy.interp().
 
-    Returns the one-dimensional piecewise linear interpolant to a function with given discrete data points (xp, fp),
-    evaluated at x.
+    Returns the one-dimensional piecewise linear interpolant to a function with
+    given discrete data points (xp, fp), evaluated at x.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.interp.html
+    Specific notes: ``xp`` is assumed to be sorted.
 
-    Specific notes: xp is assumed to be sorted.
+    Parameters
+    ----------
+    x : Vectorizable
+        The x-coordinates at which to evaluate the interpolated values.
+    xp : Vectorizable
+        The x-coordinates of the data points; assumed to be sorted.
+    fp : Vectorizable
+        The y-coordinates of the data points, same length as ``xp``.
+    left : float, optional
+        Value to return for ``x < xp[0]``. Default is ``fp[0]``.
+    right : float, optional
+        Value to return for ``x > xp[-1]``. Default is ``fp[-1]``.
+    period : float, optional
+        A period for the x-coordinates. If given, values of ``x`` are wrapped
+        into the periodic domain before interpolating.
+
+    Returns
+    -------
+    Vectorizable
+        The interpolated values.
+
+    See Also
+    --------
+    numpy.interp : https://numpy.org/doc/stable/reference/generated/numpy.interp.html
     """
     if not is_casadi_type([x, xp, fp], recursive=True):
         return _onp.interp(x=x, xp=xp, fp=fp, left=left, right=right, period=period)
@@ -30,7 +67,13 @@ def interp(x, xp, fp, left=None, right=None, period=None):
                     "Haven't yet implemented handling for if xp is outside the period."
                 )  # Not easy to implement because casadi doesn't have a sort feature.
 
-            x = _cas.fmod(x, period)
+            # Wrap x into [0, period). (Note: _cas.fmod() alone would return
+            # negative values for negative x, which would then be wrongly
+            # extrapolated rather than wrapped.)
+            x = _mod(x, period)
+            if not is_casadi_type(x, recursive=False):
+                # Match the type that _cas.fmod() would have returned here.
+                x = _cas.DM(x)
 
         ### Make sure x isn't an int
         if isinstance(x, int):
@@ -68,20 +111,26 @@ def interp(x, xp, fp, left=None, right=None, period=None):
 
 
 def is_data_structured(
-    x_data_coordinates: tuple[_onp.ndarray], y_data_structured: _onp.ndarray
+    x_data_coordinates: Sequence[ConcreteVector], y_data_structured: ConcreteArray
 ) -> bool:
-    """
-    Determines if the shapes of a given dataset are consistent with "structured" (i.e. gridded) data.
+    """Determine if a dataset's shapes are consistent with "structured" (gridded) data.
 
-    For this to evaluate True, the inputs should be:
+    For this to evaluate True, the inputs should match the descriptions below.
 
-        x_data_coordinates: A tuple or list of 1D ndarrays that represent coordinates along each axis of a N-dimensional hypercube.
+    Parameters
+    ----------
+    x_data_coordinates : Sequence[ConcreteVector]
+        A tuple or list of 1D ndarrays that represent coordinates along each axis
+        of an N-dimensional hypercube.
+    y_data_structured : ConcreteArray
+        The values of some scalar defined on that N-dimensional hypercube,
+        expressed as an N-dimensional array. In other words, ``y_data_structured``
+        is evaluated at ``np.meshgrid(*x_data_coordinates, indexing="ij")``.
 
-        y_data_structured: The values of some scalar defined on that N-dimensional hypercube, expressed as an
-        N-dimesional array. In other words, y_data_structured is evaluated at `np.meshgrid(*x_data_coordinates,
-        indexing="ij")`.
-
-    Returns: Boolean of whether the above description is true.
+    Returns
+    -------
+    bool
+        Whether the above description is true.
     """
     try:
         for coordinates in x_data_coordinates:
@@ -102,45 +151,51 @@ def is_data_structured(
 
 
 def interpn(
-    points: tuple[_onp.ndarray],
-    values: _onp.ndarray,
-    xi: _onp.ndarray,
+    points: Sequence[ArrayLike],
+    values: ConcreteArray,
+    xi: Vectorizable,
     method: Literal["linear", "bspline", "nearest"] = "linear",
-    bounds_error=True,
-    fill_value=_onp.nan,
-) -> _onp.ndarray:
-    """
-    Performs multidimensional interpolation on regular grids. Analogue to scipy.interpolate.interpn().
+    bounds_error: bool | None = True,
+    fill_value: float | None = _onp.nan,
+) -> Vectorizable:
+    """Perform multidimensional interpolation on regular grids.
 
-    See syntax here: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
+    Analogous to scipy.interpolate.interpn().
 
-    Args:
+    Parameters
+    ----------
+    points : Sequence[ArrayLike]
+        The points defining the regular grid in n dimensions. Tuple of coordinates
+        of each axis. Shapes (m1,), ..., (mn,).
+    values : ConcreteArray
+        The data on the regular grid in n dimensions. Shape (m1, ..., mn).
+    xi : Vectorizable
+        The coordinates to sample the gridded data at. Shape (..., ndim).
+    method : {"linear", "bspline", "nearest"}, optional
+        The method of interpolation to perform. One of:
 
-        points: The points defining the regular grid in n dimensions. Tuple of coordinates of each axis. Shapes (m1,
-        ), ..., (mn,)
+        - "bspline" (Note: differentiable and suitable for optimization - made of
+          piecewise-cubics. For other applications, other interpolators may be
+          faster. Not monotonicity-preserving - may overshoot.)
+        - "linear" (Note: differentiable, but not suitable for use in optimization
+          w/o subgradient treatment due to C1-discontinuity.)
+        - "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
+    bounds_error : bool, optional
+        If True, when interpolated values are requested outside of the domain of
+        the input data, a ValueError is raised. If False, then ``fill_value`` is
+        used.
+    fill_value : float, optional
+        If provided, the value to use for points outside of the interpolation
+        domain. If None, values outside the domain are extrapolated.
 
-        values: The data on the regular grid in n dimensions. Shape (m1, ..., mn)
+    Returns
+    -------
+    Vectorizable
+        Interpolated values at input coordinates.
 
-        xi: The coordinates to sample the gridded data at. (..., ndim)
-
-        method: The method of interpolation to perform. one of:
-
-            * "bspline" (Note: differentiable and suitable for optimization - made of piecewise-cubics. For other
-            applications, other interpolators may be faster. Not monotonicity-preserving - may overshoot.)
-
-            * "linear" (Note: differentiable, but not suitable for use in optimization w/o subgradient treatment due
-            to C1-discontinuity)
-
-            * "nearest" (Note: NOT differentiable, don't use in optimization. Fast.)
-
-        bounds_error: If True, when interpolated values are requested outside of the domain of the input data,
-        a ValueError is raised. If False, then fill_value is used.
-
-        fill_value: If provided, the value to use for points outside of the interpolation domain. If None,
-        values outside the domain are extrapolated.
-
-    Returns: Interpolated values at input coordinates.
-
+    See Also
+    --------
+    scipy.interpolate.interpn : https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interpn.html
     """
     ### Check input types for points and values
     if is_casadi_type([points, values], recursive=True):
@@ -179,11 +234,6 @@ def interpn(
         )
 
     elif (method == "linear") or (method == "bspline"):  ### CasADi implementation
-        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
-        ### For more information, see: https://github.com/casadi/casadi/issues/2837
-        if method == "bspline" and all(values == 0):
-            return zeros_like(xi)
-
         ### If xi is an int or float, promote it to an array
         if isinstance(xi, int) or isinstance(xi, float):
             xi = array([xi])
@@ -205,23 +255,44 @@ def interpn(
             xi = xi.T
             assert xi.shape[1] == n_dimensions
 
+        ### Add handling to patch a specific bug in CasADi that occurs when `values` is all zeros.
+        ### For more information, see: https://github.com/casadi/casadi/issues/2837
+        if method == "bspline" and all(values == 0):
+            ### The result is identically zero; return it with the same shape
+            ### that the normal code path below would produce.
+            if isinstance(xi, (_cas.MX, _cas.SX)):
+                return zeros_like(xi[:, 0])
+            elif xi.shape[0] == 1:  # Single query point: normal path returns a float.
+                return 0.0
+            else:
+                return _onp.zeros(xi.shape[0])
+
         ### Calculate the minimum and maximum values along each axis.
         axis_values_min = [_onp.min(axis_values) for axis_values in points]
         axis_values_max = [_onp.max(axis_values) for axis_values in points]
 
         ### If fill_value is None, project the xi back onto the nearest point in the domain.
         if fill_value is None:
+            ### Build a clamped copy of xi, rather than assigning into it, so
+            ### that the caller's array is not mutated in-place.
+            clamped_columns = []
             for axis in range(n_dimensions):
-                xi[:, axis] = where(
-                    xi[:, axis] > axis_values_max[axis],
+                column = xi[:, axis]
+                column = where(
+                    column > axis_values_max[axis],
                     axis_values_max[axis],
-                    xi[:, axis],
+                    column,
                 )
-                xi[:, axis] = where(
-                    xi[:, axis] < axis_values_min[axis],
+                column = where(
+                    column < axis_values_min[axis],
                     axis_values_min[axis],
-                    xi[:, axis],
+                    column,
                 )
+                clamped_columns.append(column)
+            if is_casadi_type(xi, recursive=False):
+                xi = _cas.horzcat(*clamped_columns)
+            else:
+                xi = _onp.stack(clamped_columns, axis=1)
 
         ### Check bounds_error
         if bounds_error:

@@ -1,0 +1,60 @@
+# Renders the Quarto documentation book and deploys it to GitHub Pages.
+#
+# Execution note: all code cells are pre-executed locally and committed under
+# docs/book/_freeze/, so this workflow does NOT run any Python — `quarto render`
+# just assembles HTML from the frozen results. To refresh computed outputs,
+# re-render locally (which re-executes changed cells) and commit the updated
+# _freeze/ directory.
+#
+# The first successful run switches the repo's GitHub Pages source to
+# "GitHub Actions" (via actions/configure-pages enablement), replacing the
+# legacy Jekyll-rendered README site with the book.
+
+name: Deploy docs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'docs/book/**'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  render-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render book (from committed freeze; no cell execution)
+        run: quarto render docs/book
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/book/_book
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

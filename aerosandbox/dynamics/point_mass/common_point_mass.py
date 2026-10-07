@@ -1,25 +1,28 @@
 import aerosandbox.numpy as np
 from aerosandbox.common import AeroSandboxObject
 from abc import ABC, abstractmethod
-from typing import Sequence
+from typing import Literal, Sequence, TYPE_CHECKING
 from aerosandbox import (
     MassProperties,
     Opti,
     OperatingPoint,
     Atmosphere,
     Airplane,
-    _asb_root,
 )
 from aerosandbox.tools.string_formatting import trim_string
 import inspect
 import copy
+from aerosandbox.numpy.typing import Vectorizable, Vector
+
+if TYPE_CHECKING:
+    from pyvista import PolyData
 
 
 class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def __init__(
         self,
-        mass_props: MassProperties = None,
+        mass_props: MassProperties | None = None,
         **state_variables_and_indirect_control_variables,
     ):
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -35,18 +38,23 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @abstractmethod
     def state(self) -> dict[str, float | np.ndarray]:
         """
-        Returns the state variables of this Dynamics instance as a Dict.
+        Return the state variables of this Dynamics instance as a Dict.
 
-        Keys are strings that give the name of the variables.
+        Keys are strings that give the names of the variables.
         Values are the variables themselves.
 
         This method should look something like:
+
             >>> {
             >>>     "x_e": self.x_e,
             >>>     "u_e": self.u_e,
             >>>     ...
             >>> }
 
+        Returns
+        -------
+        dict[str, float | np.ndarray]
+            The state variables of this Dynamics instance.
         """
         pass
 
@@ -55,15 +63,21 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
-        Creates a new instance of this same Dynamics class from the given state.
+        Create a new instance of this same Dynamics class from the given state.
 
-        Note that any control variables (forces, moments) associated with the previous instance are zeroed.
+        Note that any control variables (forces, moments) associated with the previous instance
+        are zeroed.
 
-        Args:
-            new_state: The new state to be used for the new instance. Ideally, this is represented as a Dict in identical format to the `state` of a Dynamics instance.
+        Parameters
+        ----------
+        new_state : dict[str, float | np.ndarray] | Sequence | np.ndarray | None
+            The new state to be used for the new instance. Ideally, this is represented as a Dict
+            in identical format to the `state` of a Dynamics instance.
 
-        Returns: A new instance of this same Dynamics class.
-
+        Returns
+        -------
+        _DynamicsPointMassBaseClass
+            A new instance of this same Dynamics class.
         """
 
         ### Get a list of all the inputs that the class constructor wants to see
@@ -84,15 +98,23 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         new_state: dict[str, float | np.ndarray] | Sequence | np.ndarray | None = None,
     ):
         """
-        Force-overwrites all state variables with a new set (either partial or complete) of state variables.
+        Force-overwrite all state variables with a new set (either partial or complete) of them.
 
         Warning: this is *not* the intended public usage of Dynamics instances.
         If you want a new state yourself, you should instantiate a new one either:
+
             a) manually, or
             b) by using Dynamics.get_new_instance_with_state()
 
-        Hence, this function is meant for PRIVATE use only - be careful how you use this! Especially note that
-        control variables (e.g., forces, moments) do not reset to zero.
+        Hence, this function is meant for PRIVATE use only - be careful how you use this!
+        Especially note that control variables (e.g., forces, moments) do not reset to zero.
+
+        Parameters
+        ----------
+        new_state : dict[str, float | np.ndarray] | Sequence | np.ndarray | None
+            The new state variables: either a dict-like mapping state variable names to values
+            (partial or complete), or an iterable with the same number of entries as the state
+            vector of the system.
         """
         ### Set the default parameters
         if new_state is None:
@@ -110,16 +132,20 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             )  # Pack the iterable into a dict-like, then do the same thing as above.
 
     def unpack_state(
-        self, dict_like_state: dict[str, float | np.ndarray] | None = None
-    ) -> tuple[float | np.ndarray]:
+        self, dict_like_state: dict[str, Vectorizable] | None = None
+    ) -> tuple[Vectorizable, ...]:
         """
-        'Unpacks' a Dict-like state into an array-like that represents the state of the dynamical system.
+        'Unpack' a Dict-like state into an array-like that represents the state of the system.
 
-        Args:
-            dict_like_state: Takes in a dict-like representation of the state.
+        Parameters
+        ----------
+        dict_like_state : dict[str, Vectorizable] | None
+            Takes in a dict-like representation of the state.
 
-        Returns: The array representation of the state that you gave.
-
+        Returns
+        -------
+        tuple[Vectorizable, ...]
+            The array representation of the state that you gave.
         """
         if dict_like_state is None:
             dict_like_state = self.state
@@ -129,13 +155,18 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         self, array_like_state: Sequence | np.ndarray | None = None
     ) -> dict[str, float | np.ndarray]:
         """
-        'Packs' an array into a Dict that represents the state of the dynamical system.
+        'Pack' an array into a Dict that represents the state of the dynamical system.
 
-        Args:
-            array_like_state: Takes in an iterable that must have the same number of entries as the state vector of the system.
+        Parameters
+        ----------
+        array_like_state : Sequence | np.ndarray | None
+            Takes in an iterable that must have the same number of entries as the state vector of
+            the system.
 
-        Returns: The Dict representation of the state that you gave.
-
+        Returns
+        -------
+        dict[str, float | np.ndarray]
+            The Dict representation of the state that you gave.
         """
         if array_like_state is None:
             return self.state
@@ -148,6 +179,17 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @property
     @abstractmethod
     def control_variables(self) -> dict[str, float | np.ndarray]:
+        """
+        Return the control variables of this Dynamics instance as a Dict.
+
+        Keys are strings that give the names of the variables.
+        Values are the variables themselves.
+
+        Returns
+        -------
+        dict[str, float | np.ndarray]
+            The control variables of this Dynamics instance.
+        """
         pass
 
     def __repr__(self) -> str:
@@ -185,23 +227,30 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def __getitem__(self, index: int | slice):
         """
-        Indexes one item from each attribute of a Dynamics instance.
+        Index one item from each attribute of a Dynamics instance.
+
         Returns a new Dynamics instance of the same type.
 
-        Args:
-            index: The index that is being called; e.g.,:
+        Parameters
+        ----------
+        index : int | slice
+            The index that is being called; e.g.,:
+
                 >>> first_dyn = dyn[0]
 
-        Returns: A new Dynamics instance, where each attribute is subscripted at the given value, if possible.
-
+        Returns
+        -------
+        _DynamicsPointMassBaseClass
+            A new Dynamics instance, where each attribute is subscripted at the given value, if
+            possible.
         """
-        l = len(self)
+        self_length = len(self)
 
         def get_item_of_attribute(a):
             if hasattr(a, "__len__") and hasattr(a, "__getitem__"):
                 if len(a) == 1:
                     return a[0]
-                elif len(a) == l:
+                elif len(a) == self_length:
                     return a[index]
                 else:
                     try:
@@ -209,7 +258,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     except IndexError:
                         raise IndexError(
                             f"A state variable could not be indexed; it has length {len(a)} while the"
-                            f"parent has length {l}."
+                            f"parent has length {self_length}."
                         )
             else:
                 return a
@@ -236,57 +285,65 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     )
         return length
 
-    def __array__(self, dtype="O"):
+    def __array__(self, dtype="O", copy=None):
         """
-        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        Allow NumPy array creation without infinite recursion in __len__ and __getitem__.
+
+        The `copy` argument is accepted for compatibility with the NumPy 2.x `__array__` protocol;
+        since a new array is always created here, any requested copy semantics are trivially
+        satisfied.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
     @abstractmethod
     def state_derivatives(self) -> dict[str, float | np.ndarray]:
         """
-        A function that returns the derivatives with respect to time of the state specified in the `state` property.
+        Return the derivatives with respect to time of the state specified in `state`.
 
         Should return a Dict with the same keys as the `state` property.
+
+        Returns
+        -------
+        dict[str, float | np.ndarray]
+            The time derivative of each state variable, keyed identically to the `state` property.
         """
         pass
 
     def constrain_derivatives(
         self,
         opti: Opti,
-        time: np.ndarray,
+        time: Vector,
         method: str = "trapezoidal",
         which: str | Sequence[str] = "all",
         _stacklevel=1,
     ):
         """
-        Applies the relevant state derivative constraints to a given Opti instance.
+        Apply the relevant state derivative constraints to a given Opti instance.
 
-        Args:
+        Parameters
+        ----------
+        opti : Opti
+            The AeroSandbox `Opti` instance that constraints should be applied to.
+        time : Vector
+            A vector that represents the time at each discrete point. Should be the same length as
+            any vectorized state variables in the `state` property of this Dynamics instance.
+        method : str
+            The discrete integration method to use. See Opti.constrain_derivative() for options.
+        which : str | Sequence[str]
+            Which state variables should we constrain? By default, constrains all of them.
 
-            opti: the AeroSandbox `Opti` instance that constraints should be applied to.
+            Options:
 
-            time: A vector that represents the time at each discrete point. Should be the same length as any
-            vectorized state variables in the `state` property of this Dynamics instance.
+            * "all", which constrains all state variables (default)
 
-            method: The discrete integration method to use. See Opti.constrain_derivative() for options.
-
-            which: Which state variables should be we constrain? By default, constrains all of them.
-
-                Options:
-
-                    * "all", which constrains all state variables (default)
-
-                    * A list of strings that are state variable names (i.e., a subset of `dyn.state.keys()`),
-                    that gives the names of state variables to be constrained.
-
-            _stacklevel: Optional and advanced, purely used for debugging. Allows users to correctly track where
-            constraints are declared in the event that they are subclassing `aerosandbox.Opti`. Modifies the
-            stacklevel of the declaration tracked, which is then presented using
-            `aerosandbox.Opti.variable_declaration()` and `aerosandbox.Opti.constraint_declaration()`.
-
-        Returns:
-
+            * A list of strings that are state variable names (i.e., a subset of
+              `dyn.state.keys()`), that gives the names of state variables to be constrained.
+        _stacklevel : int
+            Optional and advanced, purely used for debugging. Allows users to correctly track
+            where constraints are declared in the event that they are subclassing
+            `aerosandbox.Opti`. Modifies the stacklevel of the declaration tracked, which is then
+            presented using `aerosandbox.Opti.variable_declaration()` and
+            `aerosandbox.Opti.constraint_declaration()`.
         """
         if which == "all":
             which = self.state.keys()
@@ -294,6 +351,11 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         state_derivatives = self.state_derivatives()
 
         for state_var_name in which:
+            if state_var_name not in self.state:
+                raise ValueError(
+                    f"This dynamics instance does not have a state named '{state_var_name}'!"
+                )
+
             # If a state derivative has a None value, skip it.
             if state_derivatives[state_var_name] is None:
                 continue
@@ -307,94 +369,119 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                     method=method,
                     _stacklevel=_stacklevel + 1,
                 )
-            except KeyError:
+            except KeyError as e:
                 raise ValueError(
                     f"This dynamics instance does not have a state named '{state_var_name}'!"
-                )
+                ) from e
             except Exception as e:
                 raise ValueError(
                     f"Error while constraining state variable '{state_var_name}': \n{e}"
-                )
+                ) from e
 
     @abstractmethod
     def convert_axes(
         self,
-        x_from: float,
-        y_from: float,
-        z_from: float,
+        x_from: Vectorizable,
+        y_from: Vectorizable,
+        z_from: Vectorizable,
         from_axes: str,
         to_axes: str,
-    ) -> tuple[float, float, float]:
+    ) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
         """
-        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an equivalent vector [x_to,
-        y_to, z_to], as given in the `to_axes` frame.
+        Convert a vector from one axis frame to another.
 
-        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For more documentation,
-        see the docstring of OperatingPoint.convert_axes().
+        Converts a vector [x_from, y_from, z_from], as given in the `from_axes` frame, to an
+        equivalent vector [x_to, y_to, z_to], as given in the `to_axes` frame.
+
+        Identical to OperatingPoint.convert_axes(), but adds in "earth" as a valid axis frame. For
+        more documentation, see the docstring of OperatingPoint.convert_axes().
 
         Both `from_axes` and `to_axes` should be a string, one of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
 
-        Args:
-                x_from: x-component of the vector, in `from_axes` frame.
+        * "geometry"
+        * "body"
+        * "wind"
+        * "stability"
+        * "earth"
 
-                y_from: y-component of the vector, in `from_axes` frame.
+        Parameters
+        ----------
+        x_from : Vectorizable
+            x-component of the vector, in `from_axes` frame.
+        y_from : Vectorizable
+            y-component of the vector, in `from_axes` frame.
+        z_from : Vectorizable
+            z-component of the vector, in `from_axes` frame.
+        from_axes : str
+            The axes to convert from. See above for options.
+        to_axes : str
+            The axes to convert to. See above for options.
 
-                z_from: z-component of the vector, in `from_axes` frame.
-
-                from_axes: The axes to convert from. See above for options.
-
-                to_axes: The axes to convert to. See above for options.
-
-
-        Returns: The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
-
+        Returns
+        -------
+        tuple[Vectorizable, Vectorizable, Vectorizable]
+            The x-, y-, and z-components of the vector, in `to_axes` frame. Given as a tuple.
         """
         pass
 
     @abstractmethod
     def add_force(
         self,
-        Fx: float | np.ndarray = 0,
-        Fy: float | np.ndarray = 0,
-        Fz: float | np.ndarray = 0,
-        axes: str = "wind",
+        Fx: Vectorizable = 0,
+        Fy: Vectorizable = 0,
+        Fz: Vectorizable = 0,
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "wind",
     ) -> None:
         """
-        Adds a force (in whichever axis system you choose) to this Dynamics instance.
+        Add a force (in whichever axis system you choose) to this Dynamics instance.
 
-        Args:
-            Fx: Force in the x-direction in the axis system chosen. [N]
+        Parameters
+        ----------
+        Fx : Vectorizable
+            Force in the x-direction in the axis system chosen. [N]
+        Fy : Vectorizable
+            Force in the y-direction in the axis system chosen. [N]
+        Fz : Vectorizable
+            Force in the z-direction in the axis system chosen. [N]
+        axes : Literal["geometry", "body", "wind", "stability", "earth"]
+            The axis system that the specified force is in. One of:
 
-            Fy: Force in the y-direction in the axis system chosen. [N]
+            * "geometry"
+            * "body"
+            * "wind"
+            * "stability"
+            * "earth"
 
-            Fz: Force in the z-direction in the axis system chosen. [N]
+            Note: the default value of `axes` differs between Dynamics subclasses; each uses its
+            own native axis system (e.g., "earth" for Cartesian point-mass classes, "wind" for
+            speed-gamma-track point-mass classes, and "body" for rigid-body classes). If you are
+            writing code that should work across different Dynamics classes, pass `axes`
+            explicitly.
 
-            axes: The axis system that the specified force is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
-
-        Returns: None (in-place)
-
+        Returns
+        -------
+        None
+            (Operates in-place.)
         """
         pass
 
-    def add_gravity_force(self, g=9.81) -> None:
+    def add_gravity_force(self, g: float = 9.81) -> None:
         """
-        In-place modifies the forces associated with this Dynamics instance: adds a force in the -z direction,
-        equal to the weight of the aircraft.
+        Add the force of gravity to this Dynamics instance.
 
-        Args:
-            g: The gravitational acceleration. [m/s^2]
+        In-place modifies the forces associated with this Dynamics instance: adds a downward force
+        (i.e., in the +z direction in Earth axes, which are NED: North-East-Down), equal to the
+        weight of the aircraft.
 
-        Returns: None (in-place)
+        Parameters
+        ----------
+        g : float
+            The gravitational acceleration. [m/s^2]
+
+        Returns
+        -------
+        None
+            (Operates in-place.)
         """
         self.add_force(
             Fz=self.mass_props.mass * g,
@@ -404,10 +491,10 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @property
     def op_point(self):
         """
-        Returns an OperatingPoint object that represents the current state of the dynamics instance.
+        Return an OperatingPoint object representing the current state of the dynamics instance.
 
-        This OperatingPoint object is effectively a subset of the state variables, and is used to compute aerodynamic
-        forces and moments.
+        This OperatingPoint object is effectively a subset of the state variables, and is used to
+        compute aerodynamic forces and moments.
         """
         return OperatingPoint(
             atmosphere=Atmosphere(altitude=self.altitude),
@@ -421,15 +508,15 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     def draw(
         self,
-        vehicle_model: "Airplane | PolyData | None" = None,
-        backend: str = "pyvista",
+        vehicle_model: "Airplane | PolyData | str | None" = None,
+        backend: Literal["pyvista"] = "pyvista",
         plotter=None,
         draw_axes: bool = True,
         draw_global_axes: bool = True,
         draw_global_grid: bool = True,
         scale_vehicle_model: float | None = None,
         n_vehicles_to_draw: int = 10,
-        cg_axes: str = "geometry",
+        cg_axes: Literal["geometry", "body", "wind", "stability"] = "geometry",
         draw_trajectory_line: bool = True,
         trajectory_line_color=None,
         draw_altitude_drape: bool = True,
@@ -440,11 +527,16 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
         vehicle_opacity: float = 0.95,
         show: bool = True,
     ):
+        """
+        Draw a 3D visualization of the trajectory of this Dynamics instance.
+        """
         if backend == "pyvista":
             import pyvista as pv
             import aerosandbox.tools.pretty_plots as p
 
             if vehicle_model is None:
+                from aerosandbox import _asb_root
+
                 default_vehicle_stl = (
                     _asb_root / "dynamics/visualization/default_assets/talon.stl"
                 )
@@ -462,12 +554,12 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 vehicle_model, str
             ):  # Interpret the string as a filepath to a .stl or similar
                 try:
-                    pv.read(filename=vehicle_model)
+                    vehicle_model = pv.read(filename=vehicle_model)
                 except Exception:
                     raise ValueError("Could not parse `vehicle_model`!")
             else:
                 raise TypeError(
-                    "`vehicle_model` should be an Airplane or PolyData object."
+                    "`vehicle_model` should be an Airplane or PolyData object, or a str filepath to a mesh file."
                 )
 
             x_e = np.array(self.x_e)
@@ -479,14 +571,6 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                 y_e = y_e * np.ones(len(self))
             if np.length(z_e) == 1:
                 z_e = z_e * np.ones(len(self))
-
-            trajectory_bounds = np.array(
-                [
-                    [x_e.min(), x_e.max()],
-                    [y_e.min(), y_e.max()],
-                    [z_e.min(), z_e.max()],
-                ]
-            )
 
             vehicle_bounds = np.array(vehicle_model.bounds).reshape((3, 2))
 
@@ -501,7 +585,7 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
                         (np.diff(x_e) ** 2 + np.diff(y_e) ** 2 + np.diff(z_e) ** 2)
                         ** 0.5
                     )
-                    vehicle_length = np.diff(vehicle_bounds[0, :])
+                    vehicle_length = np.diff(vehicle_bounds[0, :]).item()
                     scale_vehicle_model = float(
                         0.5 * path_length / vehicle_length / n_vehicles_to_draw
                     )
@@ -535,23 +619,25 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
             ### Set up interpolators for dynamics instances
             from scipy import interpolate
 
-            state_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
+            def make_interpolator(v):
+                values = v * np.ones(len(self))
+                if len(self) == 1:
+                    # A spline can't be fit through a single point; return a constant function instead.
+                    return lambda i: values[0]
+                return interpolate.InterpolatedUnivariateSpline(
                     x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
+                    y=values,
+                    k=int(
+                        np.clip(len(self) - 1, 1, 3)
+                    ),  # Spline degree must be < number of points
                     check_finite=True,
                 )
-                for k, v in self.state.items()
+
+            state_interpolators = {
+                k: make_interpolator(v) for k, v in self.state.items()
             }
             control_interpolators = {
-                k: interpolate.InterpolatedUnivariateSpline(
-                    x=np.arange(len(self)),
-                    y=v * np.ones(len(self)),
-                    k=np.clip(len(self), 1, 3),
-                    check_finite=True,
-                )
-                for k, v in self.control_variables.items()
+                k: make_interpolator(v) for k, v in self.control_variables.items()
             }
 
             ### Draw the vehicle
@@ -754,16 +840,21 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
 
     @property
     def altitude(self):
+        """
+        Return the altitude [m], equal to `-z_e` (since Earth axes are NED: North-East-Down).
+        """
         return -self.z_e
 
     @property
     def translational_kinetic_energy(self) -> float:
         """
-        Computes the kinetic energy [J] from translational motion.
+        Compute the kinetic energy [J] from translational motion.
 
         KE = 0.5 * m * v^2
 
-        Returns:
+        Returns
+        -------
+        float
             Kinetic energy [J]
         """
         return 0.5 * self.mass_props.mass * self.speed**2
@@ -771,27 +862,28 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @property
     def rotational_kinetic_energy(self) -> float:
         """
-        Computes the kinetic energy [J] from rotational motion.
+        Compute the kinetic energy [J] from rotational motion.
 
-        KE = 0.5 * I * w^2
+        A point mass has no rotational degrees of freedom, so this is always zero. (Rigid-body
+        dynamics classes override this with an inertia-based formula.)
 
-        Returns:
+        Returns
+        -------
+        float
             Kinetic energy [J]
         """
-        return 0.5 * (
-            self.mass_props.Ixx * self.p**2
-            + self.mass_props.Iyy * self.q**2
-            + self.mass_props.Izz * self.r**2
-        )
+        return 0.0
 
     @property
     def kinetic_energy(self):
         """
-        Computes the kinetic energy [J] from translational and rotational motion.
+        Compute the kinetic energy [J] from translational and rotational motion.
 
         KE = 0.5 * m * v^2 + 0.5 * I * w^2
 
-        Returns:
+        Returns
+        -------
+        float
             Kinetic energy [J]
         """
         return self.translational_kinetic_energy + self.rotational_kinetic_energy
@@ -799,14 +891,17 @@ class _DynamicsPointMassBaseClass(AeroSandboxObject, ABC):
     @property
     def potential_energy(self, g: float = 9.81):
         """
-        Computes the potential energy [J] from gravity.
+        Compute the potential energy [J] from gravity.
 
         PE = mgh
 
-        Args:
-            g: Acceleration due to gravity [m/s^2]
+        The gravitational acceleration is fixed at g = 9.81 m/s^2; because this is a property, it
+        cannot be overridden by the caller. For a different value of `g`, compute
+        `dyn.mass_props.mass * g * dyn.altitude` directly.
 
-        Returns:
+        Returns
+        -------
+        float
             Potential energy [J]
         """
         return self.mass_props.mass * g * self.altitude

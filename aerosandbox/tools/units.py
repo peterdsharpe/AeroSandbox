@@ -1,3 +1,12 @@
+"""
+Define unit conversion constants, each expressed in base SI units.
+
+Each constant gives the magnitude of that unit expressed in base SI units. For example,
+`foot` is 0.3048, since one foot is 0.3048 meters. To convert a quantity into SI units,
+multiply by its unit (e.g., `5 * foot` gives 1.524, in meters); to convert out of SI units,
+divide.
+"""
+
 from math import pi
 
 # Lengths (equivalents in meters)

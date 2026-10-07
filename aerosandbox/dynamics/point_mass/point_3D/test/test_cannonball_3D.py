@@ -51,7 +51,6 @@ def get_trajectory(
         if drag:
             this_dyn.add_force(Fx=-1 * (0.1) ** 2 * q, axes="wind")
         if sideforce:
-            strouhal = 0.2
             frequency = 5  # strouhal * this_dyn.speed / 0.1
             this_dyn.add_force(
                 Fy=q * 1 * (0.1) ** 2 * np.sin(2 * np.pi * frequency * t), axes="wind"

@@ -1,44 +1,140 @@
+"""Array creation and manipulation functions for the AeroSandbox NumPy-like interface.
+
+This module provides array creation and manipulation functions that work with
+both NumPy arrays and CasADi symbolic arrays, dispatching to the appropriate
+backend at runtime based on input types.
+"""
+
 import numpy as _onp
 import casadi as _cas
-from typing import Any, Sequence
+from typing import Any, Literal, Sequence, cast
 from aerosandbox.numpy.determine_type import is_casadi_type
+from aerosandbox.numpy.typing import ArrayLike, Array, Scalar, _CasADiType
+
+# Type alias for order parameter (matches numpy's expected types)
+OrderACF = Literal["A", "C", "F"] | None
+OrderKACF = Literal["K", "A", "C", "F"] | None
 
 
-def array(array_like, dtype=None):
-    """
-    Initializes a new array. Creates a NumPy array if possible; if not, creates a CasADi array.
+def array(array_like: ArrayLike, dtype: type | None = None) -> Array:
+    """Initialize a new array from array-like input.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.array.html
+    Create a NumPy array if possible; if the input contains CasADi types,
+    create a CasADi array instead.
+
+    Parameters
+    ----------
+    array_like : ArrayLike
+        Input data (list, tuple, ndarray, or CasADi array).
+    dtype : type, optional
+        The desired data-type for the array. If provided and input contains
+        CasADi types, this is ignored (CasADi determines its own dtype),
+        unless an object dtype is explicitly requested, in which case a
+        NumPy object-array is created.
+
+    Returns
+    -------
+    Array
+        A NumPy array if input contains no CasADi types, otherwise a CasADi
+        array.
+
+    See Also
+    --------
+    numpy.array : https://numpy.org/doc/stable/reference/generated/numpy.array.html
     """
     if is_casadi_type(
         array_like, recursive=False
     ):  # If you were literally given a CasADi array, just return it
         # Handles inputs like cas.DM([1, 2, 3])
-        return array_like
+        return cast(_CasADiType, array_like)
 
-    elif not is_casadi_type(array_like, recursive=True) or dtype is not None:
-        # If you were given a list of iterables that don't have CasADi types:
+    elif not is_casadi_type(array_like, recursive=True) or (
+        dtype is not None and _onp.dtype(dtype) == object
+    ):
+        # If you were given a list of iterables that don't have CasADi types
+        # (or you explicitly asked for a NumPy object-array):
         # Handles inputs like [[1, 2, 3], [4, 5, 6]]
         return _onp.array(array_like, dtype=dtype)
 
     else:
         # Handles inputs like [[opti_var_1, opti_var_2], [opti_var_3, opti_var_4]]
+        array_like_seq = cast(Sequence[Any], array_like)  # Must be a nested sequence
+
         def make_row(contents: Sequence[Any]):
             try:
                 return _cas.horzcat(*contents)
             except (TypeError, Exception):
                 return contents
 
-        return _cas.vertcat(*[make_row(row) for row in array_like])
+        return _cas.vertcat(*[make_row(row) for row in array_like_seq])
 
 
-def concatenate(arrays: Sequence[_onp.ndarray | _cas.MX], axis: int = 0):
+def asarray(a: ArrayLike, dtype: type | None = None) -> Array:
+    """Convert the input to an array.
+
+    No copy is made if the input is already an ndarray with matching dtype.
+    For CasADi arrays, this is a no-op (returns the input unchanged).
+
+    Parameters
+    ----------
+    a : ArrayLike
+        Input data, in any form that can be converted to an array. This
+        includes lists, tuples, ndarrays, and CasADi arrays.
+    dtype : data-type, optional
+        By default, the data-type is inferred from the input data.
+
+    Returns
+    -------
+    Array
+        Array interpretation of ``a``. No copy is made if the input is
+        already an ndarray with matching dtype, or if the input is a CasADi
+        array.
+
+    See Also
+    --------
+    numpy.asarray : https://numpy.org/doc/stable/reference/generated/numpy.asarray.html
+    array : Always makes a copy for NumPy inputs.
     """
-    Join a sequence of arrays along an existing axis. Returns a NumPy array if possible; if not, returns a CasADi array.
+    if is_casadi_type(a, recursive=False):
+        # CasADi array: no-op, return as-is
+        return cast(_CasADiType, a)
+    elif not is_casadi_type(a, recursive=True):
+        # Pure NumPy/Python: use numpy.asarray (no-copy if already ndarray)
+        return _onp.asarray(a, dtype=dtype)
+    else:
+        # Mixed: contains CasADi types, must construct CasADi array
+        return array(a, dtype=dtype)
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html
+
+def concatenate(arrays: Sequence[ArrayLike], axis: int = 0) -> Array:
+    """Join a sequence of arrays along an existing axis.
+
+    Return a NumPy array if all inputs are NumPy; otherwise return a CasADi
+    array.
+
+    Parameters
+    ----------
+    arrays : Sequence[ArrayLike]
+        The arrays to concatenate. Must have the same shape except along the
+        concatenation axis.
+    axis : int, optional
+        The axis along which the arrays will be joined. Default is 0.
+        For CasADi arrays, only 0 or 1 are valid.
+
+    Returns
+    -------
+    Array
+        The concatenated array.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an axis other than 0 or 1.
+
+    See Also
+    --------
+    numpy.concatenate : https://numpy.org/doc/stable/reference/generated/numpy.concatenate.html
     """
-
     if not is_casadi_type(arrays, recursive=True):
         return _onp.concatenate(arrays, axis=axis)
 
@@ -53,11 +149,34 @@ def concatenate(arrays: Sequence[_onp.ndarray | _cas.MX], axis: int = 0):
             )
 
 
-def stack(arrays: Sequence, axis: int = 0):
-    """
-    Join a sequence of arrays along a new axis. Returns a NumPy array if possible; if not, returns a CasADi array.
+def stack(arrays: Sequence[Array], axis: int = 0) -> Array:
+    """Join a sequence of arrays along a new axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.stack.html
+    Return a NumPy array if all inputs are NumPy; otherwise return a CasADi
+    array.
+
+    Parameters
+    ----------
+    arrays : Sequence[Array]
+        Each array must have the same shape.
+    axis : int, optional
+        The axis along which the arrays will be stacked. Default is 0.
+        For CasADi arrays, only 0, 1, -1, or -2 are valid.
+
+    Returns
+    -------
+    Array
+        The stacked array with one additional dimension.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with invalid axis, or if array shapes are
+        incompatible for stacking.
+
+    See Also
+    --------
+    numpy.stack : https://numpy.org/doc/stable/reference/generated/numpy.stack.html
     """
     if not is_casadi_type(arrays, recursive=True):
         return _onp.stack(arrays, axis=axis)
@@ -84,7 +203,33 @@ def stack(arrays: Sequence, axis: int = 0):
             )
 
 
-def hstack(arrays):
+def hstack(arrays: Sequence[ArrayLike]) -> _onp.ndarray:
+    """Stack arrays in sequence horizontally (column wise).
+
+    For NumPy arrays, behave like ``numpy.hstack``. CasADi arrays are not
+    supported; use ``stack`` or ``concatenate`` instead.
+
+    Parameters
+    ----------
+    arrays : Sequence[ArrayLike]
+        The arrays to stack.
+
+    Returns
+    -------
+    ndarray
+        The horizontally stacked array.
+
+    Raises
+    ------
+    ValueError
+        If any input is a CasADi array.
+
+    See Also
+    --------
+    numpy.hstack : https://numpy.org/doc/stable/reference/generated/numpy.hstack.html
+    stack : Preferred alternative for mixed-backend arrays.
+    concatenate : Preferred alternative for mixed-backend arrays.
+    """
     if not is_casadi_type(arrays, recursive=True):
         return _onp.hstack(arrays)
     else:
@@ -93,7 +238,33 @@ def hstack(arrays):
         )
 
 
-def vstack(arrays):
+def vstack(arrays: Sequence[ArrayLike]) -> _onp.ndarray:
+    """Stack arrays in sequence vertically (row wise).
+
+    For NumPy arrays, behave like ``numpy.vstack``. CasADi arrays are not
+    supported; use ``stack`` or ``concatenate`` instead.
+
+    Parameters
+    ----------
+    arrays : Sequence[ArrayLike]
+        The arrays to stack.
+
+    Returns
+    -------
+    ndarray
+        The vertically stacked array.
+
+    Raises
+    ------
+    ValueError
+        If any input is a CasADi array.
+
+    See Also
+    --------
+    numpy.vstack : https://numpy.org/doc/stable/reference/generated/numpy.vstack.html
+    stack : Preferred alternative for mixed-backend arrays.
+    concatenate : Preferred alternative for mixed-backend arrays.
+    """
     if not is_casadi_type(arrays, recursive=True):
         return _onp.vstack(arrays)
     else:
@@ -102,7 +273,33 @@ def vstack(arrays):
         )
 
 
-def dstack(arrays):
+def dstack(arrays: Sequence[ArrayLike]) -> _onp.ndarray:
+    """Stack arrays in sequence depth wise (along third axis).
+
+    For NumPy arrays, behave like ``numpy.dstack``. CasADi arrays are not
+    supported; use ``stack`` or ``concatenate`` instead.
+
+    Parameters
+    ----------
+    arrays : sequence of array_like
+        The arrays to stack.
+
+    Returns
+    -------
+    ndarray
+        The depth-stacked array.
+
+    Raises
+    ------
+    ValueError
+        If any input is a CasADi array.
+
+    See Also
+    --------
+    numpy.dstack : https://numpy.org/doc/stable/reference/generated/numpy.dstack.html
+    stack : Preferred alternative for mixed-backend arrays.
+    concatenate : Preferred alternative for mixed-backend arrays.
+    """
     if not is_casadi_type(arrays, recursive=True):
         return _onp.dstack(arrays)
     else:
@@ -111,62 +308,105 @@ def dstack(arrays):
         )
 
 
-def length(array) -> int:
-    """
-    Returns the length of an 1D-array-like object. An extension of len() with slightly different functionality.
-    Args:
-        array:
+def length(a: ArrayLike | Scalar) -> int:
+    """Return the length of a 1D-array-like object.
 
-    Returns:
+    An extension of ``len()`` that handles both NumPy arrays and CasADi arrays,
+    as well as scalars (which return 1).
 
+    Parameters
+    ----------
+    a : ArrayLike | Scalar
+        Input array or scalar.
+
+    Returns
+    -------
+    int
+        The length of the array. Returns 1 for scalars. For CasADi arrays,
+        returns the larger of the two dimensions (assuming column vectors).
     """
-    if not is_casadi_type(array, recursive=False):
+    if not is_casadi_type(a, recursive=False):
+        # Take len() of the original input, not of asarray(a): a Python list
+        # of CasADi expressions would become a CasADi array (which has no
+        # len()), yet its length is simply the list length.
         try:
-            return len(array)
+            return len(cast(Sequence[Any], a))
         except TypeError:
             return 1
 
     else:
-        if array.shape[0] != 1:
-            return array.shape[0]
+        a_cas = cast(_CasADiType, a)
+        if a_cas.shape[0] != 1:
+            return a_cas.shape[0]
         else:
-            return array.shape[1]
+            return a_cas.shape[1]
 
 
-def diag(v, k=0):
-    """
-    Extract a diagonal or construct a diagonal array.
+def diag(v: ArrayLike, k: int = 0) -> Array:
+    """Extract a diagonal or construct a diagonal array.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.diag.html
+    If ``v`` is a 1D array, return a 2D array with ``v`` on the k-th diagonal.
+    If ``v`` is a 2D array, return its k-th diagonal.
+
+    Parameters
+    ----------
+    v : ArrayLike
+        If 1D, elements to place on the diagonal. If 2D, array to extract
+        diagonal from.
+    k : int, optional
+        Diagonal offset: k=0 is the main diagonal, k>0 is above the main
+        diagonal, k<0 is below. Default is 0.
+
+    Returns
+    -------
+    Array
+        The extracted diagonal or constructed diagonal array.
+
+    Raises
+    ------
+    NotImplementedError
+        If extracting diagonal from a non-square CasADi matrix.
+
+    See Also
+    --------
+    numpy.diag : https://numpy.org/doc/stable/reference/generated/numpy.diag.html
     """
     if not is_casadi_type(v, recursive=False):
-        return _onp.diag(v, k=k)
+        v_np = cast(_onp.ndarray, asarray(v))
+        return _onp.diag(v_np, k=k)
 
     else:
-        if 1 in v.shape:  # If v is a 1D array, construct a diagonal matrix
-            if v.shape[0] == 1:
-                v = v.T
+        v_cas = cast(_CasADiType, asarray(v))
+        if 1 in v_cas.shape:  # If v is a 1D array, construct a diagonal matrix
+            if v_cas.shape[0] == 1:
+                v_cas = v_cas.T
 
             if k == 0:
-                return _cas.diag(v)
+                return _cas.diag(v_cas)
 
             else:
-                n = v.shape[0]
-                res = type(v).zeros(n + abs(k), n + abs(k))
+                n = v_cas.shape[0]
+                # Use isinstance to determine which zeros method to call
+                if isinstance(v_cas, _cas.MX):
+                    res = _cas.MX.zeros(n + abs(k), n + abs(k))
+                elif isinstance(v_cas, _cas.SX):
+                    res = _cas.SX.zeros(n + abs(k), n + abs(k))
+                else:  # DM
+                    res = _cas.DM.zeros(n + abs(k), n + abs(k))
                 for i in range(n):
                     if k >= 0:
-                        res[i, i + k] = v[i]
+                        res[i, i + k] = v_cas[i]
                     else:
-                        res[i - k, i] = v[i]
+                        res[i - k, i] = v_cas[i]
                 return res
 
-        elif v.shape[0] == v.shape[1]:  # If v is a square matrix, extract the diagonal
-            n = v.shape[0]
+        elif v_cas.shape[0] == v_cas.shape[1]:  # If v is a square matrix, extract the diagonal
+            n = v_cas.shape[0]
 
             if k >= 0:
-                return array([v[i, i + k] for i in range(n - k)])
+                return array([v_cas[i, i + k] for i in range(n - k)])
             else:
-                return array([v[i - k, i] for i in range(n + k)])
+                return array([v_cas[i - k, i] for i in range(n + k)])
 
         else:
             raise NotImplementedError(
@@ -174,57 +414,61 @@ def diag(v, k=0):
             )
 
 
-def roll(a, shift, axis: int = None):
-    """
-    Roll array elements along a given axis.
+def roll(
+    a: ArrayLike,
+    shift: int | tuple[int, ...],
+    axis: int | tuple[int, ...] | None = None,
+) -> Array:
+    """Roll array elements along a given axis.
 
     Elements that roll beyond the last position are re-introduced at the first.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.roll.html
-
     Parameters
     ----------
-    a : array_like
-
+    a : ArrayLike
         Input array.
-
-    shift : int or tuple of ints
-
-        The number of places by which elements are shifted. If a tuple, then axis must be a tuple of the same size,
-        and each of the given axes is shifted by the corresponding number. If an int while axis is a tuple of ints,
-        then the same value is used for all given axes.
-
-    axis : int or tuple of ints, optional
-
-        Axis or axes along which elements are shifted. By default, the array is flattened before shifting,
-        after which the original shape is restored.
+    shift : int | tuple[int, ...]
+        The number of places by which elements are shifted. If a tuple, then
+        axis must be a tuple of the same size, and each of the given axes is
+        shifted by the corresponding number. If an int while axis is a tuple
+        of ints, then the same value is used for all given axes.
+    axis : int | tuple[int, ...], optional
+        Axis or axes along which elements are shifted. By default, the array
+        is flattened before shifting, after which the original shape is
+        restored.
 
     Returns
     -------
-    res : ndarray
-        Output array, with the same shape as a.
+    Array
+        Output array, with the same shape as ``a``.
 
+    See Also
+    --------
+    numpy.roll : https://numpy.org/doc/stable/reference/generated/numpy.roll.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.roll(a, shift, axis=axis)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.roll(a_np, shift, axis=axis)
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            a_flat = reshape(a, -1)
+            a_flat = reshape(a_cas, -1)
             result = roll(a_flat, shift, axis=0)
-            return reshape(result, a.shape)
+            return reshape(result, a_cas.shape)
         elif isinstance(axis, int):
-            shift = shift % a.shape[axis]  # shift can be negative
+            shift = shift % a_cas.shape[axis]  # shift can be negative
             if shift != 0:
                 slice1 = [slice(None)] * 2
                 slice1[axis] = slice(-shift, None)
                 slice2 = [slice(None)] * 2
                 slice2[axis] = slice(-shift)
-                result = concatenate([a[tuple(slice1)], a[tuple(slice2)]], axis=axis)
+                result = concatenate([a_cas[tuple(slice1)], a_cas[tuple(slice2)]], axis=axis)
             else:
-                result = a
+                result = a_cas
             return result
         elif isinstance(axis, tuple):
-            result = a
+            result = a_cas
             if not isinstance(shift, tuple):
                 shift = (shift,) * len(axis)
             for ax, sh in zip(axis, shift):
@@ -234,82 +478,147 @@ def roll(a, shift, axis: int = None):
             raise ValueError("'axis' must be None, an integer or a tuple of integers")
 
 
-def max(a, axis=None):
-    """
-    Return the maximum of an array or maximum along an axis.
+def max(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Return the maximum of an array or maximum along an axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.max.html
-    """
+    Parameters
+    ----------
+    a : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to operate. By default, flattened input is used.
+        For CasADi arrays, only None, 0, or 1 are valid.
 
+    Returns
+    -------
+    Scalar | Array
+        Maximum of ``a``. If axis is None, a scalar is returned. Otherwise,
+        an array with the maxima along the specified axis.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.max : https://numpy.org/doc/stable/reference/generated/numpy.max.html
+    """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.max(
-            a,
-            axis=axis,
-        )
+        a_np = cast(_onp.ndarray, a)
+        return _onp.max(a_np, axis=axis)
 
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            return _cas.mmax(a)
+            return _cas.mmax(a_cas)
 
         if axis == 0:
-            if a.shape[1] == 1:
-                return _cas.mmax(a)
+            if a_cas.shape[1] == 1:
+                return _cas.mmax(a_cas)
             else:
-                return array([_cas.mmax(a[:, i]) for i in range(a.shape[1])])
+                return array([_cas.mmax(a_cas[:, i]) for i in range(a_cas.shape[1])])
 
         elif axis == 1:
-            if a.shape[0] == 1:
-                return _cas.mmax(a)
+            if a_cas.shape[0] == 1:
+                return _cas.mmax(a_cas)
             else:
-                return array([_cas.mmax(a[i, :]) for i in range(a.shape[0])])
+                return array([_cas.mmax(a_cas[i, :]) for i in range(a_cas.shape[0])])
 
         else:
             raise ValueError(f"Invalid axis {axis} for CasADi array.")
 
 
-def min(a, axis=None):
-    """
-    Return the minimum of an array or minimum along an axis.
+def min(a: ArrayLike, axis: int | None = None) -> Scalar | Array:
+    """Return the minimum of an array or minimum along an axis.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.min.html
-    """
+    Parameters
+    ----------
+    a : ArrayLike
+        Input array.
+    axis : int, optional
+        Axis along which to operate. By default, flattened input is used.
+        For CasADi arrays, only None, 0, or 1 are valid.
 
+    Returns
+    -------
+    Scalar | Array
+        Minimum of ``a``. If axis is None, a scalar is returned. Otherwise,
+        an array with the minima along the specified axis.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with an invalid axis.
+
+    See Also
+    --------
+    numpy.min : https://numpy.org/doc/stable/reference/generated/numpy.min.html
+    """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.min(
-            a=a,
-            axis=axis,
-        )
+        a_np = cast(_onp.ndarray, a)
+        return _onp.min(a_np, axis=axis)
 
     else:
+        a_cas = cast(_CasADiType, a)
         if axis is None:
-            return _cas.mmin(a)
+            return _cas.mmin(a_cas)
 
         if axis == 0:
-            if a.shape[1] == 1:
-                return _cas.mmin(a)
+            if a_cas.shape[1] == 1:
+                return _cas.mmin(a_cas)
             else:
-                return array([_cas.mmin(a[:, i]) for i in range(a.shape[1])])
+                return array([_cas.mmin(a_cas[:, i]) for i in range(a_cas.shape[1])])
 
         elif axis == 1:
-            if a.shape[0] == 1:
-                return _cas.mmin(a)
+            if a_cas.shape[0] == 1:
+                return _cas.mmin(a_cas)
             else:
-                return array([_cas.mmin(a[i, :]) for i in range(a.shape[0])])
+                return array([_cas.mmin(a_cas[i, :]) for i in range(a_cas.shape[0])])
 
         else:
             raise ValueError(f"Invalid axis {axis} for CasADi array.")
 
 
-def reshape(a, newshape, order="C"):
-    """
-    Gives a new shape to an array without changing its data.
+def reshape(a: ArrayLike, newshape: int | tuple[int, ...], order: OrderACF = "C") -> Array:
+    """Give a new shape to an array without changing its data.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
-    """
+    Parameters
+    ----------
+    a : ArrayLike
+        Array to be reshaped.
+    newshape : int | tuple[int, ...]
+        The new shape should be compatible with the original shape. If an
+        integer, the result will be a 1D array of that length. Use -1 to
+        infer a dimension.
+    order : {'C', 'F'}, optional
+        Read and write elements using C-like (row-major) or Fortran-like
+        (column-major) order. Default is 'C'.
 
+    Returns
+    -------
+    Array
+        Reshaped array.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with more than 2 dimensions.
+    NotImplementedError
+        If an order other than 'C' or 'F' is specified with CasADi arrays.
+
+    See Also
+    --------
+    numpy.reshape : https://numpy.org/doc/stable/reference/generated/numpy.reshape.html
+    """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.reshape(a, newshape, order=order)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.reshape(a_np, newshape, order=order)
     else:
+        a_cas = cast(_CasADiType, a)
         if isinstance(newshape, int):
             newshape = (newshape, 1)
 
@@ -325,113 +634,288 @@ def reshape(a, newshape, order="C"):
             )
 
         if order == "C":
-            return _cas.reshape(a.T, newshape[::-1]).T
+            return _cas.reshape(a_cas.T, newshape[::-1]).T
         elif order == "F":
-            return _cas.reshape(a, newshape)
+            return _cas.reshape(a_cas, newshape)
         else:
             raise NotImplementedError("Only C and F orders are supported.")
 
 
-def ravel(a, order="C"):
-    """
-    Returns a contiguous flattened array.
+def ravel(a: ArrayLike, order: OrderKACF = "C") -> Array:
+    """Return a contiguous flattened array.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.ravel.html
+    Parameters
+    ----------
+    a : ArrayLike
+        Input array.
+    order : {'C', 'F'}, optional
+        Read elements using C-like (row-major) or Fortran-like (column-major)
+        order. Default is 'C'.
+
+    Returns
+    -------
+    Array
+        A 1D array containing the elements of ``a``.
+
+    See Also
+    --------
+    numpy.ravel : https://numpy.org/doc/stable/reference/generated/numpy.ravel.html
     """
+    a = asarray(a)
     if not is_casadi_type(a, recursive=False):
-        return _onp.ravel(a, order=order)
+        a_np = cast(_onp.ndarray, a)
+        return _onp.ravel(a_np, order=order)
     else:
         return reshape(a, -1, order=order)
 
 
-def tile(A, reps):
-    """
-    Construct an array by repeating A the number of times given by reps.
+def tile(A: ArrayLike, reps: tuple[int, ...]) -> Array:
+    """Construct an array by repeating A the number of times given by reps.
 
-    See syntax here: https://numpy.org/doc/stable/reference/generated/numpy.tile.html
+    Parameters
+    ----------
+    A : ArrayLike
+        The input array.
+    reps : tuple[int, ...]
+        The number of repetitions of A along each axis.
+
+    Returns
+    -------
+    Array
+        The tiled output array.
+
+    Raises
+    ------
+    ValueError
+        If CasADi arrays are used with more than 2 dimensions of repetition.
+
+    See Also
+    --------
+    numpy.tile : https://numpy.org/doc/stable/reference/generated/numpy.tile.html
     """
+    A = asarray(A)
     if not is_casadi_type(A, recursive=False):
-        return _onp.tile(A, reps)
+        A_np = cast(_onp.ndarray, A)
+        return _onp.tile(A_np, reps)
     else:
+        A_cas = cast(_CasADiType, A)
         if len(reps) == 1:
-            return _cas.repmat(A, reps[0], 1)
+            return _cas.repmat(A_cas, reps[0], 1)
         elif len(reps) == 2:
-            return _cas.repmat(A, reps[0], reps[1])
+            return _cas.repmat(A_cas, reps[0], reps[1])
         else:
             raise ValueError(
                 "Cannot have >2D arrays when using CasADi numeric backend!"
             )
 
 
-def zeros_like(a, dtype=None, order="K", subok=True, shape=None):
-    """Return an array of zeros with the same shape and type as a given array."""
+def zeros_like(
+    a: ArrayLike,
+    dtype: type | None = None,
+    order: OrderKACF = "K",
+    subok: bool = True,
+    shape: int | tuple[int, ...] | None = None,
+) -> _onp.ndarray:
+    """Return an array of zeros with the same shape and type as a given array.
+
+    Parameters
+    ----------
+    a : ArrayLike
+        The shape and data-type of ``a`` define these same attributes of the
+        returned array.
+    dtype : type, optional
+        Overrides the data type of the result.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Overrides the memory layout of the result. Default is 'K'.
+    subok : bool, optional
+        If True, use the sub-class type. Default is True.
+    shape : int | tuple[int, ...], optional
+        Overrides the shape of the result.
+
+    Returns
+    -------
+    ndarray
+        Array of zeros with the same shape and type as ``a``.
+
+    See Also
+    --------
+    numpy.zeros_like : https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html
+    """
     if not is_casadi_type(a, recursive=False):
-        return _onp.zeros_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+        a_np = cast(_onp.ndarray, asarray(a))
+        return _onp.zeros_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.zeros(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.zeros(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.zeros(shape=a_cas.shape)
 
 
-def ones_like(a, dtype=None, order="K", subok=True, shape=None):
-    """Return an array of ones with the same shape and type as a given array."""
+def ones_like(
+    a: ArrayLike,
+    dtype: type | None = None,
+    order: OrderKACF = "K",
+    subok: bool = True,
+    shape: int | tuple[int, ...] | None = None,
+) -> _onp.ndarray:
+    """Return an array of ones with the same shape and type as a given array.
+
+    Parameters
+    ----------
+    a : ArrayLike
+        The shape and data-type of ``a`` define these same attributes of the
+        returned array.
+    dtype : type, optional
+        Overrides the data type of the result.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Overrides the memory layout of the result. Default is 'K'.
+    subok : bool, optional
+        If True, use the sub-class type. Default is True.
+    shape : int | tuple[int, ...], optional
+        Overrides the shape of the result.
+
+    Returns
+    -------
+    ndarray
+        Array of ones with the same shape and type as ``a``.
+
+    See Also
+    --------
+    numpy.ones_like : https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html
+    """
     if not is_casadi_type(a, recursive=False):
-        return _onp.ones_like(a, dtype=dtype, order=order, subok=subok, shape=shape)
+        a_np = cast(_onp.ndarray, asarray(a))
+        return _onp.ones_like(a_np, dtype=dtype, order=order, subok=subok, shape=shape)
     else:
-        return _onp.ones(shape=length(a))
+        a_cas = cast(_CasADiType, a)
+        if 1 in a_cas.shape:  # CasADi row/column vectors are treated as 1D arrays.
+            return _onp.ones(shape=length(a_cas))
+        else:  # For true (2D) matrices, preserve the 2D shape.
+            return _onp.ones(shape=a_cas.shape)
 
 
-def empty_like(prototype, dtype=None, order="K", subok=True, shape=None):
-    """Return a new array with the same shape and type as a given array."""
+def empty_like(
+    prototype: ArrayLike,
+    dtype: type | None = None,
+    order: OrderKACF = "K",
+    subok: bool = True,
+    shape: int | tuple[int, ...] | None = None,
+) -> _onp.ndarray:
+    """Return a new array with the same shape and type as a given array.
+
+    Parameters
+    ----------
+    prototype : ArrayLike
+        The shape and data-type of ``prototype`` define these same attributes
+        of the returned array.
+    dtype : type, optional
+        Overrides the data type of the result.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Overrides the memory layout of the result. Default is 'K'.
+    subok : bool, optional
+        If True, use the sub-class type. Default is True.
+    shape : int | tuple[int, ...], optional
+        Overrides the shape of the result.
+
+    Returns
+    -------
+    ndarray
+        Uninitialized array with the same shape and type as ``prototype``.
+
+    See Also
+    --------
+    numpy.empty_like : https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html
+    """
     if not is_casadi_type(prototype, recursive=False):
+        proto_np = cast(_onp.ndarray, asarray(prototype))
         return _onp.empty_like(
-            prototype, dtype=dtype, order=order, subok=subok, shape=shape
+            proto_np, dtype=dtype, order=order, subok=subok, shape=shape
         )
     else:
         return zeros_like(prototype)
 
 
-def full_like(a, fill_value, dtype=None, order="K", subok=True, shape=None):
-    """Return a full array with the same shape and type as a given array."""
+def full_like(
+    a: ArrayLike,
+    fill_value: Scalar,
+    dtype: type | None = None,
+    order: OrderKACF = "K",
+    subok: bool = True,
+    shape: int | tuple[int, ...] | None = None,
+) -> _onp.ndarray:
+    """Return a full array with the same shape and type as a given array.
+
+    Parameters
+    ----------
+    a : ArrayLike
+        The shape and data-type of ``a`` define these same attributes of the
+        returned array.
+    fill_value : Scalar
+        Fill value.
+    dtype : type, optional
+        Overrides the data type of the result.
+    order : {'C', 'F', 'A', 'K'}, optional
+        Overrides the memory layout of the result. Default is 'K'.
+    subok : bool, optional
+        If True, use the sub-class type. Default is True.
+    shape : int | tuple[int, ...], optional
+        Overrides the shape of the result.
+
+    Returns
+    -------
+    ndarray
+        Array of ``fill_value`` with the same shape and type as ``a``.
+
+    See Also
+    --------
+    numpy.full_like : https://numpy.org/doc/stable/reference/generated/numpy.full_like.html
+    """
     if not is_casadi_type(a, recursive=False):
+        a_np = cast(_onp.ndarray, asarray(a))
         return _onp.full_like(
-            a, fill_value, dtype=dtype, order=order, subok=subok, shape=shape
+            a_np, fill_value, dtype=dtype, order=order, subok=subok, shape=shape
         )
     else:
         return fill_value * ones_like(a)
 
 
 def assert_equal_shape(
-    arrays: list[_onp.ndarray] | dict[str, _onp.ndarray],
+    arrays: list[Array] | dict[str, Array],
 ) -> None:
+    """Assert that all of the given arrays have the same shape.
+
+    Parameters
+    ----------
+    arrays : list of Array, or dict of str to Array
+        The arrays to be evaluated. Can be provided as:
+
+        - A list, in which case a generic ValueError is thrown on mismatch.
+        - A dictionary with name:array pairs, in which case the names are
+          included in the error message.
+
+    Raises
+    ------
+    ValueError
+        If the arrays do not all have the same shape.
     """
-    Assert that all of the given arrays are the same shape. If this is not true, raise a ValueError.
-
-    Args: arrays: The arrays to be evaluated.
-
-            Can be provided as a:
-
-                * List, in which case a generic ValueError is thrown
-
-                * Dictionary consisting of name:array pairs for key:value, in which case the names are given in the ValueError.
-
-    Returns: None. Throws an error if leng
-
-    """
-    try:
-        names = arrays.keys()
-        arrays = list(arrays.values())
-    except AttributeError:
+    if isinstance(arrays, dict):
+        names: list[str] | None = list(arrays.keys())
+        arrays_list: list[Array] = list(arrays.values())
+    else:
         names = None
+        arrays_list = arrays
 
-    def get_shape(array):
+    def get_shape(arr: Array) -> tuple[int, ...]:
         try:
-            return array.shape
+            return arr.shape
         except AttributeError:  # If it's a float/int
             return ()
 
-    shape = get_shape(arrays[0])
+    shape = get_shape(arrays_list[0])
 
-    for array in arrays[1:]:
-        if not get_shape(array) == shape:
+    for arr in arrays_list[1:]:
+        if not get_shape(arr) == shape:
             if names is None:
                 raise ValueError("The given arrays do not have the same shape!")
             else:

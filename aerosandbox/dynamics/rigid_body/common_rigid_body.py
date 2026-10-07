@@ -3,8 +3,9 @@ from aerosandbox.dynamics.point_mass.common_point_mass import (
     _DynamicsPointMassBaseClass,
 )
 from abc import ABC, abstractmethod
-from typing import Union
 from aerosandbox import OperatingPoint, Atmosphere
+from aerosandbox.numpy.typing import Vectorizable
+from typing import Literal
 
 
 class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
@@ -13,27 +14,38 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
     @abstractmethod
     def add_moment(
         self,
-        Mx: Union[float, np.ndarray] = 0,
-        My: Union[float, np.ndarray] = 0,
-        Mz: Union[float, np.ndarray] = 0,
-        axes="body",
+        Mx: Vectorizable = 0,
+        My: Vectorizable = 0,
+        Mz: Vectorizable = 0,
+        axes: Literal["geometry", "body", "wind", "stability", "earth"] = "body",
     ) -> None:
         """
-        Adds a moment (in whichever axis system you choose) to this Dynamics instance.
+        Add a moment (in whichever axis system you choose) to this Dynamics instance.
 
-        Args:
-            Mx: Moment about the x-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            My: Moment about the y-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            Mz: Moment about the z-axis in the axis system chosen. Assumed these moments are applied about the center of mass. [Nm]
-            axes: The axis system that the specified moment is in. One of:
-                * "geometry"
-                * "body"
-                * "wind"
-                * "stability"
-                * "earth"
+        Parameters
+        ----------
+        Mx : Vectorizable
+            Moment about the x-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        My : Vectorizable
+            Moment about the y-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        Mz : Vectorizable
+            Moment about the z-axis in the axis system chosen. Assumed these moments are applied
+            about the center of mass. [Nm]
+        axes : Literal["geometry", "body", "wind", "stability", "earth"]
+            The axis system that the specified moment is in. One of:
 
-        Returns: None (in-place)
+            * "geometry"
+            * "body"
+            * "wind"
+            * "stability"
+            * "earth"
 
+        Returns
+        -------
+        None
+            (Operates in-place.)
         """
         pass
 
@@ -51,20 +63,39 @@ class _DynamicsRigidBodyBaseClass(_DynamicsPointMassBaseClass, ABC):
 
     @property
     def alpha(self):
-        """The angle of attack, in degrees."""
+        """Return the angle of attack, in degrees."""
         return np.arctan2d(self.w_b, self.u_b)
 
     @property
     def beta(self):
-        """The sideslip angle, in degrees."""
+        """Return the sideslip angle, in degrees."""
         return np.arctan2d(self.v_b, (self.u_b**2 + self.w_b**2) ** 0.5)
 
     @property
     def rotational_kinetic_energy(self):
+        """
+        Compute the kinetic energy [J] from rotational motion.
+
+            KE = 0.5 * omega^T @ I @ omega
+
+        where `omega = [p, q, r]` is the angular velocity vector and `I` is the inertia tensor
+        (about the center of mass), including the products of inertia. Note that
+        `MassProperties.Ixy`, `.Iyz`, and `.Ixz` are the inertia-tensor *elements* (i.e.,
+        I12 = -sum(m * x * y), etc.); see the `MassProperties` docstring.
+
+        Returns
+        -------
+        float
+            Kinetic energy [J]
+        """
         return 0.5 * (
             self.mass_props.Ixx * self.p**2
             + self.mass_props.Iyy * self.q**2
             + self.mass_props.Izz * self.r**2
+        ) + (
+            self.mass_props.Ixy * self.p * self.q
+            + self.mass_props.Iyz * self.q * self.r
+            + self.mass_props.Ixz * self.p * self.r
         )
 
     @property

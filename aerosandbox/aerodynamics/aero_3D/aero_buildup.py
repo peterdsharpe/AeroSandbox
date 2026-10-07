@@ -1,33 +1,42 @@
 from aerosandbox import ExplicitAnalysis
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane, Wing, Fuselage
 from aerosandbox.performance import OperatingPoint
 import aerosandbox.library.aerodynamics as aero
 import aerosandbox.numpy as np
-from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import *
+from aerosandbox.numpy.typing import Vectorizable
+from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.fuselage_aerodynamics_utilities import (
+    critical_mach,
+    jorgensen_eta,
+    fuselage_base_drag_coefficient,
+    fuselage_form_factor,
+)
 from aerosandbox.library.aerodynamics import transonic
 import aerosandbox.library.aerodynamics as aerolib
-from typing import Union, List, Dict
 from aerosandbox.aerodynamics.aero_3D.aero_buildup_submodels.softmax_scalefree import (
     softmax_scalefree,
 )
 from dataclasses import dataclass
+from typing import Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import ControlSurface
 
 
 class AeroBuildup(ExplicitAnalysis):
     """
     A workbook-style aerodynamics buildup.
 
-    Example usage:
-
+    Examples
+    --------
     >>> import aerosandbox as asb
     >>> ab = asb.AeroBuildup(  # This sets up the analysis, but doesn't execute calculation
-    >>>     airplane=my_airplane,  # type: asb.Airplane
-    >>>     op_point=my_operating_point,  # type: asb.OperatingPoint
+    >>>     airplane=my_airplane,  # asb.Airplane
+    >>>     op_point=my_operating_point,  # asb.OperatingPoint
     >>>     xyz_ref=[0.1, 0.2, 0.3],  # Moment reference and center of rotation.
     >>> )
     >>> aero = ab.run()  # This executes the actual aero analysis.
-    >>> aero_with_stability_derivs = ab.run_with_stability_derivatives()  # Same, but also gets stability derivatives.
-
+    >>> # Same, but also gets stability derivatives:
+    >>> aero_with_stability_derivs = ab.run_with_stability_derivatives()
     """
 
     default_analysis_specific_options = {
@@ -51,28 +60,32 @@ class AeroBuildup(ExplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: Union[np.ndarray, List[float]] = None,
-        model_size: str = "small",
+        xyz_ref: np.ndarray | list[float] | None = None,
+        model_size: Literal["small", "large"] = "small",
         include_wave_drag: bool = True,
     ):
         """
-        Initializes a new AeroBuildup analysis as an object.
+        Initialize a new AeroBuildup analysis as an object.
 
-        Note: to run the analysis, you need to first instantiate the object, then call the .run() method.
+        Note: to run the analysis, you need to first instantiate the object, then call the .run()
+        method.
 
-        Args:
-            airplane: The airplane to analyze.
-
-            op_point: The operating point to analyze at. Note that this can be vectorized (i.e., attributes of the OperatingPoint
-            object can be arrays, in which case AeroBuildup analysis will be vectorized).
-
-            xyz_ref: The reference point for the aerodynamic forces and moments. This is the point about which the moments are
-            taken, and the point at which the forces are applied. Defaults to the airplane's xyz_ref.
-
-            include_wave_drag: Whether to include wave drag in the analysis. Defaults to True.
-
-        Returns: None
-
+        Parameters
+        ----------
+        airplane : Airplane
+            The airplane to analyze.
+        op_point : OperatingPoint
+            The operating point to analyze at. Note that this can be vectorized (i.e., attributes
+            of the OperatingPoint object can be arrays, in which case AeroBuildup analysis will be
+            vectorized).
+        xyz_ref : np.ndarray | list[float] | None
+            The reference point for the aerodynamic forces and moments. This is the point about
+            which the moments are taken, and the point at which the forces are applied. Defaults
+            to the airplane's xyz_ref.
+        model_size : Literal["small", "large"]
+            The size of the NeuralFoil model to use for 2D airfoil aerodynamics.
+        include_wave_drag : bool
+            Whether to include wave drag in the analysis. Defaults to True.
         """
         super().__init__()
 
@@ -103,15 +116,19 @@ class AeroBuildup(ExplicitAnalysis):
 
     @dataclass
     class AeroComponentResults:
+        """
+        Hold the aerodynamic forces and moments computed on a single airplane component.
+        """
+
         s_ref: float  # Reference area [m^2]
         c_ref: float  # Reference chord [m]
         b_ref: float  # Reference span [m]
         op_point: OperatingPoint
-        F_g: List[
-            Union[float, np.ndarray]
+        F_g: list[
+            float | np.ndarray
         ]  # An [x, y, z] list of forces in geometry axes [N]
-        M_g: List[
-            Union[float, np.ndarray]
+        M_g: list[
+            float | np.ndarray
         ]  # An [x, y, z] list of moments about geometry axes [Nm]
         span_effective: float
         # The effective span of the component's Trefftz-plane wake, used for induced drag calculations. [m]
@@ -138,78 +155,94 @@ class AeroBuildup(ExplicitAnalysis):
             )
 
         @property
-        def F_b(self) -> List[Union[float, np.ndarray]]:
+        def F_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of forces in body axes [N]
+            An (x, y, z) tuple of forces in body axes [N].
             """
             return self.op_point.convert_axes(
-                *self.F_g, from_axes="geometry", to_axes="body"
+                self.F_g[0],
+                self.F_g[1],
+                self.F_g[2],
+                from_axes="geometry",
+                to_axes="body",
             )
 
         @property
-        def F_w(self) -> List[Union[float, np.ndarray]]:
+        def F_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of forces in wind axes [N]
+            An (x, y, z) tuple of forces in wind axes [N].
             """
             return self.op_point.convert_axes(
-                *self.F_g, from_axes="geometry", to_axes="wind"
+                self.F_g[0],
+                self.F_g[1],
+                self.F_g[2],
+                from_axes="geometry",
+                to_axes="wind",
             )
 
         @property
-        def M_b(self) -> List[Union[float, np.ndarray]]:
+        def M_b(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of moments about body axes [Nm]
+            An (x, y, z) tuple of moments about body axes [Nm].
             """
             return self.op_point.convert_axes(
-                *self.M_g, from_axes="geometry", to_axes="body"
+                self.M_g[0],
+                self.M_g[1],
+                self.M_g[2],
+                from_axes="geometry",
+                to_axes="body",
             )
 
         @property
-        def M_w(self) -> List[Union[float, np.ndarray]]:
+        def M_w(self) -> tuple[Vectorizable, Vectorizable, Vectorizable]:
             """
-            An [x, y, z] list of moments about wind axes [Nm]
+            An (x, y, z) tuple of moments about wind axes [Nm].
             """
             return self.op_point.convert_axes(
-                *self.M_g, from_axes="geometry", to_axes="wind"
+                self.M_g[0],
+                self.M_g[1],
+                self.M_g[2],
+                from_axes="geometry",
+                to_axes="wind",
             )
 
         @property
-        def L(self) -> Union[float, np.ndarray]:
+        def L(self) -> Vectorizable:
             """
             The lift force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[2]
 
         @property
-        def Y(self) -> Union[float, np.ndarray]:
+        def Y(self) -> Vectorizable:
             """
             The side force [N]. Definitionally, this is in wind axes.
             """
             return self.F_w[1]
 
         @property
-        def D(self) -> Union[float, np.ndarray]:
+        def D(self) -> Vectorizable:
             """
             The drag force [N]. Definitionally, this is in wind axes.
             """
             return -self.F_w[0]
 
         @property
-        def l_b(self) -> Union[float, np.ndarray]:
+        def l_b(self) -> Vectorizable:
             """
             The rolling moment [Nm] in body axes. Positive is roll-right.
             """
             return self.M_b[0]
 
         @property
-        def m_b(self) -> Union[float, np.ndarray]:
+        def m_b(self) -> Vectorizable:
             """
             The pitching moment [Nm] in body axes. Positive is nose-up.
             """
             return self.M_b[1]
 
         @property
-        def n_b(self) -> Union[float, np.ndarray]:
+        def n_b(self) -> Vectorizable:
             """
             The yawing moment [Nm] in body axes. Positive is nose-right.
             """
@@ -217,11 +250,14 @@ class AeroBuildup(ExplicitAnalysis):
 
     def run(
         self,
-    ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
+    ) -> dict[str, float | np.ndarray | list[float | np.ndarray]]:
         """
-        Computes the aerodynamic forces and moments on the airplane.
+        Compute the aerodynamic forces and moments on the airplane.
 
-        Returns: a dictionary with keys:
+        Returns
+        -------
+        dict[str, float | np.ndarray | list[float | np.ndarray]]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -242,19 +278,23 @@ class AeroBuildup(ExplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-            Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            AeroBuildup.airplane object.
 
             Data types:
-                - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
 
-                    - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                    are floats, not arrays).
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn"
+              keys are:
 
-                    - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                    array).
+                - floats if the OperatingPoint object is not vectorized (i.e., if all
+                  attributes of OperatingPoint are floats, not arrays).
 
-                - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-                floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute
+                  of OperatingPoint is an array).
+
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which
+              will contain either floats or arrays, again depending on whether the
+              OperatingPoint object is vectorized or not.
         """
 
         ### Compute the forces on each component
@@ -284,7 +324,11 @@ class AeroBuildup(ExplicitAnalysis):
         )
 
         _, sideforce, lift = self.op_point.convert_axes(
-            *F_g_total, from_axes="geometry", to_axes="wind"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
 
         D_induced = (lift**2 + sideforce**2) / (Q * np.pi * span_effective_squared)
@@ -304,16 +348,32 @@ class AeroBuildup(ExplicitAnalysis):
 
         ##### Add in other metrics
         output["F_b"] = self.op_point.convert_axes(
-            *F_g_total, from_axes="geometry", to_axes="body"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="body",
         )
         output["F_w"] = self.op_point.convert_axes(
-            *F_g_total, from_axes="geometry", to_axes="wind"
+            F_g_total[0],
+            F_g_total[1],
+            F_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
         output["M_b"] = self.op_point.convert_axes(
-            *M_g_total, from_axes="geometry", to_axes="body"
+            M_g_total[0],
+            M_g_total[1],
+            M_g_total[2],
+            from_axes="geometry",
+            to_axes="body",
         )
         output["M_w"] = self.op_point.convert_axes(
-            *M_g_total, from_axes="geometry", to_axes="wind"
+            M_g_total[0],
+            M_g_total[1],
+            M_g_total[2],
+            from_axes="geometry",
+            to_axes="wind",
         )
 
         output["L"] = -output["F_w"][2]
@@ -353,22 +413,34 @@ class AeroBuildup(ExplicitAnalysis):
         p=True,
         q=True,
         r=True,
-    ) -> Dict[str, Union[Union[float, np.ndarray], List[Union[float, np.ndarray]]]]:
+    ) -> dict[str, float | np.ndarray | list[float | np.ndarray]]:
         """
-        Computes the aerodynamic forces and moments on the airplane, and the stability derivatives.
+        Compute the aerodynamic forces and moments on the airplane, and the stability derivatives.
 
-        Arguments essentially determine which stability derivatives are computed. If a stability derivative is not
-        needed, leaving it False will speed up the computation.
+        Arguments essentially determine which stability derivatives are computed. If a stability
+        derivative is not needed, leaving it False will speed up the computation.
 
-        Args:
+        Parameters
+        ----------
+        alpha : bool
+            If True, compute the stability derivatives with respect to the angle of attack
+            (alpha).
+        beta : bool
+            If True, compute the stability derivatives with respect to the sideslip angle (beta).
+        p : bool
+            If True, compute the stability derivatives with respect to the body-axis roll rate
+            (p).
+        q : bool
+            If True, compute the stability derivatives with respect to the body-axis pitch rate
+            (q).
+        r : bool
+            If True, compute the stability derivatives with respect to the body-axis yaw rate
+            (r).
 
-            - alpha (bool): If True, compute the stability derivatives with respect to the angle of attack (alpha).
-            - beta (bool): If True, compute the stability derivatives with respect to the sideslip angle (beta).
-            - p (bool): If True, compute the stability derivatives with respect to the body-axis roll rate (p).
-            - q (bool): If True, compute the stability derivatives with respect to the body-axis pitch rate (q).
-            - r (bool): If True, compute the stability derivatives with respect to the body-axis yaw rate (r).
-
-        Returns: a dictionary with keys:
+        Returns
+        -------
+        dict[str, float | np.ndarray | list[float | np.ndarray]]
+            A dictionary with keys:
 
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -389,8 +461,9 @@ class AeroBuildup(ExplicitAnalysis):
             - 'Cm'  : the pitching coefficient [-], in body axes
             - 'Cn'  : the yawing coefficient [-], in body axes
 
-            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`, and `r` arguments. For
-            example, if `alpha=True`, then the following additional keys will be present:
+            Along with additional keys, depending on the value of the `alpha`, `beta`, `p`, `q`,
+            and `r` arguments. For example, if `alpha=True`, then the following additional keys
+            will be present:
 
                 - 'CLa' : the lift coefficient derivative with respect to alpha [1/rad]
                 - 'CDa' : the drag coefficient derivative with respect to alpha [1/rad]
@@ -400,22 +473,25 @@ class AeroBuildup(ExplicitAnalysis):
                 - 'Cna' : the yawing moment coefficient derivative with respect to alpha [1/rad]
                 - 'x_np': the neutral point location in the x direction [m]
 
-            Nondimensional values are nondimensionalized using reference values in the AeroBuildup.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            AeroBuildup.airplane object.
 
             Data types:
-                - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn" keys are:
 
-                    - floats if the OperatingPoint object is not vectorized (i.e., if all attributes of OperatingPoint
-                    are floats, not arrays).
+            - The "L", "Y", "D", "l_b", "m_b", "n_b", "CL", "CY", "CD", "Cl", "Cm", and "Cn"
+              keys are:
 
-                    - arrays if the OperatingPoint object is vectorized (i.e., if any attribute of OperatingPoint is an
-                    array).
+                - floats if the OperatingPoint object is not vectorized (i.e., if all
+                  attributes of OperatingPoint are floats, not arrays).
 
-                - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which will contain either
-                floats or arrays, again depending on whether the OperatingPoint object is vectorized or not.
+                - arrays if the OperatingPoint object is vectorized (i.e., if any attribute
+                  of OperatingPoint is an array).
 
+            - The "F_g", "F_b", "F_w", "M_g", "M_b", and "M_w" keys are always lists, which
+              will contain either floats or arrays, again depending on whether the
+              OperatingPoint object is vectorized or not.
         """
-        do_analysis: Dict[str, bool] = {
+        do_analysis: dict[str, bool] = {
             "alpha": alpha,
             "beta": beta,
             "p": p,
@@ -423,21 +499,21 @@ class AeroBuildup(ExplicitAnalysis):
             "r": r,
         }
 
-        abbreviations: Dict[str, str] = {
+        abbreviations: dict[str, str] = {
             "alpha": "a",
             "beta": "b",
             "p": "p",
             "q": "q",
             "r": "r",
         }
-        finite_difference_amounts: Dict[str, float] = {
+        finite_difference_amounts: dict[str, float] = {
             "alpha": 0.001,
             "beta": 0.001,
             "p": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
             "q": 0.001 * (2 * self.op_point.velocity) / self.airplane.c_ref,
             "r": 0.001 * (2 * self.op_point.velocity) / self.airplane.b_ref,
         }
-        scaling_factors: Dict[str, float] = {
+        scaling_factors: dict[str, float] = {
             "alpha": np.degrees(1),
             "beta": np.degrees(1),
             "p": (2 * self.op_point.velocity) / self.airplane.b_ref,
@@ -532,18 +608,22 @@ class AeroBuildup(ExplicitAnalysis):
         include_induced_drag: bool = True,
     ) -> AeroComponentResults:
         """
-        Estimates the aerodynamic forces, moments, and derivatives on a wing in isolation.
+        Estimate the aerodynamic forces, moments, and derivatives on a wing in isolation.
 
-        Moments are given with the reference at Wing [0, 0, 0].
+        Moments are computed about `AeroBuildup.xyz_ref`, the moment reference point of this
+        analysis.
 
-        Args:
+        Parameters
+        ----------
+        wing : Wing
+            A Wing object that you wish to analyze.
+        include_induced_drag : bool
+            Whether to include induced drag in the computed forces.
 
-            wing: A Wing object that you wish to analyze.
-
-            op_point: The OperatingPoint that you wish to analyze the fuselage at.
-
-        Returns:
-
+        Returns
+        -------
+        AeroComponentResults
+            The aerodynamic forces and moments on the wing.
         """
         ##### Alias a few things for convenience
         op_point = self.op_point
@@ -661,19 +741,26 @@ class AeroBuildup(ExplicitAnalysis):
 
         def compute_section_aerodynamics(sect_id: int, mirror_across_XZ: bool = False):
             """
-            Computes the forces and moments about self.xyz_ref on a given wing section.
-            Args:
+            Compute the forces and moments about self.xyz_ref on a given wing section.
 
-                sect_id: Wing section id. An int that can be from 0 to len(wing.xsecs) - 2.
+            Parameters
+            ----------
+            sect_id : int
+                Wing section id. An int that can be from 0 to len(wing.xsecs) - 2.
+            mirror_across_XZ : bool
+                If true, computes the forces and moments for the section that is mirrored
+                across the XZ plane.
 
-                mirror_across_XZ: Boolean. If true, computes the forces and moments for the section that is mirrored across the XZ plane.
-
-            Returns: Forces and moments, in a `(F_g, M_g)` tuple, where `F_g` and `M_g` have the following formats:
+            Returns
+            -------
+            tuple
+                Forces and moments, in a `(F_g, M_g)` tuple, where `F_g` and `M_g` have the
+                following formats:
 
                 F_g: a [Fx, Fy, Fz] list, given in geometry (`_g`) axes.
 
-                M_g: a [Mx, My, Mz] list, given in geometry (`_g`) axes. Moment reference is `AeroBuildup.xyz_ref`.
-
+                M_g: a [Mx, My, Mz] list, given in geometry (`_g`) axes. Moment reference is
+                `AeroBuildup.xyz_ref`.
             """
 
             ##### Identify the wing cross sections adjacent to this wing section.
@@ -702,7 +789,9 @@ class AeroBuildup(ExplicitAnalysis):
             ##### Compute the moment arm from the section AC
             sect_AC_raw = aerodynamic_centers[sect_id]
             if mirror_across_XZ:
-                sect_AC_raw[1] *= -1
+                # Build a new object rather than mutating the (shared) array in `aerodynamic_centers` in-place,
+                # so that repeated or reordered calls to this function remain correct.
+                sect_AC_raw = [sect_AC_raw[0], -sect_AC_raw[1], sect_AC_raw[2]]
 
             sect_AC = [sect_AC_raw[i] - self.xyz_ref[i] for i in range(3)]
 
@@ -782,7 +871,7 @@ class AeroBuildup(ExplicitAnalysis):
             mach_normal = mach * np.cos(sweep_rad)
 
             ##### Compute effective alpha due to control surface deflections
-            symmetry_treated_control_surfaces: List[ControlSurface] = []
+            symmetry_treated_control_surfaces: list[ControlSurface] = []
 
             for surf in xsec_a.control_surfaces:
                 if mirror_across_XZ and not surf.symmetric:
@@ -906,23 +995,32 @@ class AeroBuildup(ExplicitAnalysis):
         self, fuselage: Fuselage, include_induced_drag: bool = True
     ) -> AeroComponentResults:
         """
-        Estimates the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
+        Estimate the aerodynamic forces, moments, and derivatives on a fuselage in isolation.
 
         Assumes:
-            * The fuselage is a body of revolution aligned with the x_b axis.
-            * The angle between the nose and the freestream is less than 90 degrees.
 
-        Moments are given with the reference at Fuselage [0, 0, 0].
+        * The fuselage is a body of revolution aligned with the x_b axis.
 
-        Uses methods from Jorgensen, Leland Howard. "Prediction of Static Aerodynamic Characteristics for Slender Bodies
-        Alone and with Lifting Surfaces to Very High Angles of Attack". NASA TR R-474. 1977.
+        * The angle between the nose and the freestream is less than 90 degrees.
 
-        Args:
+        Moments are computed about `AeroBuildup.xyz_ref`, the moment reference point of this
+        analysis.
 
-            fuselage: A Fuselage object that you wish to analyze.
+        Uses methods from Jorgensen, Leland Howard. "Prediction of Static Aerodynamic
+        Characteristics for Slender Bodies Alone and with Lifting Surfaces to Very High Angles of
+        Attack". NASA TR R-474. 1977.
 
-        Returns:
+        Parameters
+        ----------
+        fuselage : Fuselage
+            A Fuselage object that you wish to analyze.
+        include_induced_drag : bool
+            Whether to include induced drag in the computed forces.
 
+        Returns
+        -------
+        AeroComponentResults
+            The aerodynamic forces and moments on the fuselage.
         """
         ##### Alias a few things for convenience
         op_point = self.op_point
@@ -1192,7 +1290,7 @@ class AeroBuildup(ExplicitAnalysis):
         ### Compute the induced drag, if relevant
         if include_induced_drag:
             _, sideforce, lift = op_point.convert_axes(
-                *F_g, from_axes="geometry", to_axes="wind"
+                F_g[0], F_g[1], F_g[2], from_axes="geometry", to_axes="wind"
             )
 
             D_induced = (lift**2 + sideforce**2) / (

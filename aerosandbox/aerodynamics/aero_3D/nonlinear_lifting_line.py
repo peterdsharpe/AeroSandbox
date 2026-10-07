@@ -1,5 +1,5 @@
 from aerosandbox import ImplicitAnalysis
-from aerosandbox.geometry import *
+from aerosandbox.geometry import Airplane
 from aerosandbox.performance import OperatingPoint
 from aerosandbox.aerodynamics.aero_3D.singularities.uniform_strength_horseshoe_singularities import (
     calculate_induced_velocity_horseshoe,
@@ -8,39 +8,51 @@ from aerosandbox.aerodynamics.aero_3D.singularities.point_source import (
     calculate_induced_velocity_point_source,
 )
 import aerosandbox.numpy as np
-from typing import Dict, Any, Callable, List
+from typing import Any, Callable, TYPE_CHECKING
+import aerosandbox.geometry.mesh_utilities as mesh_utils
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import Airfoil, ControlSurface
 
 
 ### Define some helper functions that take a vector and make it a Nx1 or 1xN, respectively.
 # Useful for broadcasting with matrices later.
 def tall(array):
+    """
+    Reshape an array into a tall (Nx1) column vector.
+    """
     return np.reshape(array, (-1, 1))
 
 
 def wide(array):
+    """
+    Reshape an array into a wide (1xN) row vector.
+    """
     return np.reshape(array, (1, -1))
 
 
 class NonlinearLiftingLine(ImplicitAnalysis):
     """
-    An implicit aerodynamics analysis based on lifting line theory, with modifications for nonzero sweep
-    and dihedral + multiple wings.
+    An implicit aerodynamics analysis based on lifting line theory.
+
+    Includes modifications for nonzero sweep and dihedral + multiple wings.
 
     Nonlinear, and includes viscous effects based on 2D data.
 
-    Usage example:
-        >>> analysis = asb.NonlinearLiftingLine(
-        >>>     airplane=my_airplane,
-        >>>     op_point=asb.OperatingPoint(
-        >>>         velocity=100, # m/s
-        >>>         alpha=5, # deg
-        >>>         beta=4, # deg
-        >>>         p=0.01, # rad/sec
-        >>>         q=0.02, # rad/sec
-        >>>         r=0.03, # rad/sec
-        >>>     )
-        >>> )
-        >>> outputs = analysis.run()
+    Examples
+    --------
+    >>> analysis = asb.NonlinearLiftingLine(
+    >>>     airplane=my_airplane,
+    >>>     op_point=asb.OperatingPoint(
+    >>>         velocity=100, # m/s
+    >>>         alpha=5, # deg
+    >>>         beta=4, # deg
+    >>>         p=0.01, # rad/sec
+    >>>         q=0.02, # rad/sec
+    >>>         r=0.03, # rad/sec
+    >>>     )
+    >>> )
+    >>> outputs = analysis.run()
     """
 
     @ImplicitAnalysis.initialize
@@ -48,35 +60,50 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self,
         airplane: Airplane,
         op_point: OperatingPoint,
-        xyz_ref: List[float] = None,
+        xyz_ref: list[float] | None = None,
         run_symmetric_if_possible: bool = False,
         verbose: bool = False,
-        spanwise_resolution=8,  # TODO document
+        spanwise_resolution: int = 8,
         spanwise_spacing_function: Callable[
-            [float, float, float], np.ndarray
+            [float, float, int], np.ndarray
         ] = np.cosspace,
         vortex_core_radius: float = 1e-8,
         align_trailing_vortices_with_wind: bool = False,
     ):
         """
-        Initializes and conducts a NonlinearLiftingLine analysis.
+        Initialize and conduct a NonlinearLiftingLine analysis.
 
-        Args:
+        Parameters
+        ----------
+        airplane : Airplane
+            An Airplane object that you want to analyze.
+        op_point : OperatingPoint
+            The OperatingPoint that you want to analyze the Airplane at.
+        xyz_ref : list[float] | None
+            The moment reference point, in geometry axes. Defaults to `airplane.xyz_ref`.
+        run_symmetric_if_possible : bool
+            If this flag is True and the problem formulation is XZ-symmetric, the solver will
+            attempt to exploit the symmetry. This results in roughly half the number of governing
+            equations.
+        verbose : bool
+            If True, prints progress messages during the analysis.
+        spanwise_resolution : int
+            The number of spanwise panels that each wing section is subdivided into.
+        spanwise_spacing_function : Callable[[float, float, int], np.ndarray]
+            A function (e.g., `np.linspace` or `np.cosspace`) that determines how the spanwise
+            panels are spaced within each wing section.
+        vortex_core_radius : float
+            The regularization radius of each vortex core [m].
+        align_trailing_vortices_with_wind : bool
+            If True, trailing vortex legs are aligned with the freestream direction; if False,
+            they extend in the +x (geometry axes) direction.
+        opti
+            An asb.Opti environment.
 
-            airplane: An Airplane object that you want to analyze.
+            If provided, adds the governing equations to that instance. Does not solve the
+            equations (you need to call `sol = opti.solve()` to do that).
 
-            op_point: The OperatingPoint that you want to analyze the Airplane at.
-
-            run_symmetric_if_possible: If this flag is True and the problem fomulation is XZ-symmetric, the solver will
-            attempt to exploit the symmetry. This results in roughly half the number of governing equations.
-
-            opti: An asb.Opti environment.
-
-                If provided, adds the governing equations to that instance. Does not solve the equations (you need to
-                call `sol = opti.solve()` to do that).
-
-                If not provided, creates and solves the governing equations in a new instance.
-
+            If not provided, creates and solves the governing equations in a new instance.
         """
         super().__init__()
 
@@ -122,11 +149,23 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             + "\n)"
         )
 
-    def run(self, solve: bool = True) -> Dict[str, Any]:
+    def run(self, solve: bool = True) -> dict[str, Any]:
         """
-        Computes the aerodynamic forces.
+        Compute the aerodynamic forces.
 
-        Returns a dictionary with keys:
+        Parameters
+        ----------
+        solve : bool
+            If True (default), NonlinearLiftingLine acts as a standalone solver, and the
+            governing equations are solved here. If False, the governing-equation residuals are
+            returned, and are expected to be constrained to zero in an outer optimization
+            problem.
+
+        Returns
+        -------
+        dict[str, Any]
+            A dictionary with keys:
+
             - 'residuals': a list of residuals for each horseshoe element
             - 'F_g' : an [x, y, z] list of forces in geometry axes [N]
             - 'F_b' : an [x, y, z] list of forces in body axes [N]
@@ -149,7 +188,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             - 'Cm', the pitching coefficient [-], in body axes
             - 'Cn', the yawing coefficient [-], in body axes
 
-        Nondimensional values are nondimensionalized using reference values in the VortexLatticeMethod.airplane object.
+            Nondimensional values are nondimensionalized using reference values in the
+            NonlinearLiftingLine.airplane object.
         """
 
         self.solve = solve  # is it is True (default), NL_lifting_line is a standalone solver. If False, it
@@ -163,8 +203,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         back_left_vertices = []
         back_right_vertices = []
         front_right_vertices = []
-        airfoils: List[Airfoil] = []
-        control_surfaces: List[List[ControlSurface]] = []
+        airfoils: list[Airfoil] = []
+        control_surfaces: list[list[ControlSurface]] = []
 
         for wing in self.airplane.wings:  # subdivide the wing in more spanwise sections
             if self.spanwise_resolution > 1:
@@ -204,7 +244,7 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             if wing.symmetric:  # Do the left side, if applicable
                 airfoils.extend(wing_airfoils)
 
-                def mirror_control_surface(surf: ControlSurface) -> ControlSurface:
+                def mirror_control_surface(surf: "ControlSurface") -> "ControlSurface":
                     if surf.symmetric:
                         return surf
                     else:
@@ -250,8 +290,8 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         self.back_left_vertices = back_left_vertices
         self.back_right_vertices = back_right_vertices
         self.front_right_vertices = front_right_vertices
-        self.airfoils: List[Airfoil] = airfoils
-        self.control_surfaces: List[List[ControlSurface]] = control_surfaces
+        self.airfoils: list[Airfoil] = airfoils
+        self.control_surfaces: list[list[ControlSurface]] = control_surfaces
         self.normal_directions = normal_directions
         self.areas = areas
         self.left_vortex_vertices = left_vortex_vertices
@@ -279,10 +319,6 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             wide(steady_freestream_velocity), rotation_freestream_velocities
         )
         # Nx3, represents the freestream velocity at each panel collocation point (c)
-
-        freestream_influences = np.sum(
-            freestream_velocities * normal_directions, axis=1
-        )
 
         ### Save things to the instance for later access
         self.steady_freestream_velocity = steady_freestream_velocity
@@ -466,8 +502,13 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
         # Compute pitching moment
 
-        bound_leg_YZ = vortex_bound_leg
-        bound_leg_YZ[:, 0] = 0
+        bound_leg_YZ = np.concatenate(  # Same as vortex_bound_leg, but with x-components zeroed out.
+            [
+                np.zeros((self.n_panels, 1)),
+                vortex_bound_leg[:, 1:],
+            ],
+            axis=1,
+        )  # Note: a copy, so that we don't modify `self.vortex_bound_leg` in-place.
         moments_pitching_geometry = (
             (0.5 * self.op_point.atmosphere.density() * tall(velocity_magnitudes**2))
             * tall(CMs)
@@ -575,16 +616,25 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         }
 
     def get_induced_velocity_at_points(
-        self, points: np.ndarray, vortex_strengths: np.ndarray = None
+        self, points: np.ndarray, vortex_strengths: np.ndarray | None = None
     ) -> np.ndarray:
         """
-        Computes the induced velocity at a set of points in the flowfield.
+        Compute the induced velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the induced velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the induced velocities at. Given in
+            geometry axes.
+        vortex_strengths : np.ndarray | None
+            The strength of each horseshoe vortex. If None, uses
+            `NonlinearLiftingLine.vortex_strengths` (which requires that the analysis has already
+            been run).
 
-        Returns: A Nx3 of the induced velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the induced velocity at those points. Given in geometry axes.
         """
         if vortex_strengths is None:
             try:
@@ -623,16 +673,25 @@ class NonlinearLiftingLine(ImplicitAnalysis):
     def get_velocity_at_points(
         self,
         points: np.ndarray,
-        vortex_strengths: np.ndarray = None,
+        vortex_strengths: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Computes the velocity at a set of points in the flowfield.
+        Compute the velocity at a set of points in the flowfield.
 
-        Args:
-            points: A Nx3 array of points that you would like to know the velocities at. Given in geometry axes.
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the velocities at. Given in
+            geometry axes.
+        vortex_strengths : np.ndarray | None
+            The strength of each horseshoe vortex. If None, uses
+            `NonlinearLiftingLine.vortex_strengths` (which requires that the analysis has already
+            been run).
 
-        Returns: A Nx3 of the velocity at those points. Given in geometry axes.
-
+        Returns
+        -------
+        np.ndarray
+            A Nx3 of the velocity at those points. Given in geometry axes.
         """
         V_induced = self.get_induced_velocity_at_points(
             points=points,
@@ -658,6 +717,22 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         return V
 
     def calculate_fuselage_influences(self, points: np.ndarray) -> np.ndarray:
+        """
+        Compute the velocity influence of the fuselages at a set of points in the flowfield.
+
+        Models each fuselage as a series of point sources along its centerline.
+
+        Parameters
+        ----------
+        points : np.ndarray
+            A Nx3 array of points that you would like to know the fuselage influences at. Given
+            in geometry axes.
+
+        Returns
+        -------
+        np.ndarray
+            A Nx3 array of the fuselage-induced velocity at those points. Given in geometry axes.
+        """
         this_fuse_centerline_points = []  # fuselage sections centres
         this_fuse_radii = []
 
@@ -715,33 +790,40 @@ class NonlinearLiftingLine(ImplicitAnalysis):
         return fuselage_influences
 
     def calculate_streamlines(
-        self, seed_points: np.ndarray = None, n_steps: int = 300, length: float = None
+        self,
+        seed_points: np.ndarray | None = None,
+        n_steps: int = 300,
+        length: float | None = None,
     ) -> np.ndarray:
         """
-        Computes streamlines, starting at specific seed points.
+        Compute streamlines, starting at specific seed points.
 
-        After running this function, a new instance variable `VortexLatticeFilaments.streamlines` is computed
+        After running this function, a new instance variable `NonlinearLiftingLine.streamlines`
+        is computed.
 
-        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity vectors are normalized
-        before ODE integration). After investigation, it's not worth doing fancier ODE integration methods (adaptive
-        schemes, RK substepping, etc.), due to the near-singular conditions near vortex filaments.
+        Uses simple forward-Euler integration with a fixed spatial stepsize (i.e., velocity
+        vectors are normalized before ODE integration). After investigation, it's not worth doing
+        fancier ODE integration methods (adaptive schemes, RK substepping, etc.), due to the
+        near-singular conditions near vortex filaments.
 
-        Args:
-
-            seed_points: A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+        Parameters
+        ----------
+        seed_points : np.ndarray | None
+            A Nx3 ndarray that contains a list of points where streamlines are started. Will be
+            auto-calculated if not specified.
+        n_steps : int
+            The number of individual streamline steps to trace. Minimum of 2.
+        length : float | None
+            The approximate total length of the streamlines desired, in meters. Will be
             auto-calculated if not specified.
 
-            n_steps: The number of individual streamline steps to trace. Minimum of 2.
+        Returns
+        -------
+        streamlines : np.ndarray
+            A 3D array with dimensions: (n_seed_points) x (3) x (n_steps). Consists of
+            streamlines data.
 
-            length: The approximate total length of the streamlines desired, in meters. Will be auto-calculated if
-            not specified.
-
-        Returns:
-            streamlines: a 3D array with dimensions: (n_seed_points) x (3) x (n_steps).
-            Consists of streamlines data.
-
-            Result is also saved as an instance variable, VortexLatticeMethod.streamlines.
-
+            Result is also saved as an instance variable, NonlinearLiftingLine.streamlines.
         """
         if self.verbose:
             print("Calculating streamlines...")
@@ -784,19 +866,20 @@ class NonlinearLiftingLine(ImplicitAnalysis):
 
     def draw(
         self,
-        c: np.ndarray = None,
-        cmap: str = None,
-        colorbar_label: str = None,
+        c: np.ndarray | None = None,
+        cmap: str | None = None,
+        colorbar_label: str | None = None,
         show: bool = True,
-        show_kwargs: Dict = None,
+        show_kwargs: dict | None = None,
         draw_streamlines=True,
         recalculate_streamlines=False,
         backend: str = "pyvista",
     ):
         """
-        Draws the solution. Note: Must be called on a SOLVED AeroProblem object.
-        To solve an AeroProblem, use opti.solve(). To substitute a solved solution, use ap = sol(ap).
-        :return:
+        Draw the solution.
+
+        Note: Must be called on a SOLVED AeroProblem object. To solve an AeroProblem, use
+        opti.solve(). To substitute a solved solution, use ap = sol(ap).
         """
         if show_kwargs is None:
             show_kwargs = {}
@@ -892,11 +975,11 @@ class NonlinearLiftingLine(ImplicitAnalysis):
             raise ValueError("Bad value of `backend`!")
             # # Fuselages
             # for fuse_id in range(len(self.airplane.fuselages)):
-            #     fuse = self.airplane.fuselages[fuse_id]  # type: Fuselage
+            #     fuse: Fuselage = self.airplane.fuselages[fuse_id]
             #
             #     for xsec_id in range(len(fuse.xsecs) - 1):
-            #         xsec_1 = fuse.xsecs[xsec_id]  # type: FuselageXSec
-            #         xsec_2 = fuse.xsecs[xsec_id + 1]  # type: FuselageXSec
+            #         xsec_1: FuselageXSec = fuse.xsecs[xsec_id]
+            #         xsec_2: FuselageXSec = fuse.xsecs[xsec_id + 1]
             #
             #         r1 = xsec_1.equivalent_radius(preserve="area")
             #         r2 = xsec_2.equivalent_radius(preserve="area")

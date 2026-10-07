@@ -1,0 +1,66 @@
+# Quarto book config for the AeroSandbox documentation book.
+# Render with `quarto render` from this directory (or `quarto preview` while writing).
+
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "The AeroSandbox Book"
+  subtitle: "Aircraft design optimization made fast through modern automatic differentiation"
+  author: "Peter Sharpe"
+  date: today
+  repo-url: https://github.com/peterdsharpe/AeroSandbox
+  repo-actions: [issue]
+  chapters:
+    - index.qmd
+    - part: "Optimization Foundations"
+      chapters:
+        - 01-optimization-basics.qmd
+        - 02-robust-optimization-models.qmd
+        - 03-solvers-and-solutions.qmd
+    - part: "Modeling Aircraft"
+      chapters:
+        - 04-geometry.qmd
+        - 05-airfoil-aerodynamics.qmd
+        - 06-aircraft-aerodynamics.qmd
+        - 07-atmosphere-propulsion-weights.qmd
+        - 08-structures.qmd
+    - part: "Design Optimization"
+      chapters:
+        - 09-wing-design.qmd
+        - 10-aircraft-sizing-simpleac.qmd
+    - part: "Trajectory Optimization"
+      chapters:
+        - 11-optimal-control.qmd
+        - 12-dynamics-stack.qmd
+    - part: "Complete Design Studies"
+      chapters:
+        - 13-aerostructural-wing.qmd
+        - 14-transport-aircraft-design.qmd
+        - 15-solar-uav-sizing.qmd
+    - part: "Advanced Topics"
+      chapters:
+        - 16-surrogate-modeling.qmd
+        - 17-external-tools.qmd
+  appendices:
+    - 90-api-reference.qmd
+    - 91-faq-troubleshooting.qmd
+
+execute:
+  freeze: auto      # re-execute a cell only when its .qmd changes; commit _freeze/
+  warning: false
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false          # this is a teaching book: code is content, keep it visible
+    code-copy: true
+    code-overflow: wrap
+    fig-width: 8
+    fig-height: 4.5
+    fig-dpi: 150
+    link-external-newwindow: true

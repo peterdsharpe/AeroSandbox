@@ -4,21 +4,54 @@ from aerosandbox.geometry.airfoil.airfoil_families import get_kulfan_parameters
 from aerosandbox.modeling.splines.hermite import (
     cosine_hermite_patch,
 )
-from typing import Union, Dict, List
 import warnings
+from aerosandbox.numpy.typing import Vectorizable, ArrayLike, Scalar
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aerosandbox.geometry import ControlSurface
 
 
 class KulfanAirfoil(Airfoil):
+    """
+    An airfoil defined parametrically, using Kulfan (CST) parameters rather than coordinates.
+
+    See `aerosandbox.geometry.airfoil.airfoil_families.get_kulfan_coordinates()` for references
+    on the Kulfan (CST) parameterization.
+    """
+
     def __init__(
         self,
         name: str = "Untitled",
-        lower_weights: np.ndarray = None,
-        upper_weights: np.ndarray = None,
-        leading_edge_weight: float = 0.0,
-        TE_thickness: float = 0.0,
+        lower_weights: ArrayLike | None = None,
+        upper_weights: ArrayLike | None = None,
+        leading_edge_weight: Scalar = 0.0,
+        TE_thickness: Scalar = 0.0,
         N1: float = 0.5,
         N2: float = 1.0,
     ):
+        """
+        Create a KulfanAirfoil object.
+
+        Parameters
+        ----------
+        name : str
+            Name of the airfoil. If `lower_weights` and `upper_weights` are not given, this name
+            is also used to try to look up the airfoil (as a NACA airfoil, or from the UIUC
+            airfoil database) and fit Kulfan parameters to it.
+        lower_weights : ArrayLike | None
+            The Kulfan (CST) weights to use for the lower surface.
+        upper_weights : ArrayLike | None
+            The Kulfan (CST) weights to use for the upper surface.
+        leading_edge_weight : Scalar
+            The strength of the leading-edge camber mode shape of the airfoil.
+        TE_thickness : Scalar
+            The trailing-edge thickness of the airfoil, in terms of y/c.
+        N1 : float
+            The shape factor corresponding to the leading edge of the airfoil.
+        N2 : float
+            The shape factor corresponding to the trailing edge of the airfoil.
+        """
         ### Handle the airfoil name
         self.name = name
 
@@ -27,14 +60,8 @@ class KulfanAirfoil(Airfoil):
             lower_weights is None and upper_weights is None
         ):  # Try to fall back on parameters from the coordinate airfoil, if it's something from the UIUC database
 
-            class IgnoreUserWarnings:  # A context manager to ignore UserWarnings
-                def __enter__(self):
-                    warnings.filterwarnings("ignore", category=UserWarning)
-
-                def __exit__(self, exc_type, exc_val, exc_tb):
-                    warnings.resetwarnings()
-
-            with IgnoreUserWarnings():
+            with warnings.catch_warnings():  # Restores the caller's warning filters on exit.
+                warnings.simplefilter("ignore", category=UserWarning)
                 coordinate_airfoil = Airfoil(name)
 
             if coordinate_airfoil.coordinates is None:
@@ -72,6 +99,9 @@ class KulfanAirfoil(Airfoil):
 
     @property
     def kulfan_parameters(self):
+        """
+        Return a dictionary of the Kulfan parameters of this airfoil.
+        """
         return {
             "lower_weights": self.lower_weights,
             "upper_weights": self.upper_weights,
@@ -81,6 +111,9 @@ class KulfanAirfoil(Airfoil):
 
     @property
     def coordinates(self) -> np.ndarray:
+        """
+        Return the [x, y] coordinates of this airfoil, as computed from its Kulfan parameters.
+        """
         return self.to_airfoil().coordinates
 
     @coordinates.setter
@@ -97,6 +130,23 @@ class KulfanAirfoil(Airfoil):
         n_coordinates_per_side=200,
         spacing_function_per_side=np.cosspace,
     ) -> Airfoil:
+        """
+        Convert this KulfanAirfoil to a coordinate-parameterized Airfoil.
+
+        Parameters
+        ----------
+        n_coordinates_per_side : int
+            The number of coordinates to generate per side (upper and lower) of the airfoil.
+        spacing_function_per_side
+            Determines how to space the points on each side of the airfoil. Can be `np.linspace`
+            or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that
+            returns a spaced array of `n` points between `a` and `b`.
+
+        Returns
+        -------
+        Airfoil
+            A coordinate-parameterized version of this airfoil.
+        """
         x_upper = spacing_function_per_side(1, 0, n_coordinates_per_side)[:-1]
         upper = self.upper_coordinates(x_over_c=x_upper)
 
@@ -112,6 +162,23 @@ class KulfanAirfoil(Airfoil):
         n_points_per_side: int = 100,
         spacing_function_per_side=np.cosspace,
     ) -> "Airfoil":
+        """
+        Return a repaneled, coordinate-parameterized copy of this airfoil.
+
+        Parameters
+        ----------
+        n_points_per_side : int
+            Number of points per side (upper and lower) of the airfoil.
+        spacing_function_per_side
+            Determines how to space the points on each side of the airfoil. Can be `np.linspace`
+            or `np.cosspace`, or any other function of the call signature `f(a, b, n)` that
+            returns a spaced array of `n` points between `a` and `b`.
+
+        Returns
+        -------
+        Airfoil
+            A repaneled, coordinate-parameterized copy of this airfoil.
+        """
         return self.to_airfoil(
             n_coordinates_per_side=n_points_per_side,
             spacing_function_per_side=spacing_function_per_side,
@@ -120,52 +187,73 @@ class KulfanAirfoil(Airfoil):
     def normalize(
         self,
         return_dict: bool = False,
-    ) -> Union["KulfanAirfoil", Dict[str, Union["KulfanAirfoil", float]]]:
+    ) -> "KulfanAirfoil | dict[str, KulfanAirfoil | float]":
         """
-        Returns a copy of the Airfoil with a new set of `coordinates`, such that:
+        Return a copy of the Airfoil with a normalized set of `coordinates`.
+
+        The new coordinates are such that:
+
             - The leading edge (LE) is at (0, 0)
             - The trailing edge (TE) is at (1, 0)
             - The chord length is equal to 1
 
-        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting the first and last coordinate points (upper and lower surface TE points, respectively). The TE point is not necessarily one of the original points in the airfoil coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the TE thickness is nonzero.
+        The trailing-edge (TE) point is defined as the midpoint of the line segment connecting
+        the first and last coordinate points (the upper- and lower-surface TE points,
+        respectively). The TE point is not necessarily one of the original points in the airfoil
+        coordinates (`Airfoil.coordinates`); in general, it will not be one of the points if the
+        TE thickness is nonzero.
 
-        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidian distance from the trailing edge. (In other words, if you were to center a circle on the trailing edge and progressively grow it, what's the last coordinate point that it would intersect?) The LE point is always one of the original points in the airfoil coordinates.
+        The leading-edge (LE) point is defined as the coordinate point with the largest Euclidean
+        distance from the trailing edge. (In other words, if you were to center a circle on the
+        trailing edge and progressively grow it, what's the last coordinate point that it would
+        intersect?) The LE point is always one of the original points in the airfoil coordinates.
 
-        The chord is defined as the Euclidian distance between the LE and TE points.
+        The chord is defined as the Euclidean distance between the LE and TE points.
 
-        Coordinate modifications to achieve the constraints described above (LE @ origin, TE at (1, 0), and chord of 1) are done by means of a translation and rotation.
+        Coordinate modifications to achieve the constraints described above (LE at origin, TE at
+        (1, 0), and chord of 1) are done by means of a translation and rotation.
 
-        Args:
+        Parameters
+        ----------
+        return_dict : bool
+            Determines the output type of the function.
 
-            return_dict: Determines the output type of the function.
-                - If `False` (default), returns a copy of the Airfoil with the new coordinates.
-                - If `True`, returns a dictionary with keys:
+            - If `False` (default), returns a copy of the Airfoil with the new coordinates.
+            - If `True`, returns a dictionary with keys:
 
-                        - "airfoil": a copy of the Airfoil with the new coordinates
+                - "airfoil": a copy of the Airfoil with the new coordinates
 
-                        - "x_translation": the amount by which the airfoil's LE was translated in the x-direction
+                - "x_translation": the amount by which the airfoil's LE was translated in the
+                  x-direction
 
-                        - "y_translation": the amount by which the airfoil's LE was translated in the y-direction
+                - "y_translation": the amount by which the airfoil's LE was translated in the
+                  y-direction
 
-                        - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil had to get
-                            bigger)
+                - "scale_factor": the amount by which the airfoil was scaled (if >1, the airfoil
+                  had to get bigger)
 
-                        - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about the LE.
-                            Sign convention is that positive angles rotate the airfoil counter-clockwise.
+                - "rotation_angle": the angle (in degrees) by which the airfoil was rotated about
+                  the LE. Sign convention is that positive angles rotate the airfoil
+                  counter-clockwise.
 
-                    All of thes values represent the "required change", e.g.:
+              All of these values represent the "required change", e.g.:
 
-                        - "x_translation" is the amount by which the airfoil's LE had to be translated in the
-                            x-direction to get it to the origin.
+                - "x_translation" is the amount by which the airfoil's LE had to be translated
+                  in the x-direction to get it to the origin.
 
-                        - "rotation_angle" is the angle (in degrees) by which the airfoil had to be rotated (CCW).
+                - "rotation_angle" is the angle (in degrees) by which the airfoil had to be
+                  rotated (CCW).
 
-        Returns: Depending on the value of `return_dict`, either:
+        Returns
+        -------
+        KulfanAirfoil | dict[str, KulfanAirfoil | float]
+            Depending on the value of `return_dict`, either:
 
             - A copy of the airfoil with the new coordinates (default), or
 
-            - A dictionary with keys "airfoil", "x_translation", "y_translation", "scale_factor", and "rotation_angle".
-                documentation for `return_tuple` for more information.
+            - A dictionary with keys "airfoil", "x_translation", "y_translation",
+              "scale_factor", and "rotation_angle". See the documentation for the `return_dict`
+              parameter for more information.
         """
         ### A KulfanAirfoil is already normalized by definition, so we essentially just return the same airfoil.
         # (This method serves to overwrite the Airfoil.normalize() method, which is not applicable to KulfanAirfoils.)
@@ -182,20 +270,53 @@ class KulfanAirfoil(Airfoil):
             }
 
     def draw(self, *args, draw_markers=False, **kwargs):
+        """
+        Draw the airfoil object. See `Airfoil.draw()` for arguments and details.
+        """
         return self.to_airfoil().draw(*args, draw_markers=draw_markers, **kwargs)
 
     def get_aero_from_neuralfoil(
         self,
-        alpha: Union[float, np.ndarray],
-        Re: Union[float, np.ndarray],
-        mach: Union[float, np.ndarray] = 0.0,
-        n_crit: Union[float, np.ndarray] = 9.0,
-        xtr_upper: Union[float, np.ndarray] = 1.0,
-        xtr_lower: Union[float, np.ndarray] = 1.0,
+        alpha: Vectorizable,
+        Re: Vectorizable,
+        mach: Vectorizable = 0.0,
+        n_crit: Vectorizable = 9.0,
+        xtr_upper: Vectorizable = 1.0,
+        xtr_lower: Vectorizable = 1.0,
         model_size: str = "large",
-        control_surfaces: List["ControlSurface"] = None,
+        control_surfaces: list["ControlSurface"] | None = None,
         include_360_deg_effects: bool = True,
-    ) -> Dict[str, Union[float, np.ndarray]]:
+    ) -> dict[str, Vectorizable]:
+        """
+        Compute this airfoil's aerodynamics at given operating conditions using NeuralFoil.
+
+        Parameters
+        ----------
+        alpha : Vectorizable
+            Angle of attack [degrees].
+        Re : Vectorizable
+            Reynolds number [dimensionless].
+        mach : Vectorizable
+            Mach number [dimensionless].
+        n_crit : Vectorizable
+            Critical amplification factor for boundary-layer transition (e^N method).
+        xtr_upper : Vectorizable
+            Forced transition location on the upper surface, as a fraction of chord (x/c).
+        xtr_lower : Vectorizable
+            Forced transition location on the lower surface, as a fraction of chord (x/c).
+        model_size : str
+            The size of the NeuralFoil model to use (e.g., "xxsmall", "small", "large",
+            "xxxlarge").
+        control_surfaces : list["ControlSurface"] | None
+            Control surfaces to apply to the airfoil before analysis.
+        include_360_deg_effects : bool
+            Whether to blend in post-stall (360-degree) aerodynamic effects.
+
+        Returns
+        -------
+        dict[str, Vectorizable]
+            A dictionary of aerodynamic outputs (e.g., "CL", "CD", "CM", "Cpmin", ...).
+        """
         ### Validate inputs
         if (np.length(self.lower_weights) != 8) or (np.length(self.upper_weights) != 8):
             raise NotImplementedError(
@@ -348,7 +469,6 @@ class KulfanAirfoil(Airfoil):
         # Relation taken from W.H. Mason's Korn Equation
 
         ### Step 2: adjust CL, CD, CM, Cpmin by compressibility effects
-        gamma = 1.4  # Ratio of specific heats, 1.4 for air (mostly diatomic nitrogen and oxygen)
         beta_squared_ideal = 1 - mach**2
         beta = (
             np.softmax(
@@ -469,8 +589,24 @@ class KulfanAirfoil(Airfoil):
 
     def upper_coordinates(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(1, 0, 101),
+        x_over_c: Vectorizable = np.linspace(1, 0, 101),
     ) -> np.ndarray:
+        """
+        Return an Nx2 ndarray of [x, y] coordinates on the upper surface of the airfoil.
+
+        Coordinates are computed analytically from the Kulfan parameters, at the given x/c
+        locations.
+
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations at which to compute the upper-surface coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            An Nx2 ndarray of [x, y] coordinates.
+        """
         x_over_c = np.array(x_over_c)
 
         # Class function
@@ -525,8 +661,24 @@ class KulfanAirfoil(Airfoil):
 
     def lower_coordinates(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
     ) -> np.ndarray:
+        """
+        Return an Nx2 ndarray of [x, y] coordinates on the lower surface of the airfoil.
+
+        Coordinates are computed analytically from the Kulfan parameters, at the given x/c
+        locations.
+
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations at which to compute the lower-surface coordinates.
+
+        Returns
+        -------
+        np.ndarray
+            An Nx2 ndarray of [x, y] coordinates.
+        """
         x_over_c = np.array(x_over_c)
 
         # Class function
@@ -575,8 +727,21 @@ class KulfanAirfoil(Airfoil):
 
     def local_camber(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-    ) -> Union[float, np.ndarray]:
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
+    ) -> Vectorizable:
+        """
+        Return the local camber of the airfoil at a given point or points.
+
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations to calculate the camber at.
+
+        Returns
+        -------
+        Vectorizable
+            Local camber of the airfoil (y/c).
+        """
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -587,8 +752,21 @@ class KulfanAirfoil(Airfoil):
 
     def local_thickness(
         self,
-        x_over_c: Union[float, np.ndarray] = np.linspace(0, 1, 101),
-    ) -> Union[float, np.ndarray]:
+        x_over_c: Vectorizable = np.linspace(0, 1, 101),
+    ) -> Vectorizable:
+        """
+        Return the local thickness of the airfoil at a given point or points.
+
+        Parameters
+        ----------
+        x_over_c : Vectorizable
+            The x/c locations to calculate the thickness at.
+
+        Returns
+        -------
+        Vectorizable
+            Local thickness of the airfoil (y/c).
+        """
         upper = self.upper_coordinates(x_over_c=x_over_c)
         lower = self.lower_coordinates(x_over_c=x_over_c)
 
@@ -619,6 +797,9 @@ class KulfanAirfoil(Airfoil):
         )
 
     def TE_angle(self):
+        """
+        Return the trailing edge angle of the airfoil, in degrees.
+        """
         return np.degrees(
             np.arctan(self.upper_weights[-1])
             - np.arctan(self.lower_weights[-1])
@@ -626,6 +807,10 @@ class KulfanAirfoil(Airfoil):
         )
 
     def area(self):
+        """
+        Return the area of the airfoil, computed analytically from its Kulfan parameters.
+        """
+
         def get_area_of_side(weights):
             from scipy.special import beta, comb
 
@@ -645,15 +830,21 @@ class KulfanAirfoil(Airfoil):
         thickness: float = 0.0,
     ) -> "KulfanAirfoil":
         """
-        Creates a modified copy of the KulfanAirfoil that has a specified trailing-edge thickness.
+        Create a modified copy of the KulfanAirfoil that has a specified trailing-edge thickness.
 
-        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of chord).
+        Note that the trailing-edge thickness is given nondimensionally (e.g., as a fraction of
+        chord).
 
-        Args:
-            thickness: The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of chord).
+        Parameters
+        ----------
+        thickness : float
+            The target trailing-edge thickness, given nondimensionally (e.g., as a fraction of
+            chord).
 
-        Returns: The modified KulfanAirfoil.
-
+        Returns
+        -------
+        KulfanAirfoil
+            The modified KulfanAirfoil.
         """
         return KulfanAirfoil(
             name=self.name,
@@ -671,18 +862,23 @@ class KulfanAirfoil(Airfoil):
         scale_y: float = 1.0,
     ) -> "KulfanAirfoil":
         """
-        Scales a KulfanAirfoil about the origin.
+        Scale a KulfanAirfoil about the origin.
 
-        Args:
+        Parameters
+        ----------
+        scale_x : float
+            Amount to scale in the x-direction. Note: not supported by KulfanAirfoil due to
+            inherent limitations of the parameterization; only given here so that argument
+            symmetry to Airfoil.scale() is retained. Raises a ValueError if modified, along with
+            instructions to use `Airfoil` if needed.
+        scale_y : float
+            Amount to scale in the y-direction. Scaling by a negative y-value will result in
+            `lower_weights` and `upper_weights` being flipped as appropriate.
 
-            scale_x: Amount to scale in the x-direction. Note: not supported by KulfanAirfoil due to inherent
-                limitations of parameterization; only given here so that argument symmetry to Airfoil.scale() is
-                retained. Raises a ValueError if modified, along with instructions to use `Airfoil` if needed.
-
-            scale_y: Amount to scale in the y-direction. Scaling by a negative y-value will result in `lower_weights`
-                and `upper_weights` being flipped as appropriate.
-
-        Returns: A copy of the KulfanAirfoil with appropriate scaling applied.
+        Returns
+        -------
+        KulfanAirfoil
+            A copy of the KulfanAirfoil with appropriate scaling applied.
         """
         if scale_x != 1:
             raise ValueError(
@@ -720,9 +916,25 @@ class KulfanAirfoil(Airfoil):
 
     def blend_with_another_airfoil(
         self,
-        airfoil: Union["KulfanAirfoil", Airfoil],
+        airfoil: "KulfanAirfoil | Airfoil",
         blend_fraction: float = 0.5,
     ) -> "KulfanAirfoil":
+        """
+        Blend this airfoil with another airfoil, by blending their Kulfan parameters.
+
+        Parameters
+        ----------
+        airfoil : KulfanAirfoil | Airfoil
+            The other airfoil to blend with. If this is a coordinate-parameterized Airfoil, it
+            is first converted to a KulfanAirfoil.
+        blend_fraction : float
+            The fraction of the other airfoil to use when blending. Defaults to 0.5 (50%).
+
+        Returns
+        -------
+        KulfanAirfoil
+            A new airfoil that is a blend of this airfoil and another one.
+        """
         if not isinstance(airfoil, KulfanAirfoil):
             try:
                 airfoil = airfoil.to_kulfan_airfoil()

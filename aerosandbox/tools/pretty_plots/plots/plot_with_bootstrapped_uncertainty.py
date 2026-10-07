@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Tuple, Optional, Callable
+from typing import Iterable, Callable
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -8,14 +8,14 @@ from aerosandbox.tools.statistics import time_series_uncertainty_quantification 
 def plot_with_bootstrapped_uncertainty(
     x: np.ndarray,
     y: np.ndarray,
-    ci: Optional[Union[float, Iterable[float], np.ndarray]] = 0.95,
-    x_stdev: Union[None, float] = 0.0,
-    y_stdev: Union[None, float] = None,
-    color: Optional[Union[str, Tuple[float]]] = None,
+    ci: float | Iterable[float] | np.ndarray | None = 0.95,
+    x_stdev: None | float = 0.0,
+    y_stdev: None | float = None,
+    color: str | tuple[float] | None = None,
     draw_data: bool = True,
-    label_line: Union[bool, str] = "Best Estimate",
+    label_line: bool | str = "Best Estimate",
     label_ci: bool = True,
-    label_data: Union[bool, str] = "Raw Data",
+    label_data: bool | str = "Raw Data",
     line_alpha: float = 0.9,
     ci_to_alpha_mapping: Callable[[float], float] = lambda ci: 0.8 * (1 - ci) ** 0.4,
     n_bootstraps=2000,
@@ -25,6 +25,61 @@ def plot_with_bootstrapped_uncertainty(
     x_log_scale: bool = False,
     y_log_scale: bool = False,
 ):
+    """
+    Plot a bootstrapped spline fit of a dataset, with confidence intervals, on the current axes.
+
+    Bootstrap-resamples the data using `bootstrap_fits()`, plots the median fit as a
+    best-estimate line, shades the requested confidence intervals, and optionally draws the raw
+    data points.
+
+    Parameters
+    ----------
+    x : np.ndarray
+        The independent variable of the dataset. A 1D NumPy array.
+    y : np.ndarray
+        The dependent variable of the dataset. A 1D NumPy array.
+    ci : float | Iterable[float] | np.ndarray | None
+        The confidence interval(s) to plot, each in the range (0, 1). If None, no confidence
+        intervals are plotted.
+    x_stdev : None | float
+        The standard deviation of the noise in `x`. If None, it is estimated from the data.
+    y_stdev : None | float
+        The standard deviation of the noise in `y`. If None, it is estimated from the data.
+    color : str | tuple[float] | None
+        The color of the line and confidence intervals. If None, the next color in the current
+        color cycle is used.
+    draw_data : bool
+        Whether to plot the raw data points.
+    label_line : bool | str
+        The legend label for the best-estimate line.
+    label_ci : bool
+        Whether to add legend labels for the confidence intervals.
+    label_data : bool | str
+        The legend label for the raw data points.
+    line_alpha : float
+        The opacity of the best-estimate line.
+    ci_to_alpha_mapping : Callable[[float], float]
+        A function that maps a confidence interval value to the opacity of its shaded region.
+    n_bootstraps
+        The number of bootstrap resamples to create.
+    n_fit_points
+        The number of points at which to evaluate the bootstrapped spline fits.
+    spline_degree
+        The degree of the splines to fit.
+    normalize : bool
+        Whether to normalize the data before fitting. See `bootstrap_fits()`.
+    x_log_scale : bool
+        If True, fits in log-transformed x-space, and sets the x-axis to a log scale.
+    y_log_scale : bool
+        If True, fits in log-transformed y-space, and sets the y-axis to a log scale.
+
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        A tuple of (x_fit, y_bootstrap_fits), where x_fit is a 1D array of the x-values at
+        which the splines were evaluated, and y_bootstrap_fits is a 2D array of shape
+        (n_bootstraps, len(x_fit)) with the corresponding spline y-values.
+    """
     x = np.array(x)
     y = np.array(y)
 

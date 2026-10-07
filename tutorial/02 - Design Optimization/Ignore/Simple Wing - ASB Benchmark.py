@@ -66,7 +66,7 @@ def solve():
     # Objective
     opti.minimize(drag)
 
-    sol = opti.solve(max_iter=100, verbose=False)
+    opti.solve(max_iter=100, verbose=False)
 
 
 def timeit():

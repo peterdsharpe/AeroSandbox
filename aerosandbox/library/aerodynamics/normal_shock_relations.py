@@ -6,14 +6,18 @@ def mach_number_after_normal_shock(
     gamma=1.4,
 ):
     """
-    Computes the mach number immediately after a normal shock wave.
+    Compute the Mach number immediately after a normal shock wave.
 
-    Args:
-        mach_upstream: The mach number immediately before the normal shock wave.
-        gamma: The ratio of specific heats of the fluid. 1.4 for air.
+    Parameters
+    ----------
+    mach_upstream
+        The Mach number immediately before the normal shock wave.
+    gamma
+        The ratio of specific heats of the fluid. 1.4 for air.
 
-    Returns: The mach number immediately after the normal shock wave.
-
+    Returns
+    -------
+    The Mach number immediately after the normal shock wave.
     """
     gm1 = gamma - 1
     m2 = mach_upstream**2
@@ -23,32 +27,40 @@ def mach_number_after_normal_shock(
 
 def density_ratio_across_normal_shock(mach_upstream, gamma=1.4):
     """
-    Computes the ratio of fluid density across a normal shock.
+    Compute the ratio of fluid density across a normal shock.
 
     Specifically, returns: rho_after_shock / rho_before_shock
 
-    Args:
-        mach_upstream: The mach number immediately before the normal shock wave.
-        gamma: The ratio of specific heats of the fluid. 1.4 for air.
+    Parameters
+    ----------
+    mach_upstream
+        The Mach number immediately before the normal shock wave.
+    gamma
+        The ratio of specific heats of the fluid. 1.4 for air.
 
-    Returns: rho_after_shock / rho_before_shock
-
+    Returns
+    -------
+    rho_after_shock / rho_before_shock
     """
     return ((gamma + 1) * mach_upstream**2) / ((gamma - 1) * mach_upstream**2 + 2)
 
 
 def temperature_ratio_across_normal_shock(mach_upstream, gamma=1.4):
     """
-    Computes the ratio of fluid temperature across a normal shock.
+    Compute the ratio of fluid temperature across a normal shock.
 
     Specifically, returns: T_after_shock / T_before_shock
 
-    Args:
-        mach_upstream: The mach number immediately before the normal shock wave.
-        gamma: The ratio of specific heats of the fluid. 1.4 for air.
+    Parameters
+    ----------
+    mach_upstream
+        The Mach number immediately before the normal shock wave.
+    gamma
+        The ratio of specific heats of the fluid. 1.4 for air.
 
-    Returns: T_after_shock / T_before_shock
-
+    Returns
+    -------
+    T_after_shock / T_before_shock
     """
     gm1 = gamma - 1
     m2 = mach_upstream**2
@@ -57,16 +69,20 @@ def temperature_ratio_across_normal_shock(mach_upstream, gamma=1.4):
 
 def pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
     """
-    Computes the ratio of fluid static pressure across a normal shock.
+    Compute the ratio of fluid static pressure across a normal shock.
 
     Specifically, returns: P_after_shock / P_before_shock
 
-    Args:
-        mach_upstream: The mach number immediately before the normal shock wave.
-        gamma: The ratio of specific heats of the fluid. 1.4 for air.
+    Parameters
+    ----------
+    mach_upstream
+        The Mach number immediately before the normal shock wave.
+    gamma
+        The ratio of specific heats of the fluid. 1.4 for air.
 
-    Returns: P_after_shock / P_before_shock
-
+    Returns
+    -------
+    P_after_shock / P_before_shock
     """
     m2 = mach_upstream**2
     return (2 * gamma * m2 - (gamma - 1)) / (gamma + 1)
@@ -74,16 +90,20 @@ def pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
 
 def total_pressure_ratio_across_normal_shock(mach_upstream, gamma=1.4):
     """
-    Computes the ratio of fluid total pressure across a normal shock.
+    Compute the ratio of fluid total pressure across a normal shock.
 
     Specifically, returns: Pt_after_shock / Pt_before_shock
 
-    Args:
-        mach_upstream: The mach number immediately before the normal shock wave.
-        gamma: The ratio of specific heats of the fluid. 1.4 for air.
+    Parameters
+    ----------
+    mach_upstream
+        The Mach number immediately before the normal shock wave.
+    gamma
+        The ratio of specific heats of the fluid. 1.4 for air.
 
-    Returns: Pt_after_shock / Pt_before_shock
-
+    Returns
+    -------
+    Pt_after_shock / Pt_before_shock
     """
     return density_ratio_across_normal_shock(
         mach_upstream=mach_upstream, gamma=gamma

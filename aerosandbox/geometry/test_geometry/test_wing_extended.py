@@ -194,7 +194,7 @@ def test_wing_control_surface():
 
     ### Should create wing with control surface
     assert len(wing.xsecs[0].control_surfaces) == 1
-    assert wing.xsecs[0].control_surfaces[0].symmetric == True
+    assert wing.xsecs[0].control_surfaces[0].symmetric
 
 
 def test_wing_empty_xsecs():

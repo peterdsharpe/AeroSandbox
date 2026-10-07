@@ -89,7 +89,7 @@ def obj(n):
     opti.minimize(error + eta * np.sum(n))
     sol = opti.solve(verbose=False)
 
-    return sol.value(error) + eta * np.sum(n), sol.value(coeffs)
+    return sol(error) + eta * np.sum(n), sol(coeffs)
 
 
 def lower_bound(n):
@@ -105,7 +105,7 @@ def lower_bound(n):
     error = loss(y_model, y_data)
     opti.minimize(error + eta * np.sum(np.where(n is None, 0, n)))
     sol = opti.solve(verbose=False)
-    return sol.value(error) + eta * np.sum(np.where(n is None, 0, n))
+    return sol(error) + eta * np.sum(np.where(n is None, 0, n))
 
 
 def branch(n):
@@ -133,7 +133,7 @@ def guess(eta):
     opti.minimize(error + eta * (degree + 1))
     sol = opti.solve(verbose=False)
 
-    return sol.value(error) + eta * (degree + 1)
+    return sol(error) + eta * (degree + 1)
 
 
 if __name__ == "__main__":

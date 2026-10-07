@@ -127,7 +127,6 @@ def airfoil_CL(alpha, Re, Ma):
 
 
 def airfoil_CDp(alpha, Re, Ma, Cl):
-    alpha_rad = alpha * pi / 180
     Re_exp = -0.7
     Re_ref = 70000
     cd_0 = 0.028

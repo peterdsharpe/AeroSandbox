@@ -9,13 +9,21 @@ def generate_fuselage(
     continuity_type: str = "C2",
 ) -> str:
     """
-    Generates a VSPScript file for a Fuselage object.
+    Generate a VSPScript file for a Fuselage object.
 
-    Args:
-        fuselage: The Fuselage object to generate a VSPScript file for.
+    Parameters
+    ----------
+    fuselage : Fuselage
+        The Fuselage object to generate a VSPScript file for.
+    include_main
+        If True, wraps the script in a main() function via `_utilities.wrap_script()`.
+    continuity_type : str
+        The curve continuity to enforce at each cross-section. One of "C0", "C1", or "C2".
 
-    Returns: A VSPScript file as a string.
-
+    Returns
+    -------
+    str
+        A VSPScript file as a string.
     """
     script = ""
 
@@ -40,6 +48,10 @@ InsertXSec( fid, 3, XS_SUPER_ELLIPSE ); // FuselageXSecs {i} to {i + 1}
 """
 
     length = fuselage.xsecs[-1].xyz_c[0] - fuselage.xsecs[0].xyz_c[0]
+    if length == 0:
+        raise ValueError(
+            "Fuselage length (x-distance between first and last cross-sections) must be nonzero."
+        )
     script += f"""\
 //===== Cut The Original Section =====//
 CutXSec( fid, 0 );
@@ -68,11 +80,15 @@ Update();
         raise ValueError("Continuity type must be 'C0', 'C1', or 'C2'.")
 
     for i, xsec in enumerate(fuselage.xsecs):
+        # XSec locations are specified relative to the fuselage origin (which is
+        # already placed at fuselage.xsecs[0].xyz_c via the X/Y/Z_Rel_Location
+        # parameters above), as a fraction of the fuselage length.
+        dxyz_c = xsec.xyz_c - fuselage.xsecs[0].xyz_c
         script += f"""\
 // ASB Section {i}, VSP Section {i}
-SetParmVal( fid, "XLocPercent", "XSec_{i}", {xsec.xyz_c[0] / length} );
-SetParmVal( fid, "YLocPercent", "XSec_{i}", {xsec.xyz_c[1] / length} );
-SetParmVal( fid, "ZLocPercent", "XSec_{i}", {xsec.xyz_c[2] / length} );
+SetParmVal( fid, "XLocPercent", "XSec_{i}", {dxyz_c[0] / length} );
+SetParmVal( fid, "YLocPercent", "XSec_{i}", {dxyz_c[1] / length} );
+SetParmVal( fid, "ZLocPercent", "XSec_{i}", {dxyz_c[2] / length} );
 SetParmVal( fid, "SectTess_U", "XSec_{i}", 10 );
 SetParmVal( fid, "AllSym", "XSec_{i}", 1.0 );
 SetParmVal( fid, "TopLAngleSet", "XSec_{i}", 0.0 );

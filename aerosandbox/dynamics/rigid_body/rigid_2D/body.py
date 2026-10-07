@@ -2,13 +2,15 @@ from aerosandbox.dynamics.rigid_body.rigid_3D.body_euler import (
     DynamicsRigidBody3DBodyEuler,
 )
 from aerosandbox.weights.mass_properties import MassProperties
-import aerosandbox.numpy as np
-from typing import Union, Dict
+from aerosandbox.numpy.typing import Vectorizable
 
 
 class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
     """
+    Simulate rigid-body dynamics in 2D, with velocity parameterized in body axes.
+
     Dynamics instance:
+
     * simulating a rigid body
     * in 2D
     * with velocity parameterized in body axes
@@ -25,18 +27,17 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
         Fx_b: Force along the body-x axis. [N]
         Fz_b: Force along the body-z axis. [N]
         My_b: Moment about the body-y axis. [Nm]
-
     """
 
     def __init__(
         self,
-        mass_props: MassProperties = None,
-        x_e: Union[float, np.ndarray] = 0,
-        z_e: Union[float, np.ndarray] = 0,
-        u_b: Union[float, np.ndarray] = 0,
-        w_b: Union[float, np.ndarray] = 0,
-        theta: Union[float, np.ndarray] = 0,
-        q: Union[float, np.ndarray] = 0,
+        mass_props: MassProperties | None = None,
+        x_e: Vectorizable = 0,
+        z_e: Vectorizable = 0,
+        u_b: Vectorizable = 0,
+        w_b: Vectorizable = 0,
+        theta: Vectorizable = 0,
+        q: Vectorizable = 0,
     ):
         # Initialize state variables
         self.mass_props = MassProperties(mass=0) if mass_props is None else mass_props
@@ -83,7 +84,7 @@ class DynamicsRigidBody2DBody(DynamicsRigidBody3DBodyEuler):
             "My_b": self.My_b,
         }
 
-    def state_derivatives(self) -> Dict[str, Union[float, np.ndarray]]:
+    def state_derivatives(self) -> dict[str, Vectorizable]:
         derivatives = super().state_derivatives()
         return {k: derivatives[k] for k in self.state.keys()}
 

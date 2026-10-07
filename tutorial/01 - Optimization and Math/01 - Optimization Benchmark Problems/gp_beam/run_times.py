@@ -106,7 +106,15 @@ def solve_aerosandbox_forced_GP(N=10):
     return sol.stats()["n_call_nlp_f"]  # return number of function evaluations
 
 
-def solve_gpkit_cvxopt(N=10):
+### Note on GPKit functions below:
+### GPKit's @parse_variables decorator injects variables from docstrings into the function
+### namespace at runtime. The `noqa: F821` comments throughout the GPKit functions are
+### necessary because static analysis cannot detect this runtime magic. All variables
+### (w, L, dx, V, M, th, V_tip, M_tip, th_base, w_base, q, EI) are actually defined
+### by the decorator, despite appearing undefined to linters.
+
+
+def solve_gpkit_cvxopt(N=10):  # noqa: F821
     import numpy as np
     from gpkit import parse_variables, Model
 
@@ -142,26 +150,27 @@ def solve_gpkit_cvxopt(N=10):
 
         @parse_variables(__doc__, globals())
         def setup(self, N=4):
+            # Note: Variables are injected by GPKit's @parse_variables decorator from docstring
             # minimize tip displacement (the last w)
-            self.cost = self.w_tip = w[-1]
+            self.cost = self.w_tip = w[-1]  # noqa: F821
             return {
-                "definition of dx": L == (N - 1) * dx,
+                "definition of dx": L == (N - 1) * dx,  # noqa: F821
                 "boundary_conditions": [
-                    V[-1] >= V_tip,
-                    M[-1] >= M_tip,
-                    th[0] >= th_base,
-                    w[0] >= w_base,
+                    V[-1] >= V_tip,  # noqa: F821
+                    M[-1] >= M_tip,  # noqa: F821
+                    th[0] >= th_base,  # noqa: F821
+                    w[0] >= w_base,  # noqa: F821
                 ],
                 # below: trapezoidal integration to form a piecewise-linear
                 #        approximation of loading, shear, and so on
                 # shear and moment increase from tip to base (left > right)
-                "shear integration": V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),
-                "moment integration": M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),
+                "shear integration": V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),  # noqa: F821
+                "moment integration": M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),  # noqa: F821
                 # slope and displacement increase from base to tip (right > left)
-                "theta integration": th[1:]
-                >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,
-                "displacement integration": w[1:]
-                >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1]),
+                "theta integration": th[1:]  # noqa: F821
+                >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,  # noqa: F821
+                "displacement integration": w[1:]  # noqa: F821
+                >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1]),  # noqa: F821
             }
 
     b = Beam(N=N, substitutions={"L": 6, "EI": 1.1e4, "q": 110 * np.ones(N)})
@@ -172,7 +181,7 @@ def solve_gpkit_cvxopt(N=10):
     return np.nan
 
 
-def solve_gpkit_mosek(N=10):
+def solve_gpkit_mosek(N=10):  # noqa: F821
     import numpy as np
     from gpkit import parse_variables, Model
 
@@ -208,26 +217,27 @@ def solve_gpkit_mosek(N=10):
 
         @parse_variables(__doc__, globals())
         def setup(self, N=4):
+            # Note: Variables are injected by GPKit's @parse_variables decorator from docstring
             # minimize tip displacement (the last w)
-            self.cost = self.w_tip = w[-1]
+            self.cost = self.w_tip = w[-1]  # noqa: F821
             return {
-                "definition of dx": L == (N - 1) * dx,
+                "definition of dx": L == (N - 1) * dx,  # noqa: F821
                 "boundary_conditions": [
-                    V[-1] >= V_tip,
-                    M[-1] >= M_tip,
-                    th[0] >= th_base,
-                    w[0] >= w_base,
+                    V[-1] >= V_tip,  # noqa: F821
+                    M[-1] >= M_tip,  # noqa: F821
+                    th[0] >= th_base,  # noqa: F821
+                    w[0] >= w_base,  # noqa: F821
                 ],
                 # below: trapezoidal integration to form a piecewise-linear
                 #        approximation of loading, shear, and so on
                 # shear and moment increase from tip to base (left > right)
-                "shear integration": V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),
-                "moment integration": M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),
+                "shear integration": V[:-1] >= V[1:] + 0.5 * dx * (q[:-1] + q[1:]),  # noqa: F821
+                "moment integration": M[:-1] >= M[1:] + 0.5 * dx * (V[:-1] + V[1:]),  # noqa: F821
                 # slope and displacement increase from base to tip (right > left)
-                "theta integration": th[1:]
-                >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,
-                "displacement integration": w[1:]
-                >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1]),
+                "theta integration": th[1:]  # noqa: F821
+                >= th[:-1] + 0.5 * dx * (M[1:] + M[:-1]) / EI,  # noqa: F821
+                "displacement integration": w[1:]  # noqa: F821
+                >= w[:-1] + 0.5 * dx * (th[1:] + th[:-1]),  # noqa: F821
             }
 
     b = Beam(N=N, substitutions={"L": 6, "EI": 1.1e4, "q": 110 * np.ones(N)})

@@ -1,39 +1,54 @@
+"""Surrogate model tools for smooth optimization.
+
+This module provides differentiable approximations to non-smooth functions
+(like max/min) that are useful for gradient-based optimization.
+"""
+
 import aerosandbox.numpy as _np
 import casadi as _cas
 from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable
 
 
 def softmax(
-    *args: float | _np.ndarray,
-    softness: float = None,
-    hardness: float = None,
-) -> float | _np.ndarray:
-    """
-    An element-wise softmax between two or more arrays. Also referred to as the logsumexp() function.
+    *args: Vectorizable,
+    softness: float | None = None,
+    hardness: float | None = None,
+) -> Vectorizable:
+    """Compute element-wise soft maximum of two or more arrays.
 
-    Useful for optimization because it's differentiable and preserves convexity!
+    Also known as the log-sum-exp (LSE) function. Useful for optimization
+    because it's differentiable and preserves convexity.
 
-    Great writeup by John D Cook here:
-        https://www.johndcook.com/soft_maximum.pdf
+    Parameters
+    ----------
+    *args : Vectorizable
+        Two or more values or arrays to take the softmax of.
+    softness : float, optional
+        Softness parameter. Lower values make the result closer to
+        ``max(*args)``. Has the same units as the inputs, representing
+        "an amount of discrepancy between input values that would be
+        considered physically significant".
+    hardness : float, optional
+        Hardness parameter (inverse of softness). Higher values make the
+        result closer to ``max(*args)``. Must not specify both ``softness``
+        and ``hardness``.
 
-    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
-    provided, `hardness` is set to 1.
+    Returns
+    -------
+    Vectorizable
+        The soft maximum of the supplied values.
 
-    Args:
+    Raises
+    ------
+    ValueError
+        If both ``softness`` and ``hardness`` are specified, or if fewer
+        than 2 arguments are provided.
 
-        *args: Provide any number of arguments as values to take the softmax of.
-
-        hardness: Hardness parameter. Higher values make this closer to max(x1, x2).
-
-        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to max(x1, x2).
-
-            - Setting `softness` is particularly useful, because it has the same units as each of the function's
-            inputs. For example, if you're taking the softmax of two values that are lengths in units of meters,
-            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
-            of discrepancy between the input values that would be considered physically significant".
-
-    Returns:
-        Soft maximum of the supplied values.
+    References
+    ----------
+    .. [1] John D. Cook, "Soft Maximum"
+           https://www.johndcook.com/soft_maximum.pdf
     """
     ### Set defaults for hardness/softness
     n_specified_arguments = (hardness is not None) + (softness is not None)
@@ -75,36 +90,40 @@ def softmax(
 
 
 def softmin(
-    *args: float | _np.ndarray,
-    softness: float = None,
-    hardness: float = None,
-) -> float | _np.ndarray:
-    """
-    An element-wise softmin between two or more arrays. Related to the logsumexp() function.
+    *args: Vectorizable,
+    softness: float | None = None,
+    hardness: float | None = None,
+) -> Vectorizable:
+    """Compute element-wise soft minimum of two or more arrays.
 
-    Useful for optimization because it's differentiable and preserves convexity!
+    Related to the log-sum-exp function. Useful for optimization because
+    it's differentiable and preserves convexity.
 
-    Great writeup by John D Cook here:
-        https://www.johndcook.com/soft_maximum.pdf
+    Parameters
+    ----------
+    *args : Vectorizable
+        Two or more values or arrays to take the softmin of.
+    softness : float, optional
+        Softness parameter. Lower values make the result closer to
+        ``min(*args)``. Has the same units as the inputs.
+    hardness : float, optional
+        Hardness parameter (inverse of softness). Higher values make the
+        result closer to ``min(*args)``. Must not specify both ``softness``
+        and ``hardness``.
 
-    Notes: Can provide either `hardness` or `softness`, not both. These are the inverse of each other. If neither is
-    provided, `hardness` is set to 1.
+    Returns
+    -------
+    Vectorizable
+        The soft minimum of the supplied values.
 
-    Args:
+    See Also
+    --------
+    softmax : The corresponding soft maximum function.
 
-        *args: Provide any number of arguments as values to take the softmin of.
-
-        hardness: Hardness parameter. Higher values make this closer to min(x1, x2).
-
-        softness: Softness parameter. (Inverse of hardness.) Lower values make this closer to min(x1, x2).
-
-            - Setting `softness` is particularly useful, because it has the same units as each of the function's
-            inputs. For example, if you're taking the softmin of two values that are lengths in units of meters,
-            then `softness` is also in units of meters. In this case, `softness` has the rough meaning of "an amount
-            of discrepancy between the input values that would be considered physically significant".
-
-    Returns:
-        Soft minimum of the supplied values.
+    References
+    ----------
+    .. [1] John D. Cook, "Soft Maximum"
+           https://www.johndcook.com/soft_maximum.pdf
     """
     return -softmax(
         *[-arg for arg in args],
@@ -114,10 +133,33 @@ def softmin(
 
 
 def softmax_scalefree(
-    *args: float | _np.ndarray,
-    relative_softness: float = None,
-    relative_hardness: float = None,
-) -> float | _np.ndarray:
+    *args: Vectorizable,
+    relative_softness: float | None = None,
+    relative_hardness: float | None = None,
+) -> Vectorizable:
+    """Compute scale-free soft maximum of two or more arrays.
+
+    Like ``softmax``, but the softness is automatically scaled based on
+    the norm of the input arguments, making it scale-invariant.
+
+    Parameters
+    ----------
+    *args : Vectorizable
+        Two or more values or arrays to take the softmax of.
+    relative_softness : float, optional
+        Softness relative to the norm of inputs. Default is 0.01.
+    relative_hardness : float, optional
+        Hardness relative to the norm of inputs (inverse of relative_softness).
+
+    Returns
+    -------
+    Vectorizable
+        The scale-free soft maximum of the supplied values.
+
+    See Also
+    --------
+    softmax : Fixed-scale soft maximum.
+    """
     n_specified_arguments = (relative_hardness is not None) + (
         relative_softness is not None
     )
@@ -135,10 +177,34 @@ def softmax_scalefree(
 
 
 def softmin_scalefree(
-    *args: float | _np.ndarray,
-    relative_softness: float = None,
-    relative_hardness: float = None,
-) -> float | _np.ndarray:
+    *args: Vectorizable,
+    relative_softness: float | None = None,
+    relative_hardness: float | None = None,
+) -> Vectorizable:
+    """Compute scale-free soft minimum of two or more arrays.
+
+    Like ``softmin``, but the softness is automatically scaled based on
+    the norm of the input arguments, making it scale-invariant.
+
+    Parameters
+    ----------
+    *args : Vectorizable
+        Two or more values or arrays to take the softmin of.
+    relative_softness : float, optional
+        Softness relative to the norm of inputs. Default is 0.01.
+    relative_hardness : float, optional
+        Hardness relative to the norm of inputs (inverse of relative_softness).
+
+    Returns
+    -------
+    Vectorizable
+        The scale-free soft minimum of the supplied values.
+
+    See Also
+    --------
+    softmin : Fixed-scale soft minimum.
+    softmax_scalefree : The corresponding soft maximum function.
+    """
     return -softmax_scalefree(
         *[-arg for arg in args],
         relative_softness=relative_softness,
@@ -151,20 +217,29 @@ def softplus(
     beta=1,
     threshold=40,
 ):
-    """
-    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+    """Compute the softplus function element-wise.
 
-    Softplus(x) = 1/beta * log(1 + exp(beta * x))
+    A smooth approximation of the ReLU function::
+
+        softplus(x) = (1/beta) * log(1 + exp(beta * x))
 
     Often used as an activation function in neural networks.
 
-    Args:
-        x: The input
-        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
-            approach ReLU.
-        threshold: Values above this threshold are approximated as linear.
+    Parameters
+    ----------
+    x : float | ndarray
+        The input value(s).
+    beta : float, optional
+        Controls the "softness" of the function. Higher values make the
+        function approach ReLU. Default is 1.
+    threshold : float, optional
+        Values of ``beta * x`` above this threshold are approximated as
+        linear to avoid numerical overflow. Default is 40.
 
-    Returns: The value of the softplus function.
+    Returns
+    -------
+    float | ndarray
+        The softplus function applied element-wise to ``x``.
     """
     if _np.is_casadi_type(x, recursive=False):
         return _np.where(
@@ -179,39 +254,53 @@ def sigmoid(
     sigmoid_type: Literal["tanh", "logistic", "arctan", "polynomial"] = "tanh",
     normalization_range: tuple[float | int, float | int] = (0, 1),
 ):
-    """
-    A sigmoid function. From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
-        A sigmoid function is a mathematical function having a characteristic "S"-shaped curve
-        or sigmoid curve.
+    """Compute a sigmoid function.
 
-    Args:
-        x: The input
-        sigmoid_type: Type of sigmoid function to use [str]. Can be one of:
-            * "tanh" or "logistic" (same thing)
-            * "arctan"
-            * "polynomial"
-        normalization_type: Range in which to normalize the sigmoid, shorthanded here in the
-            documentation as "N". This parameter is given as a two-element tuple (min, max).
+    From Wikipedia (https://en.wikipedia.org/wiki/Sigmoid_function):
 
-            After normalization:
-                >>> sigmoid(-Inf) == normalization_range[0]
-                >>> sigmoid(Inf) == normalization_range[1]
+        A sigmoid function is a mathematical function having a characteristic
+        "S"-shaped curve or sigmoid curve.
 
-            * In the special case of N = (0, 1):
-                >>> sigmoid(-Inf) == 0
-                >>> sigmoid(Inf) == 1
-                >>> sigmoid(0) == 0.5
-                >>> d(sigmoid)/dx at x=0 == 0.5
-            * In the special case of N = (-1, 1):
-                >>> sigmoid(-Inf) == -1
-                >>> sigmoid(Inf) == 1
-                >>> sigmoid(0) == 0
-                >>> d(sigmoid)/dx at x=0 == 1
+    Parameters
+    ----------
+    x
+        The input value(s).
+    sigmoid_type : {"tanh", "logistic", "arctan", "polynomial"}, optional
+        Type of sigmoid function to use. Can be one of:
 
-    Returns: The value of the sigmoid.
+        - "tanh" or "logistic" (same thing)
+        - "arctan"
+        - "polynomial"
+    normalization_range : tuple[float | int, float | int], optional
+        Range in which to normalize the sigmoid, shorthanded here in the
+        documentation as "N". This parameter is given as a two-element tuple
+        (min, max).
+
+        After normalization::
+
+            sigmoid(-Inf) == normalization_range[0]
+            sigmoid(Inf) == normalization_range[1]
+
+        In the special case of N = (0, 1)::
+
+            sigmoid(-Inf) == 0
+            sigmoid(Inf) == 1
+            sigmoid(0) == 0.5
+            d(sigmoid)/dx at x=0 == 0.5
+
+        In the special case of N = (-1, 1)::
+
+            sigmoid(-Inf) == -1
+            sigmoid(Inf) == 1
+            sigmoid(0) == 0
+            d(sigmoid)/dx at x=0 == 1
+
+    Returns
+    -------
+    The value of the sigmoid.
     """
     ### Sigmoid equations given here under the (-1, 1) normalization:
-    if sigmoid_type == ("tanh" or "logistic"):
+    if sigmoid_type in ("tanh", "logistic"):
         # Note: tanh(x) is simply a scaled and shifted version of a logistic curve.
         s = _np.tanh(x)
     elif sigmoid_type == "arctan":
@@ -236,19 +325,27 @@ def swish(
     x: float | _np.ndarray,
     beta: float = 1.0,
 ):
-    """
-    A smooth approximation of the ReLU function, applied elementwise to an array `x`.
+    """Compute the swish function element-wise.
 
-    Swish(x) = x / (1 + exp(-beta * x)) = x * logistic(x) = x * (0.5 + 0.5 * tanh(x/2))
+    A smooth approximation of the ReLU function, applied element-wise to an
+    array ``x``::
+
+        Swish(x) = x / (1 + exp(-beta * x)) = x * logistic(x) = x * (0.5 + 0.5 * tanh(x/2))
 
     Often used as an activation function in neural networks.
 
-    Args:
-        x: The input
-        beta: A parameter that controls the "softness" of the function. Higher values of beta make the function
-            approach ReLU.
+    Parameters
+    ----------
+    x : float | ndarray
+        The input value(s).
+    beta : float, optional
+        A parameter that controls the "softness" of the function. Higher values
+        of beta make the function approach ReLU. Default is 1.0.
 
-    Returns: The value of the swish function.
+    Returns
+    -------
+    float | ndarray
+        The value of the swish function.
     """
     return x / (1 + _np.exp(-beta * x))
 
@@ -258,30 +355,38 @@ def blend(
     value_switch_high,
     value_switch_low,
 ):
-    """
-    Smoothly blends between two values on the basis of some switch function.
+    """Smoothly blend between two values on the basis of some switch function.
 
     This function is similar in usage to numpy.where (documented here:
-    https://numpy.org/doc/stable/reference/generated/numpy.where.html) , except that
-    instead of using a boolean as to switch between the two values, a float is used to
-    smoothly transition between the two in a differentiable manner.
+    https://numpy.org/doc/stable/reference/generated/numpy.where.html), except
+    that instead of using a boolean to switch between the two values, a float is
+    used to smoothly transition between the two in a differentiable manner.
 
-    Before using this function, be sure to understand the difference between this and
-    smoothmax(), and choose the correct one.
+    Before using this function, be sure to understand the difference between
+    this and smoothmax(), and choose the correct one.
 
-    Args:
-        switch: A value that acts as a "switch" between the two values [float].
-            If switch is -Inf, value_switch_low is returned.
-            If switch is Inf, value_switch_high is returned.
-            If switch is 0, the mean of value_switch_low and value_switch_high is returned.
-            If switch is 1, the return value is roughly (0.88 * value_switch_high + 0.12 * value_switch_low).
-            If switch is -1, the return value is roughly (0.88 * value_switch_low + 0.12 * value_switch_high).
-        value_switch_high: Value to be returned when switch is high. Can be a float or an array.
-        value_switch_low: Value to be returned when switch is low. Can be a float or an array.
+    Parameters
+    ----------
+    switch : float
+        A value that acts as a "switch" between the two values.
 
-    Returns: A value that is a blend between value_switch_low and value_switch_high, with the weighting dependent
-        on the value of the 'switch' parameter.
+        - If switch is -Inf, value_switch_low is returned.
+        - If switch is Inf, value_switch_high is returned.
+        - If switch is 0, the mean of value_switch_low and value_switch_high is
+          returned.
+        - If switch is 1, the return value is roughly
+          (0.88 * value_switch_high + 0.12 * value_switch_low).
+        - If switch is -1, the return value is roughly
+          (0.88 * value_switch_low + 0.12 * value_switch_high).
+    value_switch_high
+        Value to be returned when switch is high. Can be a float or an array.
+    value_switch_low
+        Value to be returned when switch is low. Can be a float or an array.
 
+    Returns
+    -------
+    A value that is a blend between value_switch_low and value_switch_high, with
+    the weighting dependent on the value of the 'switch' parameter.
     """
 
     def blend_function(x):

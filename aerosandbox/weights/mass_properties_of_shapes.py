@@ -1,3 +1,5 @@
+"""Compute mass properties of simple geometric shapes."""
+
 from aerosandbox.weights.mass_properties import MassProperties
 
 """
@@ -16,24 +18,35 @@ def mass_properties_from_radius_of_gyration(
     radius_of_gyration_z: float = 0,
 ) -> MassProperties:
     """
-    Returns the mass properties of an object, given its radius of gyration.
+    Return the mass properties of an object, given its radius of gyration.
 
-    It's assumed that the principle axes of the inertia tensor are aligned with the coordinate axes.
+    It's assumed that the principle axes of the inertia tensor are aligned with the coordinate
+    axes.
 
-    This is a shorthand convenience function for common usage of the MassProperties constructor. For more detailed
-    use, use the MassProperties object directly.
+    This is a shorthand convenience function for common usage of the MassProperties constructor.
+    For more detailed use, use the MassProperties object directly.
 
-    Args:
-        mass: Mass [kg]
-        x_cg: x-position of the center of gravity
-        y_cg: y-position of the center of gravity
-        z_cg: z-position of the center of gravity
-        radius_of_gyration_x: Radius of gyration along the x-axis, about the center of gravity [m]
-        radius_of_gyration_y: Radius of gyration along the y-axis, about the center of gravity [m]
-        radius_of_gyration_z: Radius of gyration along the z-axis, about the center of gravity [m]
+    Parameters
+    ----------
+    mass : float
+        Mass [kg].
+    x_cg : float
+        x-position of the center of gravity [m].
+    y_cg : float
+        y-position of the center of gravity [m].
+    z_cg : float
+        z-position of the center of gravity [m].
+    radius_of_gyration_x : float
+        Radius of gyration along the x-axis, about the center of gravity [m].
+    radius_of_gyration_y : float
+        Radius of gyration along the y-axis, about the center of gravity [m].
+    radius_of_gyration_z : float
+        Radius of gyration along the z-axis, about the center of gravity [m].
 
-    Returns: MassProperties object.
-
+    Returns
+    -------
+    MassProperties
+        MassProperties object.
     """
     return MassProperties(
         mass=mass,
@@ -56,16 +69,23 @@ def mass_properties_of_ellipsoid(
     radius_z: float,
 ) -> MassProperties:
     """
-    Returns the mass properties of an ellipsoid centered on the origin.
+    Return the mass properties of an ellipsoid centered on the origin.
 
-    Args:
-        mass: Mass [kg]
-        radius_x: Radius along the x-axis [m]
-        radius_y: Radius along the y-axis [m]
-        radius_z: Radius along the z-axis [m]
+    Parameters
+    ----------
+    mass : float
+        Mass [kg].
+    radius_x : float
+        Radius along the x-axis [m].
+    radius_y : float
+        Radius along the y-axis [m].
+    radius_z : float
+        Radius along the z-axis [m].
 
-    Returns: MassProperties object.
-
+    Returns
+    -------
+    MassProperties
+        MassProperties object.
     """
     return MassProperties(
         mass=mass,
@@ -86,14 +106,19 @@ def mass_properties_of_sphere(
     radius: float,
 ) -> MassProperties:
     """
-    Returns the mass properties of a sphere centered on the origin.
+    Return the mass properties of a sphere centered on the origin.
 
-    Args:
-        mass: Mass [kg]
-        radius: Radius [m]
+    Parameters
+    ----------
+    mass : float
+        Mass [kg].
+    radius : float
+        Radius [m].
 
-    Returns: MassProperties object.
-
+    Returns
+    -------
+    MassProperties
+        MassProperties object.
     """
     return mass_properties_of_ellipsoid(
         mass=mass, radius_x=radius, radius_y=radius, radius_z=radius
@@ -107,16 +132,23 @@ def mass_properties_of_rectangular_prism(
     length_z: float,
 ) -> MassProperties:
     """
-    Returns the mass properties of a rectangular prism centered on the origin.
+    Return the mass properties of a rectangular prism centered on the origin.
 
-    Args:
-        mass: Mass [kg]
-        length_x: Side length along the x-axis [m]
-        length_y: Side length along the y-axis [m]
-        length_z: Side length along the z-axis [m]
+    Parameters
+    ----------
+    mass : float
+        Mass [kg].
+    length_x : float
+        Side length along the x-axis [m].
+    length_y : float
+        Side length along the y-axis [m].
+    length_z : float
+        Side length along the z-axis [m].
 
-    Returns: MassProperties object.
-
+    Returns
+    -------
+    MassProperties
+        MassProperties object.
     """
     return MassProperties(
         mass=mass,
@@ -137,14 +169,19 @@ def mass_properties_of_cube(
     side_length: float,
 ) -> MassProperties:
     """
-    Returns the mass properties of a cube centered on the origin.
+    Return the mass properties of a cube centered on the origin.
 
-    Args:
-        mass: Mass [kg]
-        side_length: Side length of the cube [m]
+    Parameters
+    ----------
+    mass : float
+        Mass [kg].
+    side_length : float
+        Side length of the cube [m].
 
-    Returns: MassProperties object.
-
+    Returns
+    -------
+    MassProperties
+        MassProperties object.
     """
     return mass_properties_of_rectangular_prism(
         mass=mass,

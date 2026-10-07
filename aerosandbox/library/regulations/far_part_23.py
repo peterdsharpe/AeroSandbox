@@ -1,4 +1,5 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import Vectorizable
 from aerosandbox.tools import units as u
 from typing import Literal
 
@@ -8,30 +9,33 @@ from typing import Literal
 
 
 def limit_load_factors(
-    design_mass_TOGW: float,
+    design_mass_TOGW: Vectorizable,
     category: Literal["normal", "utility", "acrobatic", "commuter"] = "normal",
-) -> tuple[float, float]:
+) -> tuple[Vectorizable, Vectorizable]:
     """
-    Computes the required limit load factors for FAR Part 23 certification.
+    Compute the required limit load factors for FAR Part 23 certification.
 
-    From FAR Part 23: "Airworthiness Standards: Normal, Utility, Acrobatic, and Commuter Category Airplanes"
-    Section 23.337: "Limit maneuvering load factors"
+    From FAR Part 23: "Airworthiness Standards: Normal, Utility, Acrobatic, and Commuter
+    Category Airplanes", Section 23.337: "Limit maneuvering load factors".
 
-    Args:
+    Parameters
+    ----------
+    design_mass_TOGW : Vectorizable
+        The design takeoff gross weight of the aircraft [kg].
+    category : Literal["normal", "utility", "acrobatic", "commuter"]
+        The category of the aircraft. Valid values are:
 
-        design_mass_TOGW: The design takeoff gross weight of the aircraft [kg].
+        - "normal"
+        - "utility"
+        - "acrobatic"
+        - "commuter"
 
-        category: The category of the aircraft. Valid values are:
-
-            - "normal"
-            - "utility"
-            - "acrobatic"
-            - "commuter"
-
-    Returns:
-        A tuple with (positive load factor, negative load factor). These are the maximum positive and negative limit load
-        factors that the aircraft should withstand for Part 23 certification.
-
+    Returns
+    -------
+    tuple[Vectorizable, Vectorizable]
+        A tuple with (positive load factor, negative load factor). These are the maximum
+        positive and negative limit load factors that the aircraft should withstand for
+        Part 23 certification.
     """
     ### Compute positive load factor
     if category == "normal" or category == "commuter":

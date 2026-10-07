@@ -1,15 +1,23 @@
 import aerosandbox.numpy as np
+from aerosandbox.numpy.typing import ConcreteVectorizable
 from matplotlib import path
 from aerosandbox.common import AeroSandboxObject
+from pathlib import Path
 
 
 class Polygon(AeroSandboxObject):
+    """
+    Definition for a 2D polygon, represented by a list of [x, y] coordinates.
+    """
+
     def __init__(self, coordinates: np.ndarray):
         """
-        Creates a polygon object.
+        Create a polygon object.
 
-        Args:
-            coordinates: An Nx2 NumPy ndarray of [x, y] coordinates for the polygon.
+        Parameters
+        ----------
+        coordinates : np.ndarray
+            An Nx2 NumPy ndarray of [x, y] coordinates for the polygon.
         """
         self.coordinates = np.array(coordinates)
 
@@ -18,25 +26,38 @@ class Polygon(AeroSandboxObject):
 
     def x(self) -> np.ndarray:
         """
-        Returns the x coordinates of the polygon. Equivalent to Polygon.coordinates[:,0].
+        Return the x coordinates of the polygon.
 
-        Returns:
-            X coordinates as a vector
+        Equivalent to Polygon.coordinates[:,0].
+
+        Returns
+        -------
+        np.ndarray
+            X coordinates as a vector.
         """
         return self.coordinates[:, 0]
 
     def y(self) -> np.ndarray:
         """
-        Returns the y coordinates of the polygon. Equivalent to Polygon.coordinates[:,1].
+        Return the y coordinates of the polygon.
 
-        Returns:
-            Y coordinates as a vector
+        Equivalent to Polygon.coordinates[:,1].
+
+        Returns
+        -------
+        np.ndarray
+            Y coordinates as a vector.
         """
         return self.coordinates[:, 1]
 
     def n_points(self) -> int:
         """
-        Returns the number of points/vertices/coordinates of the polygon.
+        Return the number of points/vertices/coordinates of the polygon.
+
+        Returns
+        -------
+        int
+            The number of points/vertices/coordinates of the polygon.
         """
         try:
             return len(self.coordinates)
@@ -52,12 +73,19 @@ class Polygon(AeroSandboxObject):
         scale_y: float = 1.0,
     ) -> "Polygon":
         """
-        Scales a Polygon about the origin.
-        Args:
-            scale_x: Amount to scale in the x-direction.
-            scale_y: Amount to scale in the y-direction.
+        Scale a Polygon about the origin.
 
-        Returns: The scaled Polygon.
+        Parameters
+        ----------
+        scale_x : float
+            Amount to scale in the x-direction.
+        scale_y : float
+            Amount to scale in the y-direction.
+
+        Returns
+        -------
+        Polygon
+            The scaled Polygon.
         """
         x = self.x() * scale_x
         y = self.y() * scale_y
@@ -70,13 +98,19 @@ class Polygon(AeroSandboxObject):
         translate_y: float = 0.0,
     ) -> "Polygon":
         """
-        Translates a Polygon by a given amount.
-        Args:
-            translate_x: Amount to translate in the x-direction
-            translate_y: Amount to translate in the y-direction
+        Translate a Polygon by a given amount.
 
-        Returns: The translated Polygon.
+        Parameters
+        ----------
+        translate_x : float
+            Amount to translate in the x-direction.
+        translate_y : float
+            Amount to translate in the y-direction.
 
+        Returns
+        -------
+        Polygon
+            The translated Polygon.
         """
         x = self.x() + translate_x
         y = self.y() + translate_y
@@ -87,19 +121,23 @@ class Polygon(AeroSandboxObject):
         self, angle: float, x_center: float = 0.0, y_center: float = 0.0
     ) -> "Polygon":
         """
-        Rotates a Polygon clockwise by the specified amount, in radians.
+        Rotate a Polygon counterclockwise by the specified amount, in radians.
 
         Rotates about the point (x_center, y_center), which is (0, 0) by default.
 
-        Args:
-            angle: Angle to rotate, counterclockwise, in radians.
+        Parameters
+        ----------
+        angle : float
+            Angle to rotate, counterclockwise, in radians.
+        x_center : float
+            The x-coordinate of the center of rotation.
+        y_center : float
+            The y-coordinate of the center of rotation.
 
-            x_center: The x-coordinate of the center of rotation.
-
-            y_center: The y-coordinate of the center of rotation.
-
-        Returns: The rotated Polygon.
-
+        Returns
+        -------
+        Polygon
+            The rotated Polygon.
         """
         ### Translate
         translation = np.reshape(np.array([x_center, y_center]), (1, 2))
@@ -118,7 +156,12 @@ class Polygon(AeroSandboxObject):
 
     def area(self) -> float:
         """
-        Returns the area of the polygon.
+        Return the area of the polygon.
+
+        Returns
+        -------
+        float
+            The area of the polygon.
         """
         x = self.x()
         y = self.y()
@@ -135,17 +178,34 @@ class Polygon(AeroSandboxObject):
 
     def perimeter(self) -> float:
         """
-        Returns the perimeter of the polygon.
+        Return the perimeter of the polygon.
+
+        The polygon is treated as closed (consistent with `area()`, `centroid()`, etc.),
+        so the edge connecting the last point back to the first point is included. (If the
+        coordinate list already repeats the first point at the end, this closing edge has
+        zero length, so it makes no difference.)
+
+        Returns
+        -------
+        float
+            The perimeter of the polygon.
         """
-        dx = np.diff(self.x())
-        dy = np.diff(self.y())
+        x = self.x()
+        y = self.y()
+        dx = np.roll(x, -1) - x  # Includes the closing edge (last point -> first point)
+        dy = np.roll(y, -1) - y
         ds = (dx**2 + dy**2) ** 0.5
 
         return np.sum(ds)
 
     def centroid(self) -> np.ndarray:
         """
-        Returns the centroid of the polygon as a 1D np.ndarray of length 2.
+        Return the centroid of the polygon.
+
+        Returns
+        -------
+        np.ndarray
+            The centroid of the polygon, as a 1D np.ndarray of length 2.
         """
         x = self.x()
         y = self.y()
@@ -166,7 +226,11 @@ class Polygon(AeroSandboxObject):
 
     def Ixx(self):
         """
-        Returns the nondimensionalized Ixx moment of inertia, taken about the centroid.
+        Return the nondimensionalized Ixx moment of inertia, taken about the centroid.
+
+        Returns
+        -------
+        The nondimensionalized Ixx moment of inertia, taken about the centroid.
         """
         x = self.x()
         y = self.y()
@@ -191,7 +255,11 @@ class Polygon(AeroSandboxObject):
 
     def Iyy(self):
         """
-        Returns the nondimensionalized Iyy moment of inertia, taken about the centroid.
+        Return the nondimensionalized Iyy moment of inertia, taken about the centroid.
+
+        Returns
+        -------
+        The nondimensionalized Iyy moment of inertia, taken about the centroid.
         """
         x = self.x()
         y = self.y()
@@ -216,7 +284,11 @@ class Polygon(AeroSandboxObject):
 
     def Ixy(self):
         """
-        Returns the nondimensionalized product of inertia, taken about the centroid.
+        Return the nondimensionalized product of inertia, taken about the centroid.
+
+        Returns
+        -------
+        The nondimensionalized product of inertia, taken about the centroid.
         """
         x = self.x()
         y = self.y()
@@ -241,41 +313,29 @@ class Polygon(AeroSandboxObject):
 
     def J(self):
         """
-        Returns the nondimensionalized polar moment of inertia, taken about the centroid.
+        Return the nondimensionalized polar moment of inertia, taken about the centroid.
+
+        Returns
+        -------
+        The nondimensionalized polar moment of inertia, taken about the centroid.
         """
-        x = self.x()
-        y = self.y()
-        x_n = np.roll(x, -1)  # x_next, or x_i+1
-        y_n = np.roll(y, -1)  # y_next, or y_i+1
+        return self.Ixx() + self.Iyy()
 
-        a = (
-            x * y_n - x_n * y
-        )  # a is the area of the triangle bounded by a given point, the next point, and the origin.
-
-        A = 0.5 * np.sum(a)  # area
-
-        # Centroid location
-        x_c = 1 / (6 * A) * np.sum(a * (x + x_n))
-        y_c = 1 / (6 * A) * np.sum(a * (y + y_n))
-
-        Ixx = 1 / 12 * np.sum(a * (y**2 + y * y_n + y_n**2))
-
-        Iyy = 1 / 12 * np.sum(a * (x**2 + x * x_n + x_n**2))
-
-        J = Ixx + Iyy
-
-        return J
-
-    def write_sldcrv(self, filepath: str = None):
+    def write_sldcrv(self, filepath: Path | str | None = None):
         """
-        Writes a .sldcrv (SolidWorks curve) file corresponding to this Polygon to a filepath.
+        Write a .sldcrv (SolidWorks curve) file corresponding to this Polygon to a filepath.
 
-        Args:
-            filepath: A filepath (including the filename and .sldcrv extension) [string]
-                if None, this function returns the .sldcrv file as a string.
+        Parameters
+        ----------
+        filepath : Path | str | None
+            A filepath (including the filename and .sldcrv extension) [string]. If None, this
+            function returns the .sldcrv file as a string.
 
-        Returns: None
-
+        Returns
+        -------
+        str
+            The .sldcrv file contents, as a string. If `filepath` is not None, the file is
+            also written to disk.
         """
         string = "\n".join(
             ["%f %f 0" % tuple(coordinate) for coordinate in self.coordinates]
@@ -289,23 +349,26 @@ class Polygon(AeroSandboxObject):
 
     def contains_points(
         self,
-        x: float | np.ndarray,
-        y: float | np.ndarray,
-    ) -> float | np.ndarray:
+        x: ConcreteVectorizable,
+        y: ConcreteVectorizable,
+    ) -> ConcreteVectorizable:
         """
-        Returns a boolean array of whether some (x, y) point(s) are contained within the Polygon.
+        Return a boolean array of whether some (x, y) point(s) are contained within the Polygon.
 
         Note: This function is unfortunately not automatic-differentiable.
 
-        Args:
-            x: x-coordinate(s) of the query points.
-            y: y-coordinate(s) of the query points.
+        Parameters
+        ----------
+        x : ConcreteVectorizable
+            x-coordinate(s) of the query points.
+        y : ConcreteVectorizable
+            y-coordinate(s) of the query points.
 
-        Returns:
-
-            A boolean array of the same size as x and y, with values corresponding to whether the points are
-            inside the Polygon.
-
+        Returns
+        -------
+        ConcreteVectorizable
+            A boolean array of the same size as x and y, with values corresponding to whether
+            the points are inside the Polygon.
         """
         x = np.array(x)
         y = np.array(y)
@@ -326,10 +389,15 @@ class Polygon(AeroSandboxObject):
 
     def as_shapely_polygon(self):
         """
-        Returns a Shapely Polygon object representing this polygon.
+        Return a Shapely Polygon object representing this polygon.
 
-        Shapely is a Python library for 2D geometry operations. While it is more powerful than this class (e.g.,
-            allows for union/intersection calculation between Polygons), it is not automatic-differentiable.
+        Shapely is a Python library for 2D geometry operations. While it is more powerful than
+        this class (e.g., allows for union/intersection calculation between Polygons), it is
+        not automatic-differentiable.
+
+        Returns
+        -------
+        A shapely.Polygon object representing this polygon.
         """
         import shapely
 
@@ -337,18 +405,22 @@ class Polygon(AeroSandboxObject):
 
     def jaccard_similarity(self, other: "Polygon"):
         """
-        Calculates the Jaccard similarity between this polygon and another polygon.
+        Calculate the Jaccard similarity between this polygon and another polygon.
 
         Note: This function is unfortunately not automatic-differentiable.
 
-        Args:
-            other: The other polygon to compare to.
+        Parameters
+        ----------
+        other : "Polygon"
+            The other polygon to compare to.
 
-        Returns:
-            The Jaccard similarity between this polygon and the other polygon.
-                * 0 if the polygons are completely disjoint
-                * 1 if the polygons are identical
+        Returns
+        -------
+        The Jaccard similarity between this polygon and the other polygon.
 
+            * 0 if the polygons are completely disjoint
+
+            * 1 if the polygons are identical
         """
         p1 = self.as_shapely_polygon()
         p2 = other.as_shapely_polygon()
@@ -359,17 +431,23 @@ class Polygon(AeroSandboxObject):
 
     def draw(self, set_equal=True, color=None, **kwargs):
         """
-        Draws the Polygon on the current matplotlib axis.
+        Draw the Polygon on the current matplotlib axis.
 
-        Args:
+        Parameters
+        ----------
+        set_equal
+            Whether to set the aspect ratio of the plot to be equal.
+        color
+            The color to fill the Polygon with. If None, uses the next color in the current
+            matplotlib color cycle.
+        **kwargs
+            Keyword arguments to pass to the matplotlib.pyplot.fill function.
+            See: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.fill.html
 
-            set_equal: Whether to set the aspect ratio of the plot to be equal.
-
-            **kwargs: Keyword arguments to pass to the matplotlib.pyplot.fill function.
-                See: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.fill.html
-
-        Returns: None (draws on the current matplotlib axis)
-
+        Returns
+        -------
+        None
+            None (draws on the current matplotlib axis).
         """
         import matplotlib.pyplot as plt
 

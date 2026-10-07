@@ -7,6 +7,7 @@ from aerosandbox.atmosphere._diff_atmo_functions import (
 )
 import aerosandbox.tools.units as u
 from typing import Literal
+from aerosandbox.numpy.typing import Vectorizable
 
 ### Define constants
 gas_constant_universal = 8.31432  # J/(mol*K); universal gas constant
@@ -22,33 +23,41 @@ effective_collision_diameter = (
 ### Define the Atmosphere class
 class Atmosphere(AeroSandboxObject):
     r"""
+    Model an atmosphere, computing atmospheric properties as a function of altitude.
+
     All models here are smoothed fits to the 1976 COESA model;
     see AeroSandbox\studies\Atmosphere Fitting for details.
-
     """
 
     def __init__(
         self,
-        altitude: float = 0.0,  # meters
+        altitude: Vectorizable = 0.0,  # meters
         method: Literal["differentiable", "isa"] = "differentiable",
-        temperature_deviation: float = 0.0,  # Kelvin
+        temperature_deviation: Vectorizable = 0.0,  # Kelvin
     ):
         """
         Initialize a new Atmosphere.
 
-        Args:
+        Parameters
+        ----------
+        altitude : Vectorizable
+            Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
+        method : Literal["differentiable", "isa"]
+            Method of atmosphere modeling to use. Either:
 
-            altitude: Flight altitude, in meters. This is assumed to be a geopotential altitude above MSL.
-
-            method: Method of atmosphere modeling to use. Either:
-                * "differentiable" - a C1-continuous fit to the International Standard Atmosphere; useful for optimization.
-                    Mean absolute error of pressure relative to the ISA is 0.02% over 0-100 km altitude range.
-                * "isa" - the International Standard Atmosphere, exactly reproduced
-
-            temperature_deviation: A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This is useful for modeling
-                the impact of temperature on density altitude, for example.
-
+            * "differentiable" - a C1-continuous fit to the International Standard Atmosphere;
+              useful for optimization. Mean absolute error of pressure relative to the ISA is
+              0.02% over the 0-100 km altitude range.
+            * "isa" - the International Standard Atmosphere, exactly reproduced.
+        temperature_deviation : Vectorizable
+            A deviation from the temperature model, in Kelvin (or equivalently, Celsius). This
+            is useful for modeling the impact of temperature on density altitude, for example.
         """
+        if method.lower() not in ("differentiable", "isa"):
+            raise ValueError(
+                f"Bad value of `method`: {method!r}. Valid options are 'differentiable' or 'isa'."
+            )
+
         self.altitude = altitude
         self.method = method
         self.temperature_deviation = temperature_deviation
@@ -66,31 +75,38 @@ class Atmosphere(AeroSandboxObject):
 
     def __getitem__(self, index) -> "Atmosphere":
         """
-        Indexes one item from each attribute of an Atmosphere instance.
+        Index one item from each attribute of an Atmosphere instance.
+
         Returns a new Atmosphere instance.
 
-        Args:
-            index: The index that is being called; e.g.,:
-                >>> first_atmosphere = atmosphere[0]
+        Parameters
+        ----------
+        index
+            The index that is being called; e.g.,:
 
-        Returns: A new Atmosphere instance, where each attribute is subscripted at the given value, if possible.
+            >>> first_atmosphere = atmosphere[0]
 
+        Returns
+        -------
+        Atmosphere
+            A new Atmosphere instance, where each attribute is subscripted at the given value,
+            if possible.
         """
-        l = len(self)
+        self_length = len(self)
 
         def get_item_of_attribute(a):
             if hasattr(a, "__len__") and hasattr(a, "__getitem__"):
                 if len(a) == 1:
                     return a[0]
-                elif len(a) == l:
+                elif len(a) == self_length:
                     return a[index]
                 else:
                     try:
                         return a[index]
                     except IndexError:
                         raise IndexError(
-                            f"A state variable could not be indexed; it has length {len(a)} while the"
-                            f"parent has length {l}."
+                            f"A state variable could not be indexed; it has length {len(a)} while the "
+                            f"parent has length {self_length}."
                         )
             else:
                 return a
@@ -111,44 +127,52 @@ class Atmosphere(AeroSandboxObject):
             self.altitude,
             self.temperature_deviation,
         ]:
-            if np.length(v) == 1:
-                try:
-                    v[0]
-                    length = 1
-                except (TypeError, IndexError, KeyError):
+            lv = np.length(v)
+            if lv != 1:
+                if length == 1:
+                    length = lv
+                elif length == lv:
                     pass
-            elif length == 0 or length == 1:
-                length = np.length(v)
-            elif length == np.length(v):
-                pass
-            else:
-                raise ValueError(
-                    "State variables are appear vectorized, but of different lengths!"
-                )
+                else:
+                    raise ValueError(
+                        "State variables are appear vectorized, but of different lengths!"
+                    )
         return length
 
     def __array__(self, dtype="O"):
         """
-        Allows NumPy array creation without infinite recursion in __len__ and __getitem__.
+        Allow NumPy array creation without infinite recursion in __len__ and __getitem__.
         """
         return np.fromiter([self], dtype=dtype).reshape(())
 
     ### The two primary state variables, pressure and temperature, go here!
 
-    def pressure(self):
+    def pressure(self) -> Vectorizable:
         """
-        Returns the pressure, in Pascals.
+        Return the pressure, in Pascals.
+
+        Returns
+        -------
+        Vectorizable
+            Pressure [Pa].
         """
         if self.method.lower() == "isa":
             return pressure_isa(self.altitude)
         elif self.method.lower() == "differentiable":
             return pressure_differentiable(self.altitude)
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
-    def temperature(self):
+    def temperature(self) -> Vectorizable:
         """
-        Returns the temperature, in Kelvin.
+        Return the temperature, in Kelvin.
+
+        Returns
+        -------
+        Vectorizable
+            Temperature [K].
         """
         if self.method.lower() == "isa":
             return temperature_isa(self.altitude) + self.temperature_deviation
@@ -157,23 +181,47 @@ class Atmosphere(AeroSandboxObject):
                 temperature_differentiable(self.altitude) + self.temperature_deviation
             )
         else:
-            raise ValueError("Bad value of 'type'!")
+            raise ValueError(
+                f"Bad value of `method`: {self.method!r}. Valid options are 'differentiable' or 'isa'."
+            )
 
     ### Everything else in this class is a derived quantity; all models of derived quantities go here.
 
-    def density(self):
+    def density(self) -> Vectorizable:
         """
-        Returns the density, in kg/m^3.
+        Return the density, in kg/m^3.
+
+        Returns
+        -------
+        Vectorizable
+            Density [kg/m^3].
         """
         rho = self.pressure() / (self.temperature() * gas_constant_air)
 
         return rho
 
-    def density_altitude(self, method: str = "approximate"):
+    def density_altitude(
+        self, method: Literal["approximate", "exact"] = "approximate"
+    ) -> Vectorizable:
         """
-        Returns the density altitude, in meters.
+        Return the density altitude, in meters.
 
         See https://en.wikipedia.org/wiki/Density_altitude
+
+        Parameters
+        ----------
+        method : Literal["approximate", "exact"]
+            Method to use for the calculation. One of:
+
+            * "approximate" (default): Uses the National Weather Service approximation
+              formula (see the Wikipedia link above), which assumes ISA-troposphere
+              conditions.
+            * "exact": Not yet implemented; raises NotImplementedError.
+
+        Returns
+        -------
+        Vectorizable
+            The density altitude [m].
         """
         if method.lower() == "approximate":
             temperature_sea_level = 288.15
@@ -196,23 +244,36 @@ class Atmosphere(AeroSandboxObject):
         else:
             raise ValueError("Bad value of 'method'!")
 
-    def speed_of_sound(self):
+    def speed_of_sound(self) -> Vectorizable:
         """
-        Returns the speed of sound, in m/s.
+        Return the speed of sound, in m/s.
+
+        Returns
+        -------
+        Vectorizable
+            Speed of sound [m/s].
         """
         temperature = self.temperature()
         return (self.ratio_of_specific_heats() * gas_constant_air * temperature) ** 0.5
 
-    def dynamic_viscosity(self):
+    def dynamic_viscosity(self) -> Vectorizable:
         """
-        Returns the dynamic viscosity (mu), in kg/(m*s).
+        Return the dynamic viscosity (mu), in kg/(m*s).
 
         Based on Sutherland's Law, citing `https://www.cfd-online.com/Wiki/Sutherland's_law`.
 
+        Returns
+        -------
+        Vectorizable
+            Dynamic viscosity [kg/(m*s)].
+
+        Notes
+        -----
         According to Rathakrishnan, E. (2013). Theoretical aerodynamics. John Wiley & Sons.:
         This relationship is valid from 0.01 to 100 atm, and between 0 and 3000K.
 
-        According to White, F. M., & Corfield, I. (2006). Viscous fluid flow (Vol. 3, pp. 433-434). New York: McGraw-Hill.:
+        According to White, F. M., & Corfield, I. (2006). Viscous fluid flow
+        (Vol. 3, pp. 433-434). New York: McGraw-Hill.:
         The error is no more than approximately 2% for air between 170K and 1900K.
         """
 
@@ -226,15 +287,31 @@ class Atmosphere(AeroSandboxObject):
 
         return mu
 
-    def kinematic_viscosity(self):
+    def kinematic_viscosity(self) -> Vectorizable:
         """
-        Returns the kinematic viscosity (nu), in m^2/s.
+        Return the kinematic viscosity (nu), in m^2/s.
 
         Definitional.
+
+        Returns
+        -------
+        Vectorizable
+            Kinematic viscosity [m^2/s].
         """
         return self.dynamic_viscosity() / self.density()
 
-    def ratio_of_specific_heats(self):
+    def ratio_of_specific_heats(self) -> float:
+        """
+        Return the ratio of specific heats (gamma) of air, unitless.
+
+        Currently modeled as a constant 1.4, which is a good approximation near
+        standard temperatures. (Its temperature dependence is not yet modeled.)
+
+        Returns
+        -------
+        float
+            Ratio of specific heats (gamma) [unitless].
+        """
         return 1.4  # TODO model temperature variation
 
     # def thermal_velocity(self):
@@ -244,14 +321,22 @@ class Atmosphere(AeroSandboxObject):
     #
     #     """
     #
-    def mean_free_path(self):
+    def mean_free_path(self) -> Vectorizable:
         """
-        Returns the mean free path of an air molecule, in meters.
+        Return the mean free path of an air molecule, in meters.
 
-        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity as the actual gas being considered".
+        To find the collision radius, assumes "a hard-sphere gas that has the same viscosity
+        as the actual gas being considered".
 
-        From Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics. Krieger Publishing Company. p. 414.
+        Returns
+        -------
+        Vectorizable
+            Mean free path [m].
 
+        References
+        ----------
+        Vincenti, W. G. and Kruger, C. H. (1965). Introduction to physical gas dynamics.
+        Krieger Publishing Company. p. 414.
         """
         return (
             self.dynamic_viscosity()
@@ -264,9 +349,19 @@ class Atmosphere(AeroSandboxObject):
             )
         )
 
-    def knudsen(self, length):
+    def knudsen(self, length: Vectorizable) -> Vectorizable:
         """
-        Computes the Knudsen number for a given length.
+        Compute the Knudsen number for a given reference length.
+
+        Parameters
+        ----------
+        length : Vectorizable
+            Reference length [m].
+
+        Returns
+        -------
+        Vectorizable
+            Knudsen number [unitless].
         """
         return self.mean_free_path() / length
 
