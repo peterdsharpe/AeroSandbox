@@ -28,10 +28,16 @@ from aerosandbox.tools.pretty_plots.threedim import (
 )
 from aerosandbox.tools.pretty_plots.quickplot import qp
 
-sns.set_theme(
-    palette=palettes["categorical"],
-)
 
-mpl.rcParams["figure.dpi"] = 200
-mpl.rcParams["axes.formatter.useoffset"] = False
-mpl.rcParams["contour.negative_linestyle"] = "solid"
+def set_style():
+    """Apply AeroSandbox's default Matplotlib and Seaborn plotting style."""
+    sns.set_theme(
+        palette=palettes["categorical"],
+    )
+
+    mpl.rcParams["figure.dpi"] = 200
+    mpl.rcParams["axes.formatter.useoffset"] = False
+    mpl.rcParams["contour.negative_linestyle"] = "solid"
+
+
+set_style()
