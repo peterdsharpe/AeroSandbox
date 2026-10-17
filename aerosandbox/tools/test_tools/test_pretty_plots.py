@@ -1,3 +1,4 @@
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -76,7 +77,9 @@ def test_plot_smooth_valid_function_of():
     for function_of in [None, "x", "y"]:
         fig, ax = plt.subplots()
         x = np.linspace(0, 1, 10)
-        x_resample, y_resample = p.plot_smooth(x, x**2, function_of=function_of)
+        x_resample, y_resample = p.plot_smooth(
+            x, x**2, function_of=function_of
+        )
         assert np.all(np.isfinite(x_resample))
         assert np.all(np.isfinite(y_resample))
         plt.close(fig)
@@ -122,6 +125,23 @@ def test_get_last_line_color_no_lines():
     color = p.get_last_line_color()
     assert color is not None
     plt.close(fig)
+
+
+def test_set_style_reapplies_defaults():
+    """set_style() should restore AeroSandbox's plotting defaults."""
+    original_rcparams = matplotlib.rcParams.copy()
+
+    try:
+        matplotlib.rcParams.update(matplotlib.rcParamsDefault)
+        p.set_style()
+
+        assert matplotlib.rcParams["axes.facecolor"] == "#EAEAF2"
+        assert matplotlib.rcParams["axes.grid"] is True
+        assert matplotlib.rcParams["figure.dpi"] == 200
+        assert matplotlib.rcParams["axes.formatter.useoffset"] is False
+        assert matplotlib.rcParams["contour.negative_linestyle"] == "solid"
+    finally:
+        matplotlib.rcParams.update(original_rcparams)
 
 
 if __name__ == "__main__":
