@@ -12,6 +12,112 @@ if TYPE_CHECKING:
     from aerosandbox.geometry import ControlSurface
 
 
+def _unwrap_te_thickness(value):
+    """Return the raw Kulfan TE-thickness parameter, unwrapping a callable shim if needed."""
+    if isinstance(value, _CallableTEThickness):
+        return value._value
+    return value
+
+
+class _CallableTEThickness:
+    """Kulfan TE-thickness parameter that is also callable like ``Airfoil.TE_thickness()``.
+
+    ``Airfoil.TE_thickness`` is a method, while ``KulfanAirfoil`` historically stored the
+    CST trailing-edge thickness as a field of the same name. This shim preserves both
+    ``foil.TE_thickness`` (numeric / attribute access) and ``foil.TE_thickness()``
+    (the parent ``Airfoil`` API) without changing the ``TE_thickness=`` constructor
+    argument. Arithmetic and NumPy ufuncs unwrap to the raw parameter so CasADi and
+    NumPy graphs are not polluted.
+    """
+
+    __slots__ = ("_value",)
+
+    def __init__(self, value):
+        object.__setattr__(self, "_value", _unwrap_te_thickness(value))
+
+    def __call__(self):
+        return self._value
+
+    def __repr__(self):
+        return repr(self._value)
+
+    def __str__(self):
+        return str(self._value)
+
+    def __format__(self, format_spec):
+        return format(self._value, format_spec)
+
+    def __bool__(self):
+        return bool(self._value)
+
+    def __float__(self):
+        return float(self._value)
+
+    def __int__(self):
+        return int(self._value)
+
+    def __hash__(self):
+        return hash(self._value)
+
+    def __neg__(self):
+        return -self._value
+
+    def __pos__(self):
+        return +self._value
+
+    def __abs__(self):
+        return abs(self._value)
+
+    def __eq__(self, other):
+        return self._value == _unwrap_te_thickness(other)
+
+    def __ne__(self, other):
+        return self._value != _unwrap_te_thickness(other)
+
+    def __lt__(self, other):
+        return self._value < _unwrap_te_thickness(other)
+
+    def __le__(self, other):
+        return self._value <= _unwrap_te_thickness(other)
+
+    def __gt__(self, other):
+        return self._value > _unwrap_te_thickness(other)
+
+    def __ge__(self, other):
+        return self._value >= _unwrap_te_thickness(other)
+
+    def __add__(self, other):
+        return self._value + _unwrap_te_thickness(other)
+
+    def __radd__(self, other):
+        return _unwrap_te_thickness(other) + self._value
+
+    def __sub__(self, other):
+        return self._value - _unwrap_te_thickness(other)
+
+    def __rsub__(self, other):
+        return _unwrap_te_thickness(other) - self._value
+
+    def __mul__(self, other):
+        return self._value * _unwrap_te_thickness(other)
+
+    def __rmul__(self, other):
+        return _unwrap_te_thickness(other) * self._value
+
+    def __truediv__(self, other):
+        return self._value / _unwrap_te_thickness(other)
+
+    def __rtruediv__(self, other):
+        return _unwrap_te_thickness(other) / self._value
+
+    def __array__(self, dtype=None):
+        return np.asarray(self._value, dtype=dtype)
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        unwrapped = tuple(_unwrap_te_thickness(x) for x in inputs)
+        return getattr(ufunc, method)(*unwrapped, **kwargs)
+
+
 class KulfanAirfoil(Airfoil):
     """
     An airfoil defined parametrically, using Kulfan (CST) parameters rather than coordinates.
@@ -46,7 +152,10 @@ class KulfanAirfoil(Airfoil):
         leading_edge_weight : Scalar
             The strength of the leading-edge camber mode shape of the airfoil.
         TE_thickness : Scalar
-            The trailing-edge thickness of the airfoil, in terms of y/c.
+            The trailing-edge thickness of the airfoil, in terms of y/c. The constructor
+            argument name is unchanged. On the instance, both ``foil.TE_thickness``
+            (attribute-style, returning a callable numeric value) and
+            ``foil.TE_thickness()`` (the ``Airfoil`` method API) are supported.
         N1 : float
             The shape factor corresponding to the leading edge of the airfoil.
         N2 : float
@@ -90,12 +199,33 @@ class KulfanAirfoil(Airfoil):
         self.lower_weights = lower_weights
         self.upper_weights = upper_weights
         self.leading_edge_weight = leading_edge_weight
-        self.TE_thickness = TE_thickness
+        self._TE_thickness = _unwrap_te_thickness(TE_thickness)
         self.N1 = N1
         self.N2 = N2
 
     def __repr__(self) -> str:
         return f"Airfoil {self.name} (Kulfan / CST parameterization)"
+
+    @property
+    def TE_thickness(self):
+        """
+        Return the thickness of the trailing edge of the airfoil.
+
+        This is the Kulfan (CST) trailing-edge thickness parameter (y/c). It is a
+        callable numeric value so that ``KulfanAirfoil`` matches ``Airfoil.TE_thickness()``
+        while still allowing attribute-style access used by existing Kulfan code.
+
+        Both of these return the same parameter:
+
+        * ``foil.TE_thickness`` — attribute access (legacy Kulfan field)
+        * ``foil.TE_thickness()`` — method call (``Airfoil`` API, used e.g. by
+          ``Airplane.generate_cadquery_geometry``)
+        """
+        return _CallableTEThickness(self._TE_thickness)
+
+    @TE_thickness.setter
+    def TE_thickness(self, value: Scalar) -> None:
+        self._TE_thickness = _unwrap_te_thickness(value)
 
     @property
     def kulfan_parameters(self):
@@ -106,7 +236,7 @@ class KulfanAirfoil(Airfoil):
             "lower_weights": self.lower_weights,
             "upper_weights": self.upper_weights,
             "leading_edge_weight": self.leading_edge_weight,
-            "TE_thickness": self.TE_thickness,
+            "TE_thickness": self._TE_thickness,
         }
 
     @property
@@ -362,7 +492,7 @@ class KulfanAirfoil(Airfoil):
                 lower_weights=self.lower_weights,
                 upper_weights=self.upper_weights,
                 leading_edge_weight=self.leading_edge_weight,
-                TE_thickness=self.TE_thickness,
+                TE_thickness=self._TE_thickness,
             ),
             alpha=alpha + effective_d_alpha,
             Re=Re,
@@ -642,7 +772,7 @@ class KulfanAirfoil(Airfoil):
         y_upper = shape_function(self.upper_weights)
 
         # Add trailing-edge (TE) thickness
-        y_upper += x_over_c * self.TE_thickness / 2
+        y_upper += x_over_c * self._TE_thickness / 2
 
         # Add Kulfan's leading-edge-modification (LEM)
         y_upper += (
@@ -714,7 +844,7 @@ class KulfanAirfoil(Airfoil):
         y_lower = shape_function(self.lower_weights)
 
         # Add trailing-edge (TE) thickness
-        y_lower -= x_over_c * self.TE_thickness / 2
+        y_lower -= x_over_c * self._TE_thickness / 2
 
         # Add Kulfan's leading-edge-modification (LEM)
         y_lower += (
@@ -803,7 +933,7 @@ class KulfanAirfoil(Airfoil):
         return np.degrees(
             np.arctan(self.upper_weights[-1])
             - np.arctan(self.lower_weights[-1])
-            + np.arctan(self.TE_thickness)
+            + np.arctan(self._TE_thickness)
         )
 
     def area(self):
@@ -822,7 +952,7 @@ class KulfanAirfoil(Airfoil):
         return (
             get_area_of_side(self.upper_weights)
             - get_area_of_side(self.lower_weights)
-            + (self.TE_thickness / 2)
+            + (self._TE_thickness / 2)
         )
 
     def set_TE_thickness(
@@ -899,7 +1029,7 @@ class KulfanAirfoil(Airfoil):
                 lower_weights=self.lower_weights * scale_y,
                 upper_weights=self.upper_weights * scale_y,
                 leading_edge_weight=self.leading_edge_weight * scale_y,
-                TE_thickness=self.TE_thickness * scale_y,
+                TE_thickness=self._TE_thickness * scale_y,
                 N1=self.N1,
                 N2=self.N2,
             )
@@ -909,7 +1039,7 @@ class KulfanAirfoil(Airfoil):
                 lower_weights=self.upper_weights * scale_y,
                 upper_weights=self.lower_weights * scale_y,
                 leading_edge_weight=self.leading_edge_weight * scale_y,
-                TE_thickness=self.TE_thickness * (-1 * scale_y),
+                TE_thickness=self._TE_thickness * (-1 * scale_y),
                 N1=self.N1,
                 N2=self.N2,
             )
@@ -960,8 +1090,8 @@ class KulfanAirfoil(Airfoil):
             + b_fraction * foil_b.upper_weights,
             leading_edge_weight=a_fraction * foil_a.leading_edge_weight
             + b_fraction * foil_b.leading_edge_weight,
-            TE_thickness=a_fraction * foil_a.TE_thickness
-            + b_fraction * foil_b.TE_thickness,
+            TE_thickness=a_fraction * foil_a._TE_thickness
+            + b_fraction * foil_b._TE_thickness,
             N1=a_fraction * foil_a.N1 + b_fraction * foil_b.N1,
             N2=a_fraction * foil_a.N2 + b_fraction * foil_b.N2,
         )

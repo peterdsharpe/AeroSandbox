@@ -34,6 +34,8 @@ Also, for at least one version before a breaking change, AeroSandbox development
 
 # In-progress (develop) version
 
+- **Bugfix:** `KulfanAirfoil.TE_thickness` is now Liskov-compatible with `Airfoil.TE_thickness()`. The constructor argument `TE_thickness=` is unchanged; both `foil.TE_thickness` (legacy attribute access) and `foil.TE_thickness()` (the parent method API used by `Airplane.generate_cadquery_geometry`) work. Fixes #192.
+
 <!-- - **Bugfix:** Fixed `Wing.aerodynamic_center()` to properly account for twist angle when computing the AC location. Previously, the AC offset vector was not rotated by the local twist, causing incorrect AC positions for twisted wings. -->
 
 -----
