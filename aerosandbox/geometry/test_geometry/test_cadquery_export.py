@@ -86,5 +86,46 @@ def test_cadquery_export() -> None:
         assert "'Fuselage'" in step_file
 
 
+def test_cadquery_export_with_kulfan_airfoil() -> None:
+    """
+    generate_cadquery_geometry / export_cadquery_geometry call airfoil.TE_thickness().
+    KulfanAirfoil previously stored TE_thickness as a float field, which made that call
+    raise TypeError. This covers the issue #192 CAD export path.
+    """
+    pytest.importorskip(
+        "cadquery",
+        reason="cadquery (an optional dependency) is not installed; skipping CAD export test.",
+    )
+    kaf = asb.KulfanAirfoil("naca0012")
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        fname = f"{tmpdirname}/kulfan.step"
+        airplane = asb.Airplane(
+            wings=[
+                asb.Wing(
+                    name="KulfanWing",
+                    xsecs=[
+                        asb.WingXSec(
+                            xyz_le=np.array([0, 0, 0]),
+                            chord=0.5,
+                            twist=0,
+                            airfoil=kaf,
+                        ),
+                        asb.WingXSec(
+                            xyz_le=np.array([0, 1, 0]),
+                            chord=0.4,
+                            twist=0,
+                            airfoil=kaf,
+                        ),
+                    ],
+                    symmetric=True,
+                )
+            ],
+        )
+        airplane.export_cadquery_geometry(fname, split_leading_edge=False)
+        with open(fname) as step_file:
+            assert "'KulfanWing'" in step_file.read()
+
+
 if __name__ == "__main__":
     test_cadquery_export()
+    test_cadquery_export_with_kulfan_airfoil()
